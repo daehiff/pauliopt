@@ -1,14 +1,15 @@
 import networkx as nx
-from matplotlib import pyplot as plt
+from pyzx import Mat2
+from stim import Tableau
 
-from pauliopt.pauli.anneal import anneal
-from pauliopt.pauli.clifford_gates import CX, H, CY, CZ
+from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 import numpy as np
 
 from pauliopt.pauli.utils import Pauli, _pauli_to_string
 import stim
+
 
 def two_qubit_count(count_ops):
     count = 0
@@ -59,18 +60,42 @@ def verify_equality(qc_in, qc_out):
         .equiv(Statevector.from_instruction(qc_out))
 
 
+def reconstruct_tableau(tableau: stim.Tableau):
+    xsx, xsz, zsx, zsz, _, _ = tableau.to_numpy()
+    x_row = np.concatenate([xsx, xsz], axis=1)
+    z_row = np.concatenate([zsx, zsz], axis=1)
+    return np.concatenate([x_row, z_row], axis=0).astype(np.int64)
+
+
 def main(num_qubits=3):
-    tableau = stim.Tableau(3)
-    print(tableau)
-    x2x, x2z, z2x, z2z, x_signs, z_signs = tableau.to_numpy(bit_packed=False)
-    print(x2x)
-    print(x2z)
-    x_arr = np.concatenate([x2x, x2z])
-    print(x_arr)
+    # cl_tableau = CliffordTableau(2)
+    # # cl_tableau.apply_h(0)
+    # print(cl_tableau.tableau)
+    # print("H")
+    # cl_tableau = CliffordTableau(2)
+    # cl_tableau.apply_h(0)
+    # print(cl_tableau.tableau)
+    # print("S")
+    # cl_tableau = CliffordTableau(2)
+    # cl_tableau.apply_s(0)
+    # print(cl_tableau.tableau)
+    # print("CX")
+    cl_tableau = CliffordTableau(2)
+    cl_tableau.apply_cnot(0, 1)
+    print(cl_tableau.tableau)
 
-
-
-
+    table = stim.Tableau(2)
+    cnot = stim.Tableau.from_named_gate("CNOT")
+    had = stim.Tableau.from_named_gate("H")
+    table.append(had, [0])
+    table.append(cnot, [0, 1])
+    print(Mat2(reconstruct_tableau(table)).inverse())
+    print(Mat2(reconstruct_tableau(table)))
+    print("==")
+    m = Mat2(reconstruct_tableau(table))
+    m.col_add(0, 1)
+    print(m)
+    print(reconstruct_tableau(table.inverse(unsigned=True)))
 
 
 def create_rules_graph(rules):
