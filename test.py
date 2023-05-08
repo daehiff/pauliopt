@@ -1,14 +1,21 @@
 import networkx as nx
 from pyzx import Mat2
 from stim import Tableau
+import pyzx as zx
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
+from pytket.extensions.pyzx import tk_to_pyzx, pyzx_to_tk
+from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
 import numpy as np
 
 from pauliopt.pauli.utils import Pauli, _pauli_to_string
 import stim
+
+
+def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
+    return tk_to_qiskit(pyzx_to_tk(circ))
 
 
 def two_qubit_count(count_ops):
@@ -67,35 +74,45 @@ def reconstruct_tableau(tableau: stim.Tableau):
     return np.concatenate([x_row, z_row], axis=0).astype(np.int64)
 
 
-def main(num_qubits=3):
-    # cl_tableau = CliffordTableau(2)
-    # # cl_tableau.apply_h(0)
-    # print(cl_tableau.tableau)
-    # print("H")
-    # cl_tableau = CliffordTableau(2)
-    # cl_tableau.apply_h(0)
-    # print(cl_tableau.tableau)
-    # print("S")
-    # cl_tableau = CliffordTableau(2)
-    # cl_tableau.apply_s(0)
-    # print(cl_tableau.tableau)
-    # print("CX")
-    cl_tableau = CliffordTableau(2)
-    cl_tableau.apply_cnot(0, 1)
-    print(cl_tableau.tableau)
+def random_hscx_circuit(nr_gates=20, nr_qubits=4):
+    gate_choice = ["H", "S", "CX"]
+    qc = QuantumCircuit(nr_qubits)
+    for _ in range(nr_gates):
+        gate_t = np.random.choice(gate_choice)
+        if gate_t == "H":
+            qubit = np.random.choice([i for i in range(nr_qubits)])
+            qc.h(qubit)
+        elif gate_t == "S":
+            qubit = np.random.choice([i for i in range(nr_qubits)])
+            qc.s(qubit)
+        elif gate_t == "CX":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cx(control, target)
+    return qc
 
-    table = stim.Tableau(2)
-    cnot = stim.Tableau.from_named_gate("CNOT")
-    had = stim.Tableau.from_named_gate("H")
-    table.append(had, [0])
-    table.append(cnot, [0, 1])
-    print(Mat2(reconstruct_tableau(table)).inverse())
-    print(Mat2(reconstruct_tableau(table)))
-    print("==")
-    m = Mat2(reconstruct_tableau(table))
-    m.col_add(0, 1)
-    print(m)
-    print(reconstruct_tableau(table.inverse(unsigned=True)))
+
+def main(num_qubits=3):
+    circ = QuantumCircuit(4)
+    circ.s(1)
+    circ.s(3)
+    circ.cx(0, 3)
+    circ.s(1)
+    circ.cx(3, 2)
+    circ.h(1)
+    circ.s(2)
+    circ.cx(1, 0)
+    circ.h(1)
+    circ.cx(3, 0)
+    # circ = random_hscx_circuit(nr_gates=10)
+    print(circ)
+
+    ct = CliffordTableau.from_circuit(circ)
+    print(ct.tableau)
+    circ_out = ct.to_clifford_circuit()
+    print(circ_out)
+    # qc_out = cl_tableau.to_clifford_circuit()
+    print(verify_equality(circ, circ_out))
 
 
 def create_rules_graph(rules):
