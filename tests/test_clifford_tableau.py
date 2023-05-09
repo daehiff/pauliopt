@@ -1,55 +1,11 @@
-import networkx as nx
-from pyzx import Mat2
-from stim import Tableau
-import pyzx as zx
+import unittest
+import warnings
+
+import numpy as np
+import stim
+from qiskit import QuantumCircuit
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
-from pauliopt.pauli.pauli_gadget import PPhase
-from pauliopt.pauli.pauli_polynomial import *
-from pytket.extensions.pyzx import tk_to_pyzx, pyzx_to_tk
-from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
-import numpy as np
-
-from pauliopt.pauli.utils import Pauli, _pauli_to_string
-import stim
-
-
-def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
-    return tk_to_qiskit(pyzx_to_tk(circ))
-
-
-def two_qubit_count(count_ops):
-    count = 0
-    count += count_ops["cx"] if "cx" in count_ops.keys() else 0
-    count += count_ops["cy"] if "cy" in count_ops.keys() else 0
-    count += count_ops["cz"] if "cz" in count_ops.keys() else 0
-    return count
-
-
-def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
-    angle = np.random.choice(allowed_angels)
-    nr_legs = np.random.randint(min_legs, max_legs)
-    legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
-    phase_gadget = [Pauli.I for _ in range(num_qubits)]
-    for leg in legs:
-        phase_gadget[leg] = np.random.choice([Pauli.X, Pauli.Y, Pauli.Z])
-    return PPhase(angle) @ phase_gadget
-
-
-def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
-                                     max_legs=None, allowed_angels=None):
-    if min_legs is None:
-        min_legs = 1
-    if max_legs is None:
-        max_legs = num_qubits
-    if allowed_angels is None:
-        allowed_angels = [2 * np.pi, np.pi, 0.5 * np.pi, 0.25 * np.pi, 0.125 * np.pi]
-
-    pp = PauliPolynomial()
-    for _ in range(num_gadgets):
-        pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels)
-
-    return pp
 
 
 def verify_equality(qc_in, qc_out):
@@ -81,6 +37,7 @@ def reconstruct_tableau_signs(tableau: stim.Tableau):
 
 
 def circuit_to_tableau(circ: QuantumCircuit):
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
     tableau = stim.Tableau(circ.num_qubits)
     cnot = stim.Tableau.from_named_gate("CX")
     had = stim.Tableau.from_named_gate("H")
@@ -136,19 +93,22 @@ def parse_stim_to_qiskit(circ: stim.Circuit):
     return qc
 
 
-def main(num_qubits=3):
-    circ = random_hscx_circuit(nr_gates=200)
-    tableau = circuit_to_tableau(circ)
-    circ_stim = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
+class TestCliffordTableau(unittest.TestCase):
+    def test_circuit_construction(self):
+        for _ in range(10):
+            for n_qubits in [4, 8]:
+                circ = random_hscx_circuit(nr_gates=800, nr_qubits=n_qubits)
+                tableau = circuit_to_tableau(circ)
+                circ_stim = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
 
-    ct = CliffordTableau.from_circuit(circ)
-    circ_out = ct.to_clifford_circuit()
-    assert np.allclose(reconstruct_tableau(tableau), ct.tableau)
-    assert verify_equality(circ, circ_stim)
-    assert np.allclose(reconstruct_tableau_signs(tableau), ct.signs)
-    assert verify_equality(circ, circ_out)
+                ct = CliffordTableau.from_circuit(circ)
+                circ_out = ct.to_clifford_circuit()
+                self.assertTrue(np.allclose(reconstruct_tableau(tableau), ct.tableau),
+                                "The Instructions resulted in an incorrect Tableau")
+                self.assertTrue(np.allclose(reconstruct_tableau_signs(tableau), ct.signs),
+                                "")
+                self.assertTrue(verify_equality(circ, circ_stim),
+                                "The STIM Circuit resulted in a different circuit")
 
-
-if __name__ == '__main__':
-    for _ in range(100):
-        main()
+                self.assertTrue(verify_equality(circ, circ_out),
+                                "The resulting circuit from the clifford tableau did not match")
