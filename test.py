@@ -12,6 +12,7 @@ import numpy as np
 
 from pauliopt.pauli.utils import Pauli, _pauli_to_string
 import stim
+from qiskit.providers.fake_provider import FakeHanoi, FakeLima, FakeTokyo, FakeLima, FakeLagos
 
 
 def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
@@ -136,17 +137,60 @@ def parse_stim_to_qiskit(circ: stim.Circuit):
     return qc
 
 
+def compute_reduction_order(topo: Topology):
+    pass
+
+
 def main(num_qubits=3):
-    circ = random_hscx_circuit(nr_gates=200)
-    tableau = circuit_to_tableau(circ)
-    circ_stim = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
+    dict = {
+        "num_qubits": 7,
+        "couplings": sorted([(0, 1), (0, 4), (1, 2), (1, 3), (4, 5), (4, 6)])
+    }
+    backend = np.random.choice([FakeLima(), FakeLagos()])
+    topo = Topology.from_qiskit_backend(backend)
+    print(topo.num_qubits)
+    # circ = QuantumCircuit(4)
+    # circ.s(1)
+    # circ.s(3)
+    # circ.cx(0, 3)
+    # circ.s(1)
+    # circ.cx(3, 2)
+    # circ.h(1)
+    # circ.s(2)
+    # circ.cx(1, 0)
+    # circ.h(1)
+    # circ.cx(3, 0)
+    # circ = QuantumCircuit(4)
+    # circ.s(0)
+    # circ.cx(1, 2)
+    # circ.cx(2, 0)
+    # circ.cx(2, 0)
+    # circ.cx(2, 1)
+    # circ.cx(1, 3)
+    # circ.cx(0, 2)
+    # circ.h(3)
+    # circ.h(3)
+    # circ.s(0)
+    # circ.s(1)
+    # circ.h(0)
+    # circ.cx(0, 2)
+    # circ.s(0)
+    # circ.cx(2, 1)
+    # circ.s(0)
+    # circ.h(1)
+    # circ.s(2)
+    # circ.cx(0, 3)
+    # circ.h(3)
+    circ = random_hscx_circuit(nr_qubits=topo.num_qubits, nr_gates=400)
+    circ.qasm(filename="test6.qasm")
+    # circ = QuantumCircuit.from_qasm_file("test5.qasm")
 
     ct = CliffordTableau.from_circuit(circ)
-    circ_out = ct.to_clifford_circuit()
-    assert np.allclose(reconstruct_tableau(tableau), ct.tableau)
-    assert verify_equality(circ, circ_stim)
-    assert np.allclose(reconstruct_tableau_signs(tableau), ct.signs)
-    assert verify_equality(circ, circ_out)
+    circ_out = ct.to_cifford_circuit_arch_aware(topo)
+    # print(circ_out)
+    # print(circ_stim)
+
+    assert (verify_equality(circ, circ_out))
 
 
 if __name__ == '__main__':
