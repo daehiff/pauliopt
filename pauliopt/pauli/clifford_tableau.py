@@ -3,7 +3,7 @@ import numpy as np
 import stim
 from qiskit import QuantumCircuit
 
-from pauliopt.pauli.clifford_gates import CliffordGate, CLiffordType, SingleQubitGate, \
+from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, SingleQubitGate, \
     ControlGate
 from pauliopt.topologies import Topology
 
@@ -190,28 +190,28 @@ class CliffordTableau:
         self.signs = (self.signs + x_ia * z_ib * tmp_sum) % 2
 
     def append_gate(self, gate: CliffordGate):
-        if gate.c_type == CLiffordType.H:
+        if gate.c_type == CliffordType.H:
             assert isinstance(gate, SingleQubitGate)
             self.apply_h(gate.qubit)
-        elif gate.c_type == CLiffordType.S:
+        elif gate.c_type == CliffordType.S:
             assert isinstance(gate, SingleQubitGate)
             self.apply_s(gate.qubit)
-        elif gate.c_type == CLiffordType.V:
+        elif gate.c_type == CliffordType.V:
             assert isinstance(gate, SingleQubitGate)
             self.apply_h(gate.qubit)
             self.apply_s(gate.qubit)
             self.apply_h(gate.qubit)
-        elif gate.c_type == CLiffordType.CX:
+        elif gate.c_type == CliffordType.CX:
             assert isinstance(gate, ControlGate)
             self.apply_cnot(gate.control, gate.target)
-        elif gate.c_type == CLiffordType.CY:
+        elif gate.c_type == CliffordType.CY:
             assert isinstance(gate, ControlGate)
             self.apply_s(gate.target)
             self.apply_s(gate.target)
             self.apply_s(gate.target)
             self.apply_cnot(gate.control, gate.target)
             self.apply_s(gate.target)
-        elif gate.c_type == CLiffordType.CZ:
+        elif gate.c_type == CliffordType.CZ:
             assert isinstance(gate, ControlGate)
             self.apply_h(gate.target)
             self.apply_cnot(gate.control, gate.target)

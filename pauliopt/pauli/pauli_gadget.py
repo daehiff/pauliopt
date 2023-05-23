@@ -1,13 +1,12 @@
 from collections import deque
 from typing import List
 
-from qiskit import QuantumCircuit
+import networkx as nx
+import numpy as np
 
-from pauliopt.pauli.utils import _pauli_to_string, Pauli, X, Y, Z, I
+from pauliopt.pauli.utils import Pauli, X, Y, Z, I
 from pauliopt.topologies import Topology
 from pauliopt.utils import AngleExpr
-import numpy as np
-import networkx as nx
 
 
 def decompose_cnot_ladder_z(ctrl: int, trg: int, arch: Topology):
@@ -36,7 +35,6 @@ def find_minimal_cx_assignment(column: np.array, arch: Topology):
             if column[i] != 0 and column[j] != 0 and i != j:
                 G.add_edge(i, j, weight=4 * arch.dist(i, j) - 2)
 
-    # Algorithm by Gogioso et. al. (https://arxiv.org/pdf/2206.11839.pdf) to find qubit assignment with MST
     mst_branches = list(nx.minimum_spanning_edges(G, data=False, algorithm="prim"))
     incident = {q: set() for q in range(len(column))}
     for fst, snd in mst_branches:
@@ -76,23 +74,23 @@ class PauliGadget:
         return len(self.paulis)
 
     def __repr__(self):
-        return f"({self.angle}) @ {{ {', '.join([_pauli_to_string(pauli) for pauli in self.paulis])} }}"
+        return f"({self.angle}) @ {{ {', '.join([pauli.value for pauli in self.paulis])} }}"
 
     def copy(self):
         return PauliGadget(self.angle, self.paulis.copy())
 
-    def two_qubit_count(self, topology, leg_chache=None):
-        if leg_chache is None:
-            leg_chache = {}
+    def two_qubit_count(self, topology, leg_cache=None):
+        if leg_cache is None:
+            leg_cache = {}
 
         column = np.asarray(self.paulis)
         col_binary = np.where(column == Pauli.I, 0, 1)
         col_id = "".join([str(int(el)) for el in col_binary])
-        if col_id in leg_chache.keys():
-            return leg_chache[col_id]
+        if col_id in leg_cache.keys():
+            return leg_cache[col_id]
         else:
-            cnot_amount = len(find_minimal_cx_assignment(col_binary, topology)[0])
-            leg_chache[col_id] = cnot_amount
+            cnot_amount = 2 * len(find_minimal_cx_assignment(col_binary, topology)[0])
+            leg_cache[col_id] = cnot_amount
         return cnot_amount
 
     def commutes(self, other: "PauliGadget"):
@@ -109,7 +107,10 @@ class PauliGadget:
         num_qubits = len(self.paulis)
         if topology is None:
             topology = Topology.complete(num_qubits)
-
+        try:
+            from qiskit import QuantumCircuit
+        except:
+            raise Exception("Please install qiskit to export Clifford Regions")
         circ = QuantumCircuit(num_qubits)
 
         column = np.asarray(self.paulis)

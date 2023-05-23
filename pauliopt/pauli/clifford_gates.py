@@ -1,12 +1,12 @@
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Collection
+
+from pauliopt.pauli.pauli_gadget import PauliGadget
+from pauliopt.pauli.utils import X, Y, Z, I
 import numpy as np
-from .utils import _pauli_to_string, X, Y, Z, I, Pauli
-
-from .pauli_gadget import PauliGadget
 
 
-class CLiffordType(Enum):
+class CliffordType(Enum):
     CX = "cx"
     CY = "cy"
     CZ = "cz"
@@ -15,30 +15,16 @@ class CLiffordType(Enum):
     V = "v"
 
 
-class CliffordGate:
+class CliffordGate(ABC):
     def __init__(self, c_type):
         self.c_type = c_type
 
+    @abstractmethod
     def propagate_pauli(self, gadget: PauliGadget):
-        raise Exception(f"This method is not implemented on object: {self}")
-
-    def to_qiskit(self):
-        raise Exception(f"This method is not implemented on object: {self}")
-
-    @property
-    def num_qubits(self):
-        raise Exception(f"This property is not implemented on object: {self}")
-
-    @staticmethod
-    def generate_random(num_qubits):
-        raise Exception(f"This method is not implemented")
-
-    @property
-    def to_hash(self):
-        raise Exception(f"This property is not implemented on object: {self}")
+        ...
 
 
-class SingleQubitGate(CliffordGate):
+class SingleQubitGate(CliffordGate, ABC):
     rules = None
 
     def __init__(self, type, qubit):
@@ -48,18 +34,14 @@ class SingleQubitGate(CliffordGate):
     def propagate_pauli(self, gadget: PauliGadget):
         if self.rules is None:
             raise Exception(f"{self} has no rules defined for propagation!")
-        p_string = _pauli_to_string(gadget.paulis[self.qubit])
+        p_string = gadget.paulis[self.qubit].value
         new_p, phase_change = self.rules[p_string]
         gadget.paulis[self.qubit] = new_p
         gadget.angle *= phase_change
         return gadget
 
-    @property
-    def num_qubits(self):
-        return self.qubit + 1
 
-
-class ControlGate(CliffordGate):
+class ControlGate(CliffordGate, ABC):
     rules = None
 
     def __init__(self, type, control, target):
@@ -72,17 +54,14 @@ class ControlGate(CliffordGate):
             raise Exception(f"{self} has no rules defined for propagation!")
         pauli_size = len(gadget)
         if self.control >= pauli_size or self.target >= pauli_size:
-            raise Exception(f"Control: {self.control} or Target {self.target} out of bounds: {pauli_size}")
-        p_string = _pauli_to_string(gadget.paulis[self.control]) + _pauli_to_string(gadget.paulis[self.target])
+            raise Exception(
+                f"Control: {self.control} or Target {self.target} out of bounds: {pauli_size}")
+        p_string = gadget.paulis[self.control].value + gadget.paulis[self.target].value
         p_c, p_t, phase_change = self.rules[p_string]
         gadget.paulis[self.control] = p_c
         gadget.paulis[self.target] = p_t
         gadget.angle *= phase_change
         return gadget
-
-    @property
-    def num_qubits(self):
-        return max(self.control, self.target) + 1
 
 
 class CX(ControlGate):
@@ -104,22 +83,7 @@ class CX(ControlGate):
              'II': (I, I, 1)}
 
     def __init__(self, control, target):
-        super().__init__(CLiffordType.CX, control, target)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.cx(self.control, self.target)
-        return qc
-
-    @staticmethod
-    def generate_random(num_qubits):
-        control = np.random.choice(list(range(num_qubits)))
-        target = np.random.choice([i for i in range(num_qubits) if i != control])
-        return CX(control, target)
+        super().__init__(CliffordType.CX, control, target)
 
 
 class CZ(ControlGate):
@@ -141,22 +105,7 @@ class CZ(ControlGate):
              'II': (I, I, 1)}
 
     def __init__(self, control, target):
-        super().__init__(CLiffordType.CZ, control, target)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.cz(self.control, self.target)
-        return qc
-
-    @staticmethod
-    def generate_random(num_qubits):
-        control = np.random.choice(list(range(num_qubits)))
-        target = np.random.choice([i for i in range(num_qubits) if i != control])
-        return CZ(control, target)
+        super().__init__(CliffordType.CZ, control, target)
 
 
 class CY(ControlGate):
@@ -178,25 +127,9 @@ class CY(ControlGate):
              'II': (I, I, 1)}
 
     def __init__(self, control, target):
-        super().__init__(CLiffordType.CY, control, target)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.cy(self.control, self.target)
-        return qc
-
-    @staticmethod
-    def generate_random(num_qubits):
-        control = np.random.choice(list(range(num_qubits)))
-        target = np.random.choice([i for i in range(num_qubits) if i != control])
-        return CY(control, target)
+        super().__init__(CliffordType.CY, control, target)
 
 
-#
 class H(SingleQubitGate):
     rules = {'X': (Z, 1),
              'Y': (Y, -1),
@@ -204,21 +137,7 @@ class H(SingleQubitGate):
              'I': (I, 1)}
 
     def __init__(self, qubit):
-        super().__init__(CLiffordType.H, qubit)
-
-    @staticmethod
-    def generate_random(num_qubits):
-        qubit = np.random.choice(list(range(num_qubits)))
-        return H(qubit)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.h(self.qubit)
-        return qc
+        super().__init__(CliffordType.H, qubit)
 
 
 class S(SingleQubitGate):
@@ -228,22 +147,7 @@ class S(SingleQubitGate):
              'I': (I, 1)}
 
     def __init__(self, qubit):
-        super().__init__(CLiffordType.S, qubit)
-
-    @staticmethod
-    def generate_random(num_qubits):
-        qubit = np.random.choice(list(range(num_qubits)))
-
-        return S(qubit)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.s(self.qubit)
-        return qc
+        super().__init__(CliffordType.S, qubit)
 
 
 class V(SingleQubitGate):
@@ -253,22 +157,60 @@ class V(SingleQubitGate):
              'I': (I, 1)}
 
     def __init__(self, qubit):
-        super().__init__(CLiffordType.V, qubit)
+        super().__init__(CliffordType.V, qubit)
 
-    @staticmethod
-    def generate_random(num_qubits):
-        qubit = np.random.choice(list(range(num_qubits)))
-
-        return V(qubit)
-
-    def to_qiskit(self):
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Gates")
-        qc = QuantumCircuit(self.num_qubits)
-        qc.sx(self.qubit)
-        return qc
 
 # For the gates X, Y, Z there won't be a change of Pauli matrices
 # Refused to implement "higher order gates" like NCX, SWAP, DCX, ... but with this structure this can easily be done
+
+
+def generate_random_clifford(c_type: CliffordType, n_qubits: int):
+    qubit = np.random.choice(list(range(n_qubits)))
+    if c_type == CliffordType.CX:
+        control = np.random.choice([i for i in range(n_qubits) if i != qubit])
+        return CX(control, qubit)
+    elif c_type == CliffordType.CY:
+        control = np.random.choice([i for i in range(n_qubits) if i != qubit])
+        return CY(control, qubit)
+    elif c_type == CliffordType.CZ:
+        control = np.random.choice([i for i in range(n_qubits) if i != qubit])
+        return CZ(control, qubit)
+    elif c_type == CliffordType.H:
+        return H(qubit)
+    elif c_type == CliffordType.S:
+        return S(qubit)
+    elif c_type == CliffordType.V:
+        return V(qubit)
+    else:
+        raise TypeError(f"Unknown Clifford Type: {c_type}")
+
+
+def clifford_to_qiskit(clifford: CliffordGate):
+    try:
+        from qiskit import QuantumCircuit
+    except:
+        raise Exception("Please install qiskit to export Clifford Gates")
+
+    if isinstance(clifford, ControlGate):
+        qc = QuantumCircuit(max(clifford.control, clifford.target) + 1)
+        if clifford.c_type == CliffordType.CX:
+            qc.cx(clifford.control, clifford.target)
+        elif clifford.c_type == CliffordType.CY:
+            qc.cy(clifford.control, clifford.target)
+        elif clifford.c_type == CliffordType.CZ:
+            qc.cz(clifford.control, clifford.target)
+        else:
+            raise TypeError(f"Undefined Control gate {clifford.c_type}")
+    elif isinstance(clifford, SingleQubitGate):
+        qc = QuantumCircuit(clifford.qubit + 1)
+        if clifford.c_type == CliffordType.H:
+            qc.h(clifford.qubit)
+        elif clifford.c_type == CliffordType.S:
+            qc.s(clifford.qubit)
+        elif clifford.c_type == CliffordType.V:
+            qc.sx(clifford.qubit)
+        else:
+            raise TypeError(f"Undefined Single qubit gate: {clifford.c_type}")
+    else:
+        raise TypeError(f"Gate must be either single qubit or control")
+    return qc

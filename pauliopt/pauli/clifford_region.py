@@ -1,60 +1,28 @@
-from qiskit import QuantumCircuit
-
-from .clifford_gates import *
-import qiskit.quantum_info as qi
+from pauliopt.pauli.clifford_gates import *
 
 
 class CliffordRegion:
-    commutation_rule_set = {('V', 1, 0, 'H', 0, 1),
-                            ('H', 0, 1, 'S', 1, 0),
-                            ('S', 1, 0, 'CX', 1, 0),
-                            ('CX', 0, 1, 'S', 0, 1),
-                            ('H', 1, 0, 'V', 0, 1),
-                            ('S', 0, 1, 'CX', 0, 1),
-                            ('S', 1, 0, 'CZ', 0, 1),
-                            ('S', 1, 0, 'CZ', 1, 0),
-                            ('S', 0, 1, 'H', 1, 0),
-                            ('H', 0, 1, 'V', 1, 0),
-                            ('CX', 0, 1, 'V', 1, 0),
-                            ('V', 0, 1, 'H', 1, 0),
-                            ('S', 1, 0, 'H', 0, 1),
-                            ('V', 1, 0, 'CX', 0, 1),
-                            ('CX', 1, 0, 'V', 0, 1),
-                            ('S', 0, 1, 'V', 1, 0),
-                            ('H', 1, 0, 'S', 0, 1),
-                            ('S', 0, 1, 'CY', 0, 1),
-                            ('CX', 1, 0, 'S', 1, 0),
-                            ('S', 1, 0, 'CY', 1, 0),
-                            ('CZ', 1, 0, 'S', 1, 0),
-                            ('V', 0, 1, 'CX', 1, 0),
-                            ('S', 0, 1, 'CZ', 1, 0),
-                            ('CY', 1, 0, 'S', 1, 0),
-                            ('S', 1, 0, 'V', 0, 1),
-                            ('V', 0, 1, 'S', 1, 0),
-                            ('CY', 0, 1, 'S', 0, 1),
-                            ('CZ', 0, 1, 'S', 0, 1),
-                            ('S', 0, 1, 'CZ', 0, 1),
-                            ('CZ', 0, 1, 'S', 1, 0),
-                            ('CZ', 1, 0, 'S', 0, 1),
-                            ('V', 1, 0, 'S', 0, 1)}
-
-    def __init__(self, gates=None):
+    def __init__(self, num_qubits, gates=None):
         if gates is None:
             gates = []
         self.gates: [CliffordGate] = gates
-        self.num_qubits = 1
+        self.num_qubits = num_qubits
 
     def add_gate(self, gate: CliffordGate):
-        self.num_qubits = max(self.num_qubits, gate.num_qubits)
+        if isinstance(gate, SingleQubitGate) and gate.qubit >= self.num_qubits:
+            raise Exception(
+                f"Gate with {gate.qubit} is out of bounds for Clifford Region with Qubits: {self.num_qubits}")
+        if isinstance(gate, ControlGate) and gate.control >= self.num_qubits and gate.target >= self.num_qubits:
+            raise Exception(
+                f"Control Gate  with {gate.control}, {gate.target} is out of bounds for Clifford Region with Qubits: {self.num_qubits}")
         self.gates.append(gate)
 
-    def add_gate_simplify(self, gate: CliffordGate):
-        for idx, other in enumerate(self.gates):
-            pass
-
     def to_qiskit(self):
+        try:
+            from qiskit import QuantumCircuit
+        except:
+            raise Exception("Please install qiskit to export Clifford Regions")
         qc = QuantumCircuit(self.num_qubits)
         for gate in self.gates:
-            qc.compose(gate.to_qiskit(), inplace=True)
-
+            qc.compose(clifford_to_qiskit(gate), inplace=True)
         return qc
