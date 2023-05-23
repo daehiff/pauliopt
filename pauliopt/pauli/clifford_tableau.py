@@ -2,6 +2,9 @@ import networkx as nx
 import numpy as np
 import stim
 from qiskit import QuantumCircuit
+
+from pauliopt.pauli.clifford_gates import CliffordGate, CLiffordType, SingleQubitGate, \
+    ControlGate
 from pauliopt.topologies import Topology
 
 
@@ -35,9 +38,11 @@ def find_edges_up(G: nx.Graph, root: int):
     return list(reversed(steiner_up))
 
 
-def compute_steiner_tree_up_down(root: int, pivot_root: int, nodes: [int], remaining_nodes: [int], topology: Topology):
+def compute_steiner_tree_up_down(root: int, pivot_root: int, nodes: [int],
+                                 remaining_nodes: [int], topology: Topology):
     nodes_ = list(set([root, pivot_root] + nodes))
-    resulting_edges_down = compute_steiner_tree(pivot_root, nodes_, remaining_nodes, topology)
+    resulting_edges_down = compute_steiner_tree(pivot_root, nodes_, remaining_nodes,
+                                                topology)
 
     G = nx.Graph()
     G.add_edges_from(resulting_edges_down)
@@ -60,7 +65,8 @@ def produce_reduction_order(topo: Topology):
     T = nx.minimum_spanning_tree(G)
     assert isinstance(T, nx.Graph)
 
-    leaf_node = [node for node in range(topo.num_qubits) if len(list(T.neighbors(node))) == 1][0]
+    leaf_node = \
+        [node for node in range(topo.num_qubits) if len(list(T.neighbors(node))) == 1][0]
     queue = [leaf_node]
     visited = {node: False for node in range(topo.num_qubits)}
     visited[leaf_node] = True
@@ -68,7 +74,8 @@ def produce_reduction_order(topo: Topology):
     while queue:
         leaf = queue.pop(0)
         sorted_neighbours = sorted(get_unvisted_neighbours(T, leaf, visited),
-                                   key=lambda x: len(get_unvisted_neighbours(T, x, visited)))
+                                   key=lambda x: len(
+                                       get_unvisted_neighbours(T, x, visited)))
         assert visited[leaf]
         reduction_order.append(leaf)
 
@@ -78,12 +85,14 @@ def produce_reduction_order(topo: Topology):
     return list(reversed(reduction_order))
 
 
-def compute_steiner_tree(root: int, nodes: [int], remaining_nodes: [int], topology: Topology):
+def compute_steiner_tree(root: int, nodes: [int], remaining_nodes: [int],
+                         topology: Topology):
     # TODO there must be an other more efficient way
     couplings = sorted([list(c.as_pair) for c in topology.couplings])
     t_dict = {
         "num_qubits": topology.num_qubits,
-        "couplings": [(k, v) for k, v in couplings if k in remaining_nodes and v in remaining_nodes]
+        "couplings": [(k, v) for k, v in couplings if
+                      k in remaining_nodes and v in remaining_nodes]
     }
     topology_ = Topology.from_dict(t_dict)
     vertices = [root]
@@ -92,8 +101,10 @@ def compute_steiner_tree(root: int, nodes: [int], remaining_nodes: [int], topolo
     steiner_pnts = []
     while nodes_steiner:
         # find all connected options on the graph
-        options = [(node, v, topology_.dist(int(node), int(v))) for node in nodes_steiner for v in
-                   (vertices + steiner_pnts) if topology_.dist(int(node), int(v)) != np.inf]
+        options = [(node, v, topology_.dist(int(node), int(v))) for node in nodes_steiner
+                   for v in
+                   (vertices + steiner_pnts) if
+                   topology_.dist(int(node), int(v)) != np.inf]
         if not options:
             raise Exception("Topology is not connected or tableau is ill defined.")
         best_node, best_v, best_dist = min(options, key=lambda x: x[2])
@@ -126,7 +137,8 @@ def compute_steiner_tree(root: int, nodes: [int], remaining_nodes: [int], topolo
 
 
 class CliffordTableau:
-    def __init__(self, n_qubits: int = None, tableau: np.array = None, signs: np.array = None):
+    def __init__(self, n_qubits: int = None, tableau: np.array = None,
+                 signs: np.array = None):
         if n_qubits is None and tableau is None:
             raise Exception("Either Tableau or number of qubits must be defined")
         if tableau is None:
@@ -148,13 +160,15 @@ class CliffordTableau:
                     f"Tableau of shape: {tableau.shape}, is not a factor of 2")
 
     def apply_h(self, qubit):
-        self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:, self.n_qubits + qubit]) % 2
+        self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
+                                                            self.n_qubits + qubit]) % 2
 
         self.tableau[:, [self.n_qubits + qubit, qubit]] = self.tableau[:,
                                                           [qubit, self.n_qubits + qubit]]
 
     def apply_s(self, qubit):
-        self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:, self.n_qubits + qubit]) % 2
+        self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
+                                                            self.n_qubits + qubit]) % 2
 
         self.tableau[:, self.n_qubits + qubit] = (self.tableau[:, self.n_qubits + qubit] +
                                                   self.tableau[:, qubit]) % 2
@@ -169,10 +183,42 @@ class CliffordTableau:
         self.tableau[:, target] = \
             (self.tableau[:, target] + self.tableau[:, control]) % 2
         self.tableau[:, self.n_qubits + control] = \
-            (self.tableau[:, self.n_qubits + control] + self.tableau[:, self.n_qubits + target]) % 2
+            (self.tableau[:, self.n_qubits + control] + self.tableau[:,
+                                                        self.n_qubits + target]) % 2
 
         tmp_sum = ((x_ib + z_ia) % 2 + np.ones(z_ia.shape)) % 2
         self.signs = (self.signs + x_ia * z_ib * tmp_sum) % 2
+
+    def append_gate(self, gate: CliffordGate):
+        if gate.c_type == CLiffordType.H:
+            assert isinstance(gate, SingleQubitGate)
+            self.apply_h(gate.qubit)
+        elif gate.c_type == CLiffordType.S:
+            assert isinstance(gate, SingleQubitGate)
+            self.apply_s(gate.qubit)
+        elif gate.c_type == CLiffordType.V:
+            assert isinstance(gate, SingleQubitGate)
+            self.apply_h(gate.qubit)
+            self.apply_s(gate.qubit)
+            self.apply_h(gate.qubit)
+        elif gate.c_type == CLiffordType.CX:
+            assert isinstance(gate, ControlGate)
+            self.apply_cnot(gate.control, gate.target)
+        elif gate.c_type == CLiffordType.CY:
+            assert isinstance(gate, ControlGate)
+            self.apply_s(gate.target)
+            self.apply_s(gate.target)
+            self.apply_s(gate.target)
+            self.apply_cnot(gate.control, gate.target)
+            self.apply_s(gate.target)
+        elif gate.c_type == CLiffordType.CZ:
+            assert isinstance(gate, ControlGate)
+            self.apply_h(gate.target)
+            self.apply_cnot(gate.control, gate.target)
+            self.apply_h(gate.target)
+        else:
+            raise TypeError(
+                f"Unrecongnized Gate type: {type(gate)} for Clifford Tableaus")
 
     @staticmethod
     def from_circuit(circ: QuantumCircuit):
@@ -189,15 +235,21 @@ class CliffordTableau:
     def inverse(self):
 
         x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
-        z2z = self.tableau[self.n_qubits:2 * self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
-        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
-        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
+        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
+              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
+        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
+            np.bool8)
+        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
+            np.bool8)
         tab = stim.Tableau.from_numpy(x2x=x2x,
                                       x2z=x2z,
                                       z2x=z2x,
                                       z2z=z2z,
-                                      x_signs=self.signs[0:self.n_qubits].copy().astype(np.bool8),
-                                      z_signs=self.signs[self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8))
+                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
+                                          np.bool8),
+                                      z_signs=self.signs[
+                                              self.n_qubits:2 * self.n_qubits].copy().astype(
+                                          np.bool8))
         t_inv = tab.inverse()
         ct_inv = reconstruct_tableau(t_inv)
         ct_signs = reconstruct_tableau_signs(t_inv)
@@ -268,8 +320,11 @@ class CliffordTableau:
             column_x = [row for row in remaining_nodes if x_out(root, row) != 0]
             for col in column_x:
                 sanitize_field_x(root, col)
-            resulting_down_x, resulting_up_x = compute_steiner_tree_up_down(root, pivot_root, column_x,
-                                                                            remaining_nodes, topo)
+            resulting_down_x, resulting_up_x = compute_steiner_tree_up_down(root,
+                                                                            pivot_root,
+                                                                            column_x,
+                                                                            remaining_nodes,
+                                                                            topo)
             for row, col in resulting_down_x:
                 assert (x_out(root, row) == 1 or x_out(root, row) == 0) and \
                        (x_out(root, col) == 1 or x_out(root, col) == 0)
@@ -296,8 +351,11 @@ class CliffordTableau:
             if x_out(root, root) != 1:
                 apply("S", (root,))
 
-            resulting_down_z, resulting_up_z = compute_steiner_tree_up_down(root, pivot_root, column_z,
-                                                                            remaining_nodes, topo)
+            resulting_down_z, resulting_up_z = compute_steiner_tree_up_down(root,
+                                                                            pivot_root,
+                                                                            column_z,
+                                                                            remaining_nodes,
+                                                                            topo)
             for row, col in resulting_down_z:
 
                 assert (z_out(root, row) == 2 or z_out(root, row) == 0) and \

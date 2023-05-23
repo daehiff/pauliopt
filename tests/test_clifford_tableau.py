@@ -7,6 +7,7 @@ from qiskit import QuantumCircuit
 import networkx as nx
 from qiskit.providers.fake_provider import FakeLima, FakeLagos
 
+from pauliopt.pauli.clifford_gates import H, S, V, CX, CY, CZ
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.topologies import Topology
 
@@ -57,22 +58,45 @@ def circuit_to_tableau(circ: QuantumCircuit):
     return tableau
 
 
-def random_hscx_circuit(nr_gates=20, nr_qubits=4):
-    gate_choice = ["H", "S", "CX"]
+def random_clifford_circuit(nr_gates=20, nr_qubits=4, gate_choice=None):
     qc = QuantumCircuit(nr_qubits)
+    if gate_choice is None:
+        gate_choice = ["CY", "CZ", "CX", "H", "S", "V"]
     for _ in range(nr_gates):
         gate_t = np.random.choice(gate_choice)
-        if gate_t == "H":
+        if gate_t == "CX":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cx(control, target)
+        elif gate_t == "CY":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cy(control, target)
+        elif gate_t == "CZ":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cz(control, target)
+        elif gate_t == "H":
             qubit = np.random.choice([i for i in range(nr_qubits)])
             qc.h(qubit)
         elif gate_t == "S":
             qubit = np.random.choice([i for i in range(nr_qubits)])
             qc.s(qubit)
+        elif gate_t == "V":
+            qubit = np.random.choice([i for i in range(nr_qubits)])
+            qc.sx(qubit)
         elif gate_t == "CX":
             control = np.random.choice([i for i in range(nr_qubits)])
             target = np.random.choice([i for i in range(nr_qubits) if i != control])
             qc.cx(control, target)
     return qc
+
+
+def random_hscx_circuit(nr_gates=20, nr_qubits=4):
+    gate_choice = ["H", "S", "CX"]
+    return random_clifford_circuit(nr_gates=nr_gates,
+                                   nr_qubits=nr_qubits,
+                                   gate_choice=gate_choice)
 
 
 def parse_stim_to_qiskit(circ: stim.Circuit):
@@ -147,7 +171,8 @@ class TestCliffordTableau(unittest.TestCase):
     def test_tableau_synthesis_structured_architectures(self):
         for topo in [Topology.line(5), Topology.line(8), Topology.line(12),
                      Topology.cycle(5), Topology.cycle(8), Topology.cycle(12),
-                     Topology.periodic_grid(2, 3), Topology.periodic_grid(4, 4), Topology.periodic_grid(3, 4)]:
+                     Topology.periodic_grid(2, 3), Topology.periodic_grid(4, 4),
+                     Topology.periodic_grid(3, 4)]:
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
 
@@ -159,6 +184,33 @@ class TestCliffordTableau(unittest.TestCase):
 
                 self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
                                 "The resulting circuit did no match the architecture")
+
+    def test_gate_appending(self):
+        for nr_qubits in [4, 8, 16]:
+            qc = random_clifford_circuit(nr_gates=2000, nr_qubits=nr_qubits)
+            ct = CliffordTableau(n_qubits=qc.num_qubits)
+            operations = set()
+
+            for op in qc:
+                operations.add(op.operation.name)
+                if op.operation.name == "h":
+                    gate = H(op.qubits[0].index)
+                elif op.operation.name == "s":
+                    gate = S(op.qubits[0].index)
+                elif op.operation.name == "sx":
+                    gate = V(op.qubits[0].index)
+                elif op.operation.name == "cx":
+                    gate = CX(op.qubits[0].index, op.qubits[1].index)
+                elif op.operation.name == "cy":
+                    gate = CY(op.qubits[0].index, op.qubits[1].index)
+                elif op.operation.name == "cz":
+                    gate = CZ(op.qubits[0].index, op.qubits[1].index)
+                else:
+                    raise Exception(f"Unknown Gate: {op.operation.name}")
+                ct.append_gate(gate)
+
+            self.assertTrue(verify_equality(qc, ct.to_clifford_circuit()),
+                            "Expected the circuit to match the gates")
 
     def test_tableau_synthesis_ibm_backends(self):
         for backend in [FakeLima(), FakeLagos()]:

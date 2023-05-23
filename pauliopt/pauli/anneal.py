@@ -4,6 +4,7 @@ from qiskit import QuantumCircuit
 
 from .clifford_gates import CX, CY, CZ, CliffordGate
 from .clifford_region import CliffordRegion
+from .clifford_tableau import CliffordTableau
 from .pauli_polynomial import PauliPolynomial
 from ..phase.optimized_circuits import _validate_temp_schedule
 from ..topologies import Topology
@@ -18,16 +19,19 @@ def pick_random_gate(num_qubits, G: nx.Graph, gate_set=None):
     return gate.generate_random(num_qubits)
 
 
-def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology, leg_chache=None):
+def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology,
+                   leg_chache=None):
     pp_ = pp.copy()
     pp_.propagate(gate)
 
-    return pp_.two_qubit_count(topology, leg_chache=leg_chache) - pp.two_qubit_count(topology, leg_chache=leg_chache)
+    return pp_.two_qubit_count(topology, leg_chache=leg_chache) - pp.two_qubit_count(
+        topology, leg_chache=leg_chache)
 
 
-def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1), nr_iterations=100) -> QuantumCircuit:
+def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
+           nr_iterations=100) -> QuantumCircuit:
     leg_cache = {}
-    clifford_region = CliffordRegion()
+    clifford_region = CliffordTableau(n_qubits=pp.num_qubits)
 
     schedule = _validate_temp_schedule(schedule)
     random_nrs = np.random.uniform(0.0, 1.0, size=(nr_iterations,))
@@ -38,11 +42,12 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1), nr_i
         effect = 2 + compute_effect(pp, gate, topology, leg_chache=leg_cache)
         accept_step = effect < 0 or random_nrs[it] < np.exp(-np.log(2) * effect / t)
         if accept_step:
-            clifford_region.add_gate(gate) # TODO optimize clifford regions
+            clifford_region.append_gate(gate)
             pp.propagate(gate)
 
+    clifford_circ = clifford_region.to_cifford_circuit_arch_aware(topology)
     qc = QuantumCircuit(pp.num_qubits)
-    qc.compose(clifford_region.to_qiskit(), inplace=True)  # TODO route on architecture
+    qc.compose(clifford_circ, inplace=True)
     qc.compose(pp.to_qiskit(topology), inplace=True)
-    qc.compose(clifford_region.to_qiskit().inverse(), inplace=True)
+    qc.compose(clifford_circ.inverse(), inplace=True)
     return qc
