@@ -1,5 +1,6 @@
 import networkx as nx
 from pyzx import Mat2
+from qiskit.circuit import Gate
 from stim import Tableau
 import pyzx as zx
 
@@ -11,6 +12,7 @@ from pauliopt.pauli.pauli_polynomial import *
 from pytket.extensions.pyzx import tk_to_pyzx, pyzx_to_tk
 from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
 import numpy as np
+import scipy as sc
 import qiskit.quantum_info as qi
 
 from pauliopt.pauli.utils import Pauli, _pauli_to_string
@@ -279,6 +281,73 @@ def plot():
     plt.show()
 
 
+def are_non_zeros_clifford(matrix: np.array):
+    matrix_ = np.round(matrix, decimals=np.finfo(matrix.dtype).precision - 1)
+    for non_zero in matrix_[matrix_.nonzero()]:
+        if non_zero not in [1.0, -1.0, 1.j, -1.j]:
+            return False
+    return True
+
+
+def generate_pauli(j: int, n: int, p_type="x"):
+    assert p_type == "x" or p_type == "z"
+    pauli_x = np.asarray([[0.0, 1.0], [1.0, 0.0]])
+    pauli_z = np.asarray([[1.0, 0.0], [0.0, -1.0]])
+    if j == 0:
+        pauli = pauli_x if p_type == "x" else pauli_z
+    else:
+        pauli = np.identity(2)
+
+    for i in range(1, n):
+        if i == j:
+            pauli = np.kron(pauli, pauli_x if p_type == "x" else pauli_z)
+        else:
+            pauli = np.kron(pauli, np.identity(2))
+    return pauli
+
+
+def is_clifford(gate: Gate):
+    gate_unitary = gate.to_matrix()
+    for j in range(gate.num_qubits):
+        pauli_x_j = generate_pauli(j, gate.num_qubits, p_type="x")
+        pauli_z_j = generate_pauli(j, gate.num_qubits, p_type="z")
+        if not are_non_zeros_clifford(gate_unitary @ pauli_x_j @ gate_unitary.conj().T) or \
+                not are_non_zeros_clifford(
+                    gate_unitary @ pauli_z_j @ gate_unitary.conj().T):
+            return False
+
+    return True
+
+
+def count_single_qubit_cliffords(qc: QuantumCircuit):
+    count = 0
+    for instr, _, _ in qc.data:
+        assert isinstance(instr, Gate)
+        if is_clifford(instr) and instr.num_qubits < 2:
+            count += 1
+    return count
+
+
+def count_single_qubit_non_cliffords(qc: QuantumCircuit):
+    count = 0
+    for instr, _, _ in qc.data:
+        assert isinstance(instr, Gate)
+        if not is_clifford(instr) and instr.num_qubits < 2:
+            count += 1
+    return count
+
+
+def analyse_ops(qc: QuantumCircuit):
+    two_qubit = two_qubit_count(qc.count_ops())
+    single_qubit = count_single_qubit_non_cliffords(qc)
+    clifford = count_single_qubit_cliffords(qc)
+    return {
+        "two_qubit": two_qubit,
+        "single_qubit": single_qubit,
+        "single_qubit_clifford": clifford
+    }
+
+
 def main(n_qubits=5):
     topo = Topology.line(n_qubits)
     pp = generate_random_pauli_polynomial(n_qubits, 200)
@@ -286,10 +355,26 @@ def main(n_qubits=5):
     qc_base = pp.to_qiskit(topo)
 
     qc_opt = anneal(pp, topo, nr_iterations=1500)
-    print("Base: ", qc_base.count_ops())
-    print("Opt : ", qc_opt.count_ops())
+    print("Base: ", analyse_ops(qc_base))
+    print("Opt : ", analyse_ops(qc_opt))
     print(verify_equality(qc_base, qc_opt))
 
 
+def n_times_kron(p_list):
+    a = p_list[0]
+    for pauli in p_list[1:]:
+        a = np.kron(a, pauli)
+    return a
+
+
+def main_():
+    pp = generate_random_pauli_polynomial(8, 200)
+    assert isinstance(pp, PauliPolynomial)
+
+    pp_ = simplify_pauli_polynomial(pp)
+
+    print(verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
+
+
 if __name__ == '__main__':
-    main()
+    main_()

@@ -95,6 +95,16 @@ class PauliGadget:
             leg_chache[col_id] = cnot_amount
         return cnot_amount
 
+    def commutes(self, other: "PauliGadget"):
+        if not len(self.paulis) != len(other.paulis):
+            raise Exception("Paulis must be of equal length to commute.")
+
+        unequal_count = 0
+        for p_1, p_2 in zip(self.paulis, other.paulis):
+            if p_1 != p_2:
+                unequal_count += 1
+        return unequal_count % 2 == 0
+
     def to_qiskit(self, topology=None):
         num_qubits = len(self.paulis)
         if topology is None:

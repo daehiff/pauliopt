@@ -2,7 +2,7 @@ from .clifford_gates import CliffordGate
 from .pauli_gadget import PauliGadget
 
 from qiskit import QuantumCircuit
-
+import numpy as np
 from pauliopt.topologies import Topology
 
 
@@ -66,3 +66,55 @@ class PauliPolynomial:
         for gadget in self.pauli_gadgets:
             count += gadget.two_qubit_count(topology, leg_chache=leg_chache)
         return count
+
+
+def remove_collapsed_pauli_gadegts(remaining_poly):
+    return list(filter(lambda x: x.angle != 2 * np.pi or x.angle != 0, remaining_poly))
+
+
+def find_machting_parity_right(idx, remaining_poly):
+    gadget = remaining_poly[idx]
+    for idx_right, gadget_right in enumerate(remaining_poly[idx + 1:]):
+        if np.all([p_1 == p_2 for p_1, p_2 in zip(gadget.paulis, gadget_right.paulis)]):
+            return idx + idx_right
+    return None
+
+
+def is_commuting_region(idx, idx_right, remaining_poly):
+    for k in range(idx, idx_right):
+        if not remaining_poly[idx].commutes(remaining_poly[k]):
+            return False
+    return True
+
+
+def propagate_phase_gadegts(remaining_poly):
+    converged = True
+    for idx, gadget in enumerate(remaining_poly):
+        idx_right = find_machting_parity_right(idx, remaining_poly)
+        if idx_right is None:
+            continue
+        if not is_commuting_region(idx, idx_right, remaining_poly):
+            continue
+        del remaining_poly[idx]
+        converged = False
+    return converged
+
+
+def clamp(phase):
+    new_phase = phase % 2
+    if new_phase > 1:
+        return new_phase - 2
+    return phase
+
+
+def simplify_pauli_polynomial(pp: PauliPolynomial):
+    remaining_poly = [gadet for gadet in pp.pauli_gadgets]
+    converged = False
+    while not converged:
+        remaining_poly = remove_collapsed_pauli_gadegts(remaining_poly)
+        converged = propagate_phase_gadegts(remaining_poly)
+
+    pp_ = PauliPolynomial()
+    for gadget in remaining_poly:
+        pp_ >>= gadget
+    return pp_

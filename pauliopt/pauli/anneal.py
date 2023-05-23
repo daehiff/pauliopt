@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit
 
-from .clifford_gates import CX, CY, CZ, CliffordGate
+from .clifford_gates import CX, CY, CZ, CliffordGate, ControlGate
 from .clifford_region import CliffordRegion
 from .clifford_tableau import CliffordTableau
 from .pauli_polynomial import PauliPolynomial
@@ -39,8 +39,12 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
     for it in range(nr_iterations):
         t = schedule(it, nr_iterations)
         gate = pick_random_gate(num_qubits, topology.to_nx)
-        effect = 2 + compute_effect(pp, gate, topology, leg_chache=leg_cache)
-        accept_step = effect < 0 or random_nrs[it] < np.exp(-np.log(2) * effect / t)
+        assert isinstance(gate, ControlGate)
+        dist = topology.dist(int(gate.control), int(gate.target))
+
+        effect = compute_effect(pp, gate, topology, leg_chache=leg_cache)
+        accept_step = 2 * dist + effect < 0 \
+                      or random_nrs[it] < np.exp(-np.log(2) * effect / t)
         if accept_step:
             clifford_region.append_gate(gate)
             pp.propagate(gate)
