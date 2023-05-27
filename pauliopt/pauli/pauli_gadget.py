@@ -94,12 +94,13 @@ class PauliGadget:
         return cnot_amount
 
     def commutes(self, other: "PauliGadget"):
-        if not len(self.paulis) != len(other.paulis):
-            raise Exception("Paulis must be of equal length to commute.")
+        if len(self.paulis) != len(other.paulis):
+            raise Exception(
+                f"Paulis must be of equal length to commute. But are {len(self.paulis)}, {len(other.paulis)}")
 
         unequal_count = 0
         for p_1, p_2 in zip(self.paulis, other.paulis):
-            if p_1 != p_2:
+            if p_1 != p_2 and p_1 != Pauli.I and p_2 != Pauli.I:
                 unequal_count += 1
         return unequal_count % 2 == 0
 

@@ -1,29 +1,23 @@
-import networkx as nx
-from pyzx import Mat2
 from qiskit.circuit import Gate
-from stim import Tableau
 import pyzx as zx
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pyzx as zx
+import seaborn as sns
+import stim
+from pytket.extensions.pyzx import pyzx_to_tk
+from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit
+from qiskit import QuantumCircuit
+from qiskit.circuit import Gate
+from qiskit.quantum_info import Clifford
+
 from pauliopt.pauli.anneal import anneal
-from pauliopt.pauli.clifford_gates import H, S, V, CX, CY, CZ
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pytket.extensions.pyzx import tk_to_pyzx, pyzx_to_tk
-from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
-import numpy as np
-import scipy as sc
-import qiskit.quantum_info as qi
-
-from pauliopt.pauli.utils import Pauli, _pauli_to_string
-import stim
-from qiskit.providers.fake_provider import FakeHanoi, FakeLima, FakeTokyo, FakeLima, \
-    FakeLagos
-import pandas as pd
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-from qiskit.quantum_info import Clifford
+from pauliopt.pauli.utils import X, Y, Z, I, Pauli
 
 
 def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
@@ -55,9 +49,9 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * np.pi, np.pi, 0.5 * np.pi, 0.25 * np.pi, 0.125 * np.pi]
+        allowed_angels = [np.pi, 0.5 * np.pi, 0.25 * np.pi, 0.125 * np.pi]
 
-    pp = PauliPolynomial()
+    pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
         pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels)
 
@@ -368,12 +362,24 @@ def n_times_kron(p_list):
 
 
 def main_():
-    pp = generate_random_pauli_polynomial(8, 200)
+    pp = PauliPolynomial(num_qubits=4)
+    pp >>= PPhase(0.245) @ [I, X, Y, Z]
+    pp >>= PPhase(0.245) @ [Z, X, X, X]
+    pp >>= PPhase(0.245) @ [X, X, I, Z]
+    pp >>= PPhase(0.245) @ [I, X, X, X]
+    pp >>= PPhase(0.245) @ [Z, X, X, X]
+    pp >>= PPhase(0.245) @ [I, X, I, I]
+    pp >>= PPhase(0.245) @ [I, X, X, X]
+    #pp = generate_random_pauli_polynomial(4, 80)
     assert isinstance(pp, PauliPolynomial)
 
     pp_ = simplify_pauli_polynomial(pp)
-
-    print(verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
+    print(len(pp.pauli_gadgets))
+    print(len(pp_.pauli_gadgets))
+    print(pp)
+    print("==")
+    print(pp_)
+    assert (verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
 
 
 if __name__ == '__main__':
