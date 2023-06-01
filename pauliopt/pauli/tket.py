@@ -7,20 +7,38 @@ from pauliopt.topologies import Topology
 
 def synth_tket(pp: PauliPolynomial, topo: Topology = None,
                method="PauliSimp",
-               kwargs=None):
+               return_circuit=True,
+               **kwargs):
     """
     Synthesize a PauliPolynomial using tket. This function requires tket to be installed.
     :param pp: PauliPolynomial to synthesize
     :param topo: Topology to synthesize on
     :param method: Method to use for synthesis:
         - PauliSimp: Simplify the PauliPolynomial using the PauliSimp pass and route the
-                        resulting circuit afterwards
-        - GuidedPauliSimp: Simplify the PauliPolynomial using the GuidedPauliSimp pass and
-                            route the resulting circuit afterwards
-        - PauliSquash: Simplify the PauliPolynomial using the PauliSquash pass and route
-                        the resulting circuit afterwards
+                     resulting circuit afterwards
         - list of passes: Apply the passes in the list in order constructing your own
-                            synthesis strategy with tket
+                          synthesis strategy with tket
+    :param return_circuit: Wether to return a Qiskit circuit (sanatized, by swapping the
+                           permutated qubits due to the routing process of tket) or the
+                           compilation unit with circuit and placement
+
+    :return: A pytket.Circuit or the result of applying the passes in the list if
+    the circuit is not supposed to be swapped afterwards on the classical side
+
+    Example:
+    >>> from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+    >>> from pauliopt.pauli.utils import X, Y, Z, I
+    >>> from pauliopt.utils import pi
+    >>> from pauliopt.topologies import Topology
+    >>> from pauliopt.pauli.tket import synth_tket
+    >>> from pauliopt.pauli.pauli_gadget import PPhase
+    >>> pp = PauliPolynomial(5)
+    >>> pp >>= PPhase(pi/4) @ [X, Y, Z, I, X]
+    >>> pp >>= PPhase(pi/2) @ [X, Y, Z, I, X]
+    >>> pp >>= PPhase(pi/8) @ [X, X, Z, Z, X]
+    >>> topo = Topology.line(5)
+    >>> circuit = synth_tket(pp, topo, method="PauliSimp")
+    >>> unit = synth_tket(pp, topo, return_circuit=False)
     """
     try:
         import pytket
@@ -32,6 +50,9 @@ def synth_tket(pp: PauliPolynomial, topo: Topology = None,
             PauliSquash, GuidedPauliSimp, DecomposeBoxes
         from pytket._tket.predicates import CompilationUnit, ConnectivityPredicate
         from pytket.transform import PauliSynthStrat
+        from pytket._tket.architecture import Architecture
+        from pytket._tket.passes import PlacementPass
+        from pytket._tket.placement import GraphPlacement
 
     except:
         raise Exception("In order for this function to work, please install:"
@@ -51,8 +72,7 @@ def synth_tket(pp: PauliPolynomial, topo: Topology = None,
                         gadget.angle.to_qiskit / np.pi),
             list(range(pp.num_qubits)))
 
-    coupling_graph = [e for e in topo.to_nx.edges()]
-    tket_arch = pytket.routing.Architecture(coupling_graph)
+    tket_arch = Architecture([e for e in topo.to_nx.edges()])
 
     unit = CompilationUnit(circuit, [ConnectivityPredicate(tket_arch)])
 
@@ -60,22 +80,8 @@ def synth_tket(pp: PauliPolynomial, topo: Topology = None,
         # get the strat from kwargs
         strat = kwargs.get("strat", PauliSynthStrat.Pairwise)
         passes = SequencePass([
-            DecomposeBoxes(),
             PauliSimp(strat=strat),
-            RoutingPass(tket_arch),
-        ])
-    elif method == "PauliSquash":
-        strat = kwargs.get("strat", PauliSynthStrat.Pairwise)
-        passes = SequencePass([
-            DecomposeBoxes(),
-            PauliSquash(strat=strat),
-            RoutingPass(tket_arch),
-        ])
-    elif method == "GuidedPauliSimp":
-        strat = kwargs.get("strat", PauliSynthStrat.Pairwise)
-        passes = SequencePass([
-            DecomposeBoxes(),
-            GuidedPauliSimp(strat=strat),
+            PlacementPass(GraphPlacement(tket_arch)),
             RoutingPass(tket_arch),
         ])
     elif isinstance(method, list):
@@ -84,4 +90,16 @@ def synth_tket(pp: PauliPolynomial, topo: Topology = None,
         raise Exception(f"Unsupported Method: {method}")
 
     passes.apply(unit)
-    tk_to_qiskit(unit.circui)
+    circ_out = unit.circuit
+    if return_circuit:
+        inv_map = {v: k for k, v in unit.final_map.items()}
+        circ_out_ = pytket.Circuit(circ_out.n_qubits)
+        for cmd in circ_out:
+            if isinstance(cmd, pytket.circuit.Command):
+                remaped_qubits = list(map(lambda node: inv_map[node], cmd.qubits))
+                circ_out_.add_gate(cmd.op, remaped_qubits)
+        circ_out = circ_out_
+
+        return tk_to_qiskit(circ_out)
+    else:
+        return unit
