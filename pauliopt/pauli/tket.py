@@ -4,7 +4,6 @@ from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import X, Y, Z, I
 from pauliopt.topologies import Topology
 
-
 def synth_tket(pp: PauliPolynomial, topo: Topology = None,
                method="PauliSimp",
                return_circuit=True,
