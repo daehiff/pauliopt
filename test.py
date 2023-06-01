@@ -20,6 +20,7 @@ from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.utils import X, Y, Z, I, Pauli
+from pauliopt.utils import pi
 
 
 def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
@@ -51,7 +52,7 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [np.pi, 0.5 * np.pi, 0.25 * np.pi, 0.125 * np.pi]
+        allowed_angels = [2*pi, pi, pi/2, pi/4, pi/8, pi/16, pi/32, pi/64, pi/128, pi/256]
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -372,15 +373,13 @@ def main_():
     # pp >>= PPhase(0.245) @ [Z, X, X, X]
     # pp >>= PPhase(0.245) @ [I, X, I, I]
     # pp >>= PPhase(0.245) @ [I, X, X, X]
-    pp = generate_random_pauli_polynomial(4, 80)
+    pp = generate_random_pauli_polynomial(8, 200)
     assert isinstance(pp, PauliPolynomial)
 
     pp_ = simplify_pauli_polynomial(pp)
-    print(len(pp.pauli_gadgets))
-    print(len(pp_.pauli_gadgets))
-    print(pp)
-    print("==")
-    print(pp_)
+    print("===========")
+    print(len(pp.pauli_gadgets), len(pp_.pauli_gadgets))
+    print("===========")
     assert (verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
 
 
@@ -426,6 +425,7 @@ def define_clifford_rules():
             m2 = I
 
         return n_times_kron([m1, m2])
+
     print(CX @ S0)
     for p1 in ["X", "Y", "Z", "I"]:
         for p2 in ["X", "Y", "Z", "I"]:
@@ -442,4 +442,5 @@ def define_clifford_rules():
 
 
 if __name__ == '__main__':
-    main_()
+    for _ in range(100):
+        main_()
