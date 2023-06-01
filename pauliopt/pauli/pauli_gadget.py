@@ -96,13 +96,14 @@ class PauliGadget:
     def commutes(self, other: "PauliGadget"):
         if len(self.paulis) != len(other.paulis):
             raise Exception(
-                f"Paulis must be of equal length to commute. But are {len(self.paulis)}, {len(other.paulis)}")
+                f"Paulis must be of equal length to commute. But are {len(self.paulis)}, "
+                f"{len(other.paulis)}")
 
-        unequal_count = 0
+        mismatchcount = 0
         for p_1, p_2 in zip(self.paulis, other.paulis):
             if p_1 != p_2 and p_1 != Pauli.I and p_2 != Pauli.I:
-                unequal_count += 1
-        return unequal_count % 2 == 0
+                mismatchcount += 1
+        return mismatchcount % 2 == 0
 
     def to_qiskit(self, topology=None):
         num_qubits = len(self.paulis)

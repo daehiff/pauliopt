@@ -1,3 +1,5 @@
+import itertools
+
 from qiskit.circuit import Gate
 import pyzx as zx
 
@@ -362,15 +364,15 @@ def n_times_kron(p_list):
 
 
 def main_():
-    pp = PauliPolynomial(num_qubits=4)
-    pp >>= PPhase(0.245) @ [I, X, Y, Z]
-    pp >>= PPhase(0.245) @ [Z, X, X, X]
-    pp >>= PPhase(0.245) @ [X, X, I, Z]
-    pp >>= PPhase(0.245) @ [I, X, X, X]
-    pp >>= PPhase(0.245) @ [Z, X, X, X]
-    pp >>= PPhase(0.245) @ [I, X, I, I]
-    pp >>= PPhase(0.245) @ [I, X, X, X]
-    #pp = generate_random_pauli_polynomial(4, 80)
+    # pp = PauliPolynomial(num_qubits=4)
+    # pp >>= PPhase(0.245) @ [I, X, Y, Z]
+    # pp >>= PPhase(0.245) @ [Z, X, X, X]
+    # pp >>= PPhase(0.245) @ [X, X, I, Z]
+    # pp >>= PPhase(0.245) @ [I, X, X, X]
+    # pp >>= PPhase(0.245) @ [Z, X, X, X]
+    # pp >>= PPhase(0.245) @ [I, X, I, I]
+    # pp >>= PPhase(0.245) @ [I, X, X, X]
+    pp = generate_random_pauli_polynomial(4, 80)
     assert isinstance(pp, PauliPolynomial)
 
     pp_ = simplify_pauli_polynomial(pp)
@@ -380,6 +382,63 @@ def main_():
     print("==")
     print(pp_)
     assert (verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
+
+
+def define_clifford_rules():
+    # defaine Pauli X, Y, Z, I as numpy arrays
+
+    X = np.asarray([[0.0, 1.0], [1.0, 0.0]])
+    Y = np.asarray([[0.0, -1.j], [1.j, 0.0]])
+    Z = np.asarray([[1.0, 0.0], [0.0, -1.0]])
+    I = np.asarray([[1.0, 0.0], [0.0, 1.0]])
+
+    # define the stabilizer states of identity tableau
+    S0 = n_times_kron([X, I])
+    S1 = n_times_kron([I, X])
+    S2 = n_times_kron([Z, I])
+    S3 = n_times_kron([I, Z])
+
+    # define the cnot clifford as unitary matrix
+    CX = np.asarray([[1.0, 0.0, 0.0, 0.0],
+                     [0.0, 1.0, 0.0, 0.0],
+                     [0.0, 0.0, 0.0, 1.0],
+                     [0.0, 0.0, 1.0, 0.0]])
+
+    def pauli_strings_to_mat(p, p1):
+        m1 = None
+        m2 = None
+        if p == "X":
+            m1 = X
+        elif p == "Y":
+            m1 = Y
+        elif p == "Z":
+            m1 = Z
+        elif p == "I":
+            m1 = I
+
+        if p1 == "X":
+            m2 = X
+        elif p1 == "Y":
+            m2 = Y
+        elif p1 == "Z":
+            m2 = Z
+        elif p1 == "I":
+            m2 = I
+
+        return n_times_kron([m1, m2])
+    print(CX @ S0)
+    for p1 in ["X", "Y", "Z", "I"]:
+        for p2 in ["X", "Y", "Z", "I"]:
+            for sign in [1, -1, 1.j, -1.j]:
+                state = pauli_strings_to_mat(p1, p2) * sign
+                if np.allclose(CX @ S0, state):
+                    print("CX@S0 = ", sign, p1, p2)
+                if np.allclose(CX @ S1, state):
+                    print("CX@S1 = ", sign, p1, p2)
+                if np.allclose(CX @ S2, state):
+                    print("CX@S2 = ", sign, p1, p2)
+                if np.allclose(CX @ S3, state):
+                    print("CX@S3 = ", sign, p1, p2)
 
 
 if __name__ == '__main__':
