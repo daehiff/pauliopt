@@ -76,13 +76,36 @@ fill=white
 
 
 class PauliPolynomial:
+    """
+    Class to create a PauliPolynomial with a given number of qubits:
+    Please note, that the angle for each Pauli gadget can either be a float or an AngleExpr.
+
+    Example:
+        ```python
+            >>> from pauliopt.pauli.pauli_gadget import PPhase
+            >>> from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+            >>> from pauliopt.pauli.utils import *
+            >>> from pauliopt.utils import Angle, pi
+
+            >>> pp = PauliPolynomial(5)
+            >>> pp >>= PPhase(Angle(pi)) @ [I, I, X, Z, Y]
+            >>> pp >>= PPhase(Angle(pi)) @ [I, I, X, Z, Y]
+            >>> pp >>= PPhase(Angle(pi/2)) @ [I, I, X, Z, Y]
+            >>> print(pp)
+            # pi @ {I I X Z Y}
+            # pi @ {I I X Z Y}
+            # pi/2 @ {I I X Z Y}
+        ```
+    """
+
     def __init__(self, num_qubits):
         self.num_qubits = num_qubits
         self.pauli_gadgets = []
 
     def __irshift__(self, gadget: PauliGadget):
         if not len(gadget) == self.num_qubits:
-            raise Exception(f"Pauli Polynomial has {self.num_qubits}, but Pauli gadget has: {len(gadget)}")
+            raise Exception(
+                f"Pauli Polynomial has {self.num_qubits}, but Pauli gadget has: {len(gadget)}")
         self.pauli_gadgets.append(gadget)
         return self
 
@@ -102,6 +125,10 @@ class PauliPolynomial:
         return len(self.pauli_gadgets)
 
     def to_qiskit(self, topology=None):
+        """
+        Export the Pauli Polynomial to a qiskit QuantumCircuit
+        :param topology: Topology to use for the export (default: complete)
+        """
         num_qubits = self.num_qubits
         if topology is None:
             topology = Topology.complete(num_qubits)
@@ -117,18 +144,28 @@ class PauliPolynomial:
         return qc
 
     def propagate(self, gate: CliffordGate):
+        """
+        Propagate a Clifford Gate through the Pauli Polynomial
+        :param gate: Clifford Gate to propagate
+        """
         pp_ = PauliPolynomial(self.num_qubits)
         for gadget in self.pauli_gadgets:
             pp_ >>= gate.propagate_pauli(gadget)
         return pp_
 
     def copy(self):
+        """
+        Deep copy the Pauli Polynomial
+        """
         pp_ = PauliPolynomial(self.num_qubits)
         for gadget in self.pauli_gadgets:
             pp_ >>= gadget.copy()
         return pp_
 
     def two_qubit_count(self, topology, leg_cache=None):
+        """
+        Count the number of two qubit gates in the Pauli Polynomial
+        """
         if leg_cache is None:
             leg_cache = {}
         count = 0
@@ -138,6 +175,13 @@ class PauliPolynomial:
 
     def to_svg(self, hscale: float = 1.0, vscale: float = 1.0, scale: float = 1.0,
                svg_code_only=False):
+        """
+        Export the Pauli Polynomial to an SVG image
+
+        :param hscale: Horizontal scale of the image
+        :param vscale: Vertical scale of the image
+        :param scale: Overall scale of the image
+        """
         vscale *= scale
         hscale *= scale
 
@@ -236,6 +280,11 @@ class PauliPolynomial:
         return self.to_svg(svg_code_only=True)
 
     def to_latex(self, file_name=None):
+        """
+        Export the Pauli Polynomial to a LaTeX image
+
+        :param file_name: Name of the file to save the LaTeX code to (optional)
+        """
         out_str = LATEX_HEADER
         out_str += "\\begin{document}\n"
         out_str += "\\begin{ZX}\n"
@@ -278,4 +327,6 @@ class PauliPolynomial:
         if file_name is not None:
             with open(f"{file_name}.tex", "w") as f:
                 f.write(out_str)
-        return out_str
+            return None
+        else:
+            return out_str

@@ -1,6 +1,7 @@
 import numpy as np
 
-from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, generate_random_clifford
+from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, \
+    generate_random_clifford
 from pauliopt.pauli.clifford_region import CliffordRegion
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.phase.optimized_circuits import _validate_temp_schedule
@@ -8,6 +9,11 @@ from pauliopt.topologies import Topology
 
 
 def pick_random_gate(num_qubits, gate_set=None):
+    """
+    Helper method to pick a random gate from the gate set.
+    :param num_qubits: Number of qubits
+    :param gate_set: List of gates to pick from
+    """
     if gate_set is None:
         gate_set = [CliffordType.CX, CliffordType.CY, CliffordType.CZ]
 
@@ -18,6 +24,13 @@ def pick_random_gate(num_qubits, gate_set=None):
 
 def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology,
                    leg_cache=None):
+    """
+    Helper method to compute the effect of a gate on a Pauli polynomial given a topology.
+    :param pp: Pauli polynomial
+    :param gate: Clifford gate
+    :param topology: Topology
+    :param leg_cache: Cache for the legs
+    """
     pp_ = pp.copy()
     pp_.propagate(gate)
 
@@ -27,6 +40,14 @@ def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology,
 
 def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
            nr_iterations=100):
+    """
+    Synthesize the Pauli polynomial to a circuit using simulated annealing.
+    :param pp: Pauli polynomial
+    :param topology: Topology
+    :param schedule: Schedule for the temperature
+            (possible types of scheudles: "geometric", "linear", "exponential")
+    :param nr_iterations: Number of iterations
+    """
     leg_cache = {}
     clifford_region = CliffordRegion(pp.num_qubits)
 
