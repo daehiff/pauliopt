@@ -1,38 +1,25 @@
-import itertools
-
-from qiskit.circuit import Gate
-import pyzx as zx
+import networkx as nx
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import pyzx as zx
-import seaborn as sns
+import networkx as nx
 import stim
-from pytket.extensions.pyzx import pyzx_to_tk
-from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import Gate
-from qiskit.quantum_info import Clifford
+from qiskit.providers.fake_provider import FakeVigo, FakeMumbai
 
 from pauliopt.pauli.anneal import anneal
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pauliopt.pauli.utils import X, Y, Z, I, Pauli
+from pauliopt.pauli.utils import Pauli
 from pauliopt.utils import pi
 
 
-def pyzx_to_qiskit(circ: zx.Circuit) -> QuantumCircuit:
-    return tk_to_qiskit(pyzx_to_tk(circ))
-
-
-def two_qubit_count(count_ops):
-    count = 0
-    count += count_ops["cx"] if "cx" in count_ops.keys() else 0
-    count += count_ops["cy"] if "cy" in count_ops.keys() else 0
-    count += count_ops["cz"] if "cz" in count_ops.keys() else 0
-    return count
+def reconstruct_tableau(tableau: stim.Tableau):
+    xsx, xsz, zsx, zsz, x_signs, z_signs = tableau.to_numpy()
+    x_row = np.concatenate([xsx, xsz], axis=1)
+    z_row = np.concatenate([zsx, zsz], axis=1)
+    return np.concatenate([x_row, z_row], axis=0).astype(np.int64)
 
 
 def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
@@ -52,7 +39,8 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2*pi, pi, pi/2, pi/4, pi/8, pi/16, pi/32, pi/64, pi/128, pi/256]
+        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64,
+                          pi / 128, pi / 256]
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -91,70 +79,6 @@ def verify_equality(qc_in, qc_out):
         .equiv(Statevector.from_instruction(qc_out))
 
 
-def reconstruct_tableau(tableau: stim.Tableau):
-    xsx, xsz, zsx, zsz, x_signs, z_signs = tableau.to_numpy()
-    x_row = np.concatenate([xsx, xsz], axis=1)
-    z_row = np.concatenate([zsx, zsz], axis=1)
-    return np.concatenate([x_row, z_row], axis=0).astype(np.int64)
-
-
-def reconstruct_tableau_signs(tableau: stim.Tableau):
-    xsx, xsz, zsx, zsz, x_signs, z_signs = tableau.to_numpy()
-    signs = np.concatenate([x_signs, z_signs]).astype(np.int64)
-    return signs
-
-
-def circuit_to_tableau(circ: QuantumCircuit):
-    tableau = stim.Tableau(circ.num_qubits)
-    cnot = stim.Tableau.from_named_gate("CX")
-    had = stim.Tableau.from_named_gate("H")
-    s = stim.Tableau.from_named_gate("S")
-    for op in circ:
-        if op.operation.name == "h":
-            tableau.append(had, [op.qubits[0].index])
-        elif op.operation.name == "s":
-            tableau.append(s, [op.qubits[0].index])
-        elif op.operation.name == "cx":
-            tableau.append(cnot, [op.qubits[0].index, op.qubits[1].index])
-        else:
-            raise Exception("Unknown operation")
-    return tableau
-
-
-def random_clifford_circuit(nr_gates=20, nr_qubits=4, gate_choice=None):
-    qc = QuantumCircuit(nr_qubits)
-    if gate_choice is None:
-        gate_choice = ["CY", "CZ", "CX", "H", "S", "V"]
-    for _ in range(nr_gates):
-        gate_t = np.random.choice(gate_choice)
-        if gate_t == "CX":
-            control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice([i for i in range(nr_qubits) if i != control])
-            qc.cx(control, target)
-        elif gate_t == "CY":
-            control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice([i for i in range(nr_qubits) if i != control])
-            qc.cy(control, target)
-        elif gate_t == "CZ":
-            control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice([i for i in range(nr_qubits) if i != control])
-            qc.cz(control, target)
-        elif gate_t == "H":
-            qubit = np.random.choice([i for i in range(nr_qubits)])
-            qc.h(qubit)
-        elif gate_t == "S":
-            qubit = np.random.choice([i for i in range(nr_qubits)])
-            qc.s(qubit)
-        elif gate_t == "V":
-            qubit = np.random.choice([i for i in range(nr_qubits)])
-            qc.sx(qubit)
-        elif gate_t == "CX":
-            control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice([i for i in range(nr_qubits) if i != control])
-            qc.cx(control, target)
-    return qc
-
-
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     gate_choice = ["H", "S", "CX"]
     qc = QuantumCircuit(nr_qubits)
@@ -171,111 +95,6 @@ def random_hscx_circuit(nr_gates=20, nr_qubits=4):
             target = np.random.choice([i for i in range(nr_qubits) if i != control])
             qc.cx(control, target)
     return qc
-
-
-def parse_stim_to_qiskit(circ: stim.Circuit):
-    qc = QuantumCircuit(circ.num_qubits)
-    for gate in circ:
-        if gate.name == "CX":
-            targets = [target.value for target in gate.targets_copy()]
-            targets = [(targets[i], targets[i + 1]) for i in range(0, len(targets), 2)]
-            for (ctrl, target) in targets:
-                qc.cx(ctrl, target)
-        elif gate.name == "H":
-            targets = [target.value for target in gate.targets_copy()]
-            for qubit in targets:
-                qc.h(qubit)
-        elif gate.name == "S":
-            targets = [target.value for target in gate.targets_copy()]
-            for qubit in targets:
-                qc.s(qubit)
-        else:
-            raise TypeError(f"Unknown Name: {gate.name}")
-    return qc
-
-
-def get_ops_count(qc: QuantumCircuit):
-    count = {"single": 0, "two": 0}
-    ops = qc.count_ops()
-    if "cx" in ops.keys():
-        count["two"] += ops["cx"]
-    if "swap" in ops.keys():
-        count["two"] += 3 * ops["swap"]
-    if "h" in ops.keys():
-        count["single"] += ops["h"]
-    if "s" in ops.keys():
-        count["single"] += ops["s"]
-    if "x" in ops.keys():
-        count["single"] += ops["x"]
-    if "y" in ops.keys():
-        count["single"] += ops["y"]
-    if "z" in ops.keys():
-        count["single"] += ops["z"]
-    return count
-
-
-def experiment(num_qubits=7):
-    num_qubits = 7
-    df = pd.DataFrame(
-        columns=["n_rep", "num_qubits", "n_gadgets", "arch", "single", "two"])
-    for n_gadgets in range(10, 250, 10):
-        for _ in range(10):
-            circ = random_hscx_circuit(nr_qubits=num_qubits, nr_gates=n_gadgets)
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "original"} \
-                     | get_ops_count(circ)
-            df.loc[len(df)] = column
-            df.to_csv("test1.csv")
-            for name, topo in [("complete", Topology.complete(num_qubits)),
-                               ("line", Topology.line(num_qubits))]:
-                ct = CliffordTableau.from_circuit(circ)
-                circ_out = ct.to_cifford_circuit_arch_aware(topo)
-                column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                          "arch": name} \
-                         | get_ops_count(circ_out)
-                df.loc[len(df)] = column
-                df.to_csv("test1.csv")
-
-            ct = CliffordTableau.from_circuit(circ)
-            circ_out = ct.to_clifford_circuit()
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "complete_stim"} \
-                     | get_ops_count(circ_out)
-            df.loc[len(df)] = column
-            df.to_csv("test1.csv")
-
-            ct = Clifford(circ)
-            circ_out = ct.to_circuit()
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "complete_qiskit"} \
-                     | get_ops_count(circ_out)
-            df.loc[len(df)] = column
-            df.to_csv("test1.csv")
-
-    df.to_csv("test1.csv")
-    # print(circ_out)
-    # print(circ_stim)
-
-    assert (verify_equality(circ, circ_out))
-
-
-def plot():
-    df = pd.read_csv("test1.csv")
-    # df = df[df.arch != "original"]
-    df["single"] = df["single"] / 2.0
-
-    sns.lineplot(df, x="n_gadgets", y="single", hue="arch")
-    plt.title("Single Qubits")
-
-    # plt.savefig("single.png")
-    # plt.clf()
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="two", hue="arch")
-    plt.title("Two Qubits")
-    # plt.savefig("two.png")
-    # plt.clf()
-    plt.show()
 
 
 def are_non_zeros_clifford(matrix: np.array):
@@ -334,6 +153,15 @@ def count_single_qubit_non_cliffords(qc: QuantumCircuit):
     return count
 
 
+def two_qubit_count(count_ops):
+    two_qubit_ops = ["cy", "cx", "cz", "swap", "cz"]
+    count = 0
+    for op in count_ops:
+        if op in two_qubit_ops:
+            count += count_ops[op]
+    return count
+
+
 def analyse_ops(qc: QuantumCircuit):
     two_qubit = two_qubit_count(qc.count_ops())
     single_qubit = count_single_qubit_non_cliffords(qc)
@@ -364,83 +192,57 @@ def n_times_kron(p_list):
     return a
 
 
-def main_():
-    # pp = PauliPolynomial(num_qubits=4)
-    # pp >>= PPhase(0.245) @ [I, X, Y, Z]
-    # pp >>= PPhase(0.245) @ [Z, X, X, X]
-    # pp >>= PPhase(0.245) @ [X, X, I, Z]
-    # pp >>= PPhase(0.245) @ [I, X, X, X]
-    # pp >>= PPhase(0.245) @ [Z, X, X, X]
-    # pp >>= PPhase(0.245) @ [I, X, I, I]
-    # pp >>= PPhase(0.245) @ [I, X, X, X]
-    pp = generate_random_pauli_polynomial(8, 200)
-    assert isinstance(pp, PauliPolynomial)
+def random_hscx_circuit(nr_gates=20, nr_qubits=4):
+    gate_choice = ["H", "S", "CX"]
+    qc = QuantumCircuit(nr_qubits)
+    for _ in range(nr_gates):
+        gate_t = np.random.choice(gate_choice)
+        if gate_t == "H":
+            qubit = np.random.choice([i for i in range(nr_qubits)])
+            qc.h(qubit)
+        elif gate_t == "S":
+            qubit = np.random.choice([i for i in range(nr_qubits)])
+            qc.s(qubit)
+        elif gate_t == "CX":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cx(control, target)
+        elif gate_t == "CY":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cy(control, target)
+        elif gate_t == "CZ":
+            control = np.random.choice([i for i in range(nr_qubits)])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
+            qc.cz(control, target)
+    return qc
 
-    pp_ = simplify_pauli_polynomial(pp)
-    print("===========")
-    print(len(pp.pauli_gadgets), len(pp_.pauli_gadgets))
-    print("===========")
-    assert (verify_equality(pp_.to_qiskit(), pp.to_qiskit()))
 
+def main():
+    backend = FakeVigo()
+    n_qubits = backend.configuration().n_qubits
 
-def define_clifford_rules():
-    # defaine Pauli X, Y, Z, I as numpy arrays
+    # circ = random_hscx_circuit(nr_gates=200, nr_qubits=n_qubits)
+    # circ.qasm(filename="test.qasm")
+    circ = QuantumCircuit.from_qasm_file("test.qasm")
+    # circ_ = transpile(circ, backend=backend,
+    #                   basis_gates=["h", "s", "cx"],
+    #                   approximation_degree=1.0,
+    #                   initial_layout=[q for q in range(n_qubits)])
+    # print(verify_equality(circ, circ_))
+    topo = Topology.from_qiskit_backend(backend)
 
-    X = np.asarray([[0.0, 1.0], [1.0, 0.0]])
-    Y = np.asarray([[0.0, -1.j], [1.j, 0.0]])
-    Z = np.asarray([[1.0, 0.0], [0.0, -1.0]])
-    I = np.asarray([[1.0, 0.0], [0.0, 1.0]])
+    # nx.draw(topo.to_nx, with_labels=True)
+    # plt.show()
 
-    # define the stabilizer states of identity tableau
-    S0 = n_times_kron([X, I])
-    S1 = n_times_kron([I, X])
-    S2 = n_times_kron([Z, I])
-    S3 = n_times_kron([I, Z])
-
-    # define the cnot clifford as unitary matrix
-    CX = np.asarray([[1.0, 0.0, 0.0, 0.0],
-                     [0.0, 1.0, 0.0, 0.0],
-                     [0.0, 0.0, 0.0, 1.0],
-                     [0.0, 0.0, 1.0, 0.0]])
-
-    def pauli_strings_to_mat(p, p1):
-        m1 = None
-        m2 = None
-        if p == "X":
-            m1 = X
-        elif p == "Y":
-            m1 = Y
-        elif p == "Z":
-            m1 = Z
-        elif p == "I":
-            m1 = I
-
-        if p1 == "X":
-            m2 = X
-        elif p1 == "Y":
-            m2 = Y
-        elif p1 == "Z":
-            m2 = Z
-        elif p1 == "I":
-            m2 = I
-
-        return n_times_kron([m1, m2])
-
-    print(CX @ S0)
-    for p1 in ["X", "Y", "Z", "I"]:
-        for p2 in ["X", "Y", "Z", "I"]:
-            for sign in [1, -1, 1.j, -1.j]:
-                state = pauli_strings_to_mat(p1, p2) * sign
-                if np.allclose(CX @ S0, state):
-                    print("CX@S0 = ", sign, p1, p2)
-                if np.allclose(CX @ S1, state):
-                    print("CX@S1 = ", sign, p1, p2)
-                if np.allclose(CX @ S2, state):
-                    print("CX@S2 = ", sign, p1, p2)
-                if np.allclose(CX @ S3, state):
-                    print("CX@S3 = ", sign, p1, p2)
+    ct = CliffordTableau.from_circuit(circ)
+    circ_out = ct.to_cifford_circuit_arch_aware(topo)
+    # print(verify_equality(circ, circ_out))
+    # print("Original: ", circ.count_ops())
+    # print("Tableau:  ", circ_out.count_ops())
+    # print("Transpile: ", circ_.count_ops())
+    # assert verify_equality(circ, circ_out)
 
 
 if __name__ == '__main__':
-    for _ in range(100):
-        main_()
+    main()
