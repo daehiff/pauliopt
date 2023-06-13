@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List
+from typing import List, Set, Union
 
 import networkx as nx
 import numpy as np
@@ -10,6 +10,9 @@ from pauliopt.utils import AngleExpr
 
 
 def decompose_cnot_ladder_z(ctrl: int, trg: int, arch: Topology):
+    """
+    Helper function to route a CNOT between two qubits on a given architecture
+    """
     cnot_ladder = []
     shortest_path = arch.shortest_path(ctrl, trg)
 
@@ -23,6 +26,11 @@ def decompose_cnot_ladder_z(ctrl: int, trg: int, arch: Topology):
 
 
 def find_minimal_cx_assignment(column: np.array, arch: Topology):
+    """
+    Find a minimal CNOT assignment for a given column (which is a binary array) on a given architecture.
+    :param column: Binary array
+    :param arch: Architecture
+    """
     if not np.all(np.isin(column, [0, 1])):
         raise Exception(f"Expected binary array as column, got: {column}")
 
@@ -56,9 +64,21 @@ def find_minimal_cx_assignment(column: np.array, arch: Topology):
 
 
 class PPhase:
-    _angle: AngleExpr
+    """
+    Class to create a PauliGadget with a given angle:
 
-    def __init__(self, angle: AngleExpr):
+    Example:
+        >>> from pauliopt.pauli.utils import Pauli, X, Y, Z, I
+        >>> from pauliopt.pauli.pauli_gadget import PPhase
+        >>> from pauliopt.topologies import Topology
+        >>> from pauliopt.utils import AngleExpr
+        >>> from pauliopt.utils import pi
+        >>> angle = AngleExpr(pi/2)
+        >>> pauli_gadget = PPhase(angle) @ [X, Y, Z]
+    """
+    _angle: Union[AngleExpr, float]
+
+    def __init__(self, angle: Union[AngleExpr, float]):
         self._angle = angle
 
     def __matmul__(self, paulis: List[Pauli]):
@@ -66,7 +86,23 @@ class PPhase:
 
 
 class PauliGadget:
-    def __init__(self, angle: AngleExpr, paulis: List[Pauli]):
+    """
+    Class to create a PauliGadget with a given angle and paulis:
+    Please note, that the angle can either be a float or an AngleExpr.
+    Also note, that there exists a PPhase class to create a
+    PauliGadget with a given angle:
+
+    >>> from pauliopt.pauli.utils import Pauli, X, Y, Z, I
+    >>> from pauliopt.pauli.pauli_gadget import PPhase
+    >>> from pauliopt.topologies import Topology
+    >>> from pauliopt.utils import AngleExpr
+    >>> from pauliopt.utils import pi
+    >>> angle = AngleExpr(pi/2)
+    >>> pauli_gadget = PPhase(angle) @ [X, Y, Z]
+
+    """
+
+    def __init__(self, angle: Union[AngleExpr, float], paulis: List[Pauli]):
         self.angle = angle
         self.paulis = paulis
 
@@ -77,9 +113,19 @@ class PauliGadget:
         return f"({self.angle}) @ {{ {', '.join([pauli.value for pauli in self.paulis])} }}"
 
     def copy(self):
+        """
+        Returns a deep copy of the PauliGadget
+        """
         return PauliGadget(self.angle, self.paulis.copy())
 
     def two_qubit_count(self, topology, leg_cache=None):
+        """
+        Returns the amount of two qubit gates needed to implement the PauliGadget
+        on a given topology.
+
+        :param topology: Topology
+        :param leg_cache: Cache for the amount of two qubit gates needed for a given column
+        """
         if leg_cache is None:
             leg_cache = {}
 
@@ -94,6 +140,12 @@ class PauliGadget:
         return cnot_amount
 
     def to_qiskit(self, topology=None):
+        """
+        Returns a qiskit QuantumCircuit that implements the PauliGadget on a given topology.
+        If no topology is given, a complete topology is assumed.
+
+        :param topology: Topology (default: complete)
+        """
 
         if isinstance(self.angle, float):
             angle = self.angle

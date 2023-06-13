@@ -7,6 +7,9 @@ import numpy as np
 
 
 class CliffordType(Enum):
+    """
+    Enum that describes the type of Clifford gate.
+    """
     CX = "cx"
     CY = "cy"
     CZ = "cz"
@@ -16,15 +19,34 @@ class CliffordType(Enum):
 
 
 class CliffordGate(ABC):
+    """
+    Abstract class for Clifford gates.
+    Clifford gates within pauliopt stick to the convention of qiskit:
+    CX = CNOT
+    CY = Controlled Y
+    CZ = Controlled Z
+
+    H = Hadamard
+    S = S
+    V = V (sqrt(X), gate in qiskit)
+    """
+
     def __init__(self, c_type):
         self.c_type = c_type
 
     @abstractmethod
     def propagate_pauli(self, gadget: PauliGadget):
+        """
+        Propagate a clifford gate trough a pauli gadget.
+        (propagation follows a Strategy pattern)
+        """
         ...
 
 
 class SingleQubitGate(CliffordGate, ABC):
+    """
+    Abstract class for single qubit gates.
+    """
     rules = None
 
     def __init__(self, type, qubit):
@@ -32,6 +54,10 @@ class SingleQubitGate(CliffordGate, ABC):
         self.qubit = qubit
 
     def propagate_pauli(self, gadget: PauliGadget):
+        """
+        We can define a set of rules for the single qubit gate to propagate
+        trough a pauli gadget.
+        """
         if self.rules is None:
             raise Exception(f"{self} has no rules defined for propagation!")
         p_string = gadget.paulis[self.qubit].value
@@ -42,6 +68,9 @@ class SingleQubitGate(CliffordGate, ABC):
 
 
 class ControlGate(CliffordGate, ABC):
+    """
+    Two qubit gates are controlled gates.
+    """
     rules = None
 
     def __init__(self, type, control, target):
@@ -50,6 +79,10 @@ class ControlGate(CliffordGate, ABC):
         self.target = target
 
     def propagate_pauli(self, gadget: PauliGadget):
+        """
+        We can define a set of rules for the control gate to propagate
+        trough a pauli gadget.
+        """
         if self.rules is None:
             raise Exception(f"{self} has no rules defined for propagation!")
         pauli_size = len(gadget)
@@ -65,6 +98,9 @@ class ControlGate(CliffordGate, ABC):
 
 
 class CX(ControlGate):
+    """
+    CX gate is a controlled X gate.
+    """
     rules = {'XX': (X, I, 1),
              'XY': (Y, Z, 1),
              'XZ': (Y, Y, -1),
@@ -87,6 +123,9 @@ class CX(ControlGate):
 
 
 class CZ(ControlGate):
+    """
+    CZ gate is a controlled Z gate.
+    """
     rules = {'XX': (Y, Y, 1),
              'XY': (Y, X, -1),
              'XZ': (X, I, 1),
@@ -109,6 +148,9 @@ class CZ(ControlGate):
 
 
 class CY(ControlGate):
+    """
+    CY gate is a controlled Y gate.
+    """
     rules = {'XX': (Y, Z, -1),
              'XY': (X, I, 1),
              'XZ': (Y, X, 1),
@@ -131,6 +173,9 @@ class CY(ControlGate):
 
 
 class H(SingleQubitGate):
+    """
+    H gate is a Hadamard gate.
+    """
     rules = {'X': (Z, 1),
              'Y': (Y, -1),
              'Z': (X, 1),
@@ -141,6 +186,9 @@ class H(SingleQubitGate):
 
 
 class S(SingleQubitGate):
+    """
+    S gate is a phase gate.
+    """
     rules = {'X': (Y, -1),
              'Y': (X, 1),
              'Z': (Z, 1),
@@ -151,6 +199,9 @@ class S(SingleQubitGate):
 
 
 class V(SingleQubitGate):
+    """
+    V gate is a pi/4 rotation around the Y axis.
+    """
     rules = {'X': (X, 1),
              'Y': (Z, -1),
              'Z': (Y, 1),
@@ -165,14 +216,25 @@ class V(SingleQubitGate):
 
 
 def generate_random_clifford(c_type: CliffordType, n_qubits: int):
+    """
+    Generates a random Clifford gate of the given type, which may act on one of the n_qubits.
+    :param c_type: CliffordType
+    :param n_qubits: int (number of qubits, from which one will be chosen randomly)
+    """
     qubit = np.random.choice(list(range(n_qubits)))
     if c_type == CliffordType.CX:
+        if n_qubits == 1:
+            raise ValueError("Cannot generate CX gate on single qubit")
         control = np.random.choice([i for i in range(n_qubits) if i != qubit])
         return CX(control, qubit)
     elif c_type == CliffordType.CY:
+        if n_qubits == 1:
+            raise ValueError("Cannot generate CY gate on single qubit")
         control = np.random.choice([i for i in range(n_qubits) if i != qubit])
         return CY(control, qubit)
     elif c_type == CliffordType.CZ:
+        if n_qubits == 1:
+            raise ValueError("Cannot generate CZ gate on single qubit")
         control = np.random.choice([i for i in range(n_qubits) if i != qubit])
         return CZ(control, qubit)
     elif c_type == CliffordType.H:
@@ -186,6 +248,9 @@ def generate_random_clifford(c_type: CliffordType, n_qubits: int):
 
 
 def clifford_to_qiskit(clifford: CliffordGate):
+    """
+    Converts a Clifford gate to its equivalent on a qiskit QuantumCircuit.
+    """
     try:
         from qiskit import QuantumCircuit
     except:

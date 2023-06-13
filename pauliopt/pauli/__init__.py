@@ -4,3 +4,9 @@
 
     Currently in development.
 """
+
+__all__ = ["clifford_gates",
+           "clifford_region",
+           "pauli_gadget",
+           "pauli_polynomial",
+           "utils"]
