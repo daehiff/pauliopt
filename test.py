@@ -1,11 +1,9 @@
 import numpy as np
 import scipy.linalg
 
-from pauliopt.pauli.pauli_gadget import PPhase
-from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import Y, X, Z, I
-from pauliopt.utils import pi
-import qiskit.quantum_info as qi
+
+
 
 
 def pauli_to_matrix(pauli):
@@ -43,17 +41,12 @@ def get_resulting_pauli(p_mat, p1_mat):
     for pauli in [X, Y, Z, I]:
         for phase in [1, -1, 1.j, -1.j]:
             res_mat = pauli_to_matrix(pauli)
-            if np.allclose(p_mat @ p1_mat, phase*res_mat):
+            if np.allclose(p_mat @ p1_mat, phase * res_mat):
                 return (pauli.value, phase)
 
 
 def main():
-    rule_dict = {}
-    for pauli in [X, Y, Z, I]:
-        for pauli_1 in [X, Y, Z, I]:
-            rule_dict[(pauli.value, pauli_1.value)] = get_resulting_pauli(pauli_to_matrix(pauli),
-                                                              pauli_to_matrix(pauli_1))
-    print(rule_dict)
+    print((2*X) ** Y ** Z)
 
 
 if __name__ == '__main__':
