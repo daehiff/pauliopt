@@ -1,10 +1,13 @@
+import itertools
+from enum import Enum
+
 import networkx as nx
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import stim
-from qiskit import QuantumCircuit, transpile
-from qiskit.circuit import Gate
+from qiskit import QuantumCircuit, transpile, QuantumRegister
+from qiskit.circuit import Gate, CircuitInstruction
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai
 
 from pauliopt.pauli.anneal import anneal
@@ -218,25 +221,97 @@ def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     return qc
 
 
+class GateType(Enum):
+    H = 0
+    S = 1
+    CX = 2
+    Rx = 3
+
+
+class Gate:
+    def __init__(self, type, qubits):
+        self.type = type
+        self.qubits = qubits
+
+    @staticmethod
+    def from_op(op: CircuitInstruction):
+        if op.operation.name == "h":
+            return Gate(GateType.H, [op.qubits[0].index])
+        elif op.operation.name == "s":
+            return Gate(GateType.S, [op.qubits[0].index])
+        elif op.operation.name == "cx":
+            return Gate(GateType.CX, [op.qubits[0].index, op.qubits[1].index])
+        elif op.operation.name == "rz":
+            return Gate(GateType.Rx, [op.qubits[0].index])
+
+
+def build_model_circuit(n):
+    """Create quantum fourier transform circuit on quantum register qreg."""
+    qreg = QuantumRegister(n)
+    circuit = QuantumCircuit(qreg, name="qft")
+
+    for i in range(n):
+        for j in range(i):
+            # Using negative exponents so we safely underflow to 0 rather than
+            # raise `OverflowError`.
+            circuit.cp(math.pi * (2.0 ** (j - i)), qreg[i], qreg[j])
+        circuit.h(qreg[i])
+
+    return circuit
+
+
+def pauli_string_to_matrix(pauli_string):
+    if pauli_string == "I":
+        return np.eye(2)
+    elif pauli_string == "X":
+        return np.array([[0, 1], [1, 0]])
+    elif pauli_string == "Y":
+        return np.array([[0, -1j], [1j, 0]])
+    elif pauli_string == "Z":
+        return np.array([[1, 0], [0, -1]])
+    else:
+        raise Exception("Invalid pauli string")
+
+
+def get_resulting_pauli(res_matrix, pauli2):
+    for sign in [-1, 1, 1.j, -1.j]:
+        for pauli in ["X", "Y", "Z", "I"]:
+            if np.allclose(res_matrix, sign * pauli_string_to_matrix(pauli)):
+                return sign, pauli
+
+
 def main():
-    backend = FakeVigo()
-    n_qubits = backend.configuration().n_qubits
+    # backend = FakeMumbai()
 
-    # circ = random_hscx_circuit(nr_gates=200, nr_qubits=n_qubits)
-    # circ.qasm(filename="test.qasm")
-    circ = QuantumCircuit.from_qasm_file("test.qasm")
-    # circ_ = transpile(circ, backend=backend,
-    #                   basis_gates=["h", "s", "cx"],
-    #                   approximation_degree=1.0,
-    #                   initial_layout=[q for q in range(n_qubits)])
-    # print(verify_equality(circ, circ_))
-    topo = Topology.from_qiskit_backend(backend)
+    PAULI_DICT = {}
+    for combinations in itertools.product(["X", "Y", "Z", "I"], repeat=2):
+        res_matrix = pauli_string_to_matrix(combinations[0]) @ \
+                     pauli_string_to_matrix(combinations[1])
+        sign, pauli = get_resulting_pauli(res_matrix, combinations)
+        PAULI_DICT[combinations] = (sign, pauli)
 
-    # nx.draw(topo.to_nx, with_labels=True)
-    # plt.show()
+    print(PAULI_DICT)
 
-    ct = CliffordTableau.from_circuit(circ)
-    circ_out = ct.to_cifford_circuit_arch_aware(topo)
+    # circ = QuantumCircuit.from_qasm_file("test.qasm")
+    #
+    # topo = Topology.line(circ.num_qubits)
+    #
+    # # circ = QuantumCircuit.from_qasm_file("test.qasm")
+    #
+    # # nx.draw(topo.to_nx, with_labels=True)
+    # # plt.show()
+    #
+    # circ_out = transpile(circ,
+    #                      basis_gates=["h", "s", "cx"],
+    #                      approximation_degree=1.0,
+    #                      coupling_map=[[i, j] for (i, j) in topo.to_nx.edges()],
+    #                      optimization_level=0)
+    # print("Qiskit:", circ_out.count_ops())
+    #
+    # circ = transpile(circ, basis_gates=["h", "s", "cx"], optimization_level=0)
+    # ct = CliffordTableau.from_circuit(circ)
+    # circ_out = ct.to_cifford_circuit_arch_aware(topo)
+    # print("Clifford:", circ_out.count_ops())
     # print(verify_equality(circ, circ_out))
     # print("Original: ", circ.count_ops())
     # print("Tableau:  ", circ_out.count_ops())

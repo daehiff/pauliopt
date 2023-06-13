@@ -39,8 +39,12 @@ def find_edges_up(G: nx.Graph, root: int):
 
 
 def compute_steiner_tree_up_down(root: int, pivot_root: int, nodes: [int],
-                                 remaining_nodes: [int], topology: Topology):
-    nodes_ = list(set([root, pivot_root] + nodes))
+                                 remaining_nodes: [int], topology: Topology,
+                                 introduce_permutation: bool = False):
+    if introduce_permutation:
+        nodes_ = list(set([pivot_root] + nodes))
+    else:
+        nodes_ = list(set([root, pivot_root] + nodes))
     resulting_edges_down = compute_steiner_tree(pivot_root, nodes_, remaining_nodes,
                                                 topology)
 
@@ -48,8 +52,11 @@ def compute_steiner_tree_up_down(root: int, pivot_root: int, nodes: [int],
     G.add_edges_from(resulting_edges_down)
 
     if resulting_edges_down:
-        # TODO changed!!!! => previously: pivot
-        resulting_edges_up = find_edges_up(G, root)
+
+        if introduce_permutation:
+            resulting_edges_up = find_edges_up(G, pivot_root)
+        else:
+            resulting_edges_up = find_edges_up(G, root)
     else:
         resulting_edges_up = []
 
@@ -82,23 +89,15 @@ def compute_node_scores(topo: Topology, remaining: "CliffordTableau"):
 
 
 def compute_node_candidates(g: nx.Graph, remaining: "CliffordTableau", topo: Topology):
-    def x_out(inp, out):
-        return remaining.tableau[inp, out] + \
-               2 * remaining.tableau[inp, out + remaining.n_qubits]
-
-    def z_out(inp, out):
-        return remaining.tableau[inp + remaining.n_qubits, out] + \
-               2 * remaining.tableau[inp + remaining.n_qubits, out + remaining.n_qubits]
-
     nodes_scores = {}
     for pivot_col in g.nodes:
         score = 0
         for row in g.nodes:
-            px = x_out(pivot_col, row)
-            pz = z_out(pivot_col, row)
+            px = remaining.x_out(pivot_col, row)
+            pz = remaining.z_out(pivot_col, row)
             if px != 0 or pz != 0:
                 # We need to move over this node too
-                score += 2 * topo.dist(pivot_col, row)
+                score += nx.shortest_path_length(g, pivot_col, row)
         nodes_scores[pivot_col] = score
 
     return nodes_scores
@@ -434,16 +433,16 @@ class CliffordTableau:
             if x_out(row, column) == 2:
                 apply("H", (column,))
 
-        def steiner_reduce_column(root, pivot_root, remaining_nodes):
+        def steiner_reduce_column(root, pivot_root, remaining_nodes,
+                                  introduce_permutation):
             remaining
             column_x = [row for row in remaining_nodes if x_out(root, row) != 0]
             for col in column_x:
                 sanitize_field_x(root, col)
-            resulting_down_x, resulting_up_x = compute_steiner_tree_up_down(root,
-                                                                            pivot_root,
-                                                                            column_x,
-                                                                            remaining_nodes,
-                                                                            topo)
+            resulting_down_x, \
+            resulting_up_x = compute_steiner_tree_up_down(root, pivot_root, column_x,
+                                                          remaining_nodes,
+                                                          topo, introduce_permutation)
             for row, col in resulting_down_x:
                 assert (x_out(root, row) == 1 or x_out(root, row) == 0) and \
                        (x_out(root, col) == 1 or x_out(root, col) == 0)
@@ -461,7 +460,8 @@ class CliffordTableau:
                 # When the pivot is a zero in the column, pick a new one to cancel the Z Basis
                 # TODO check what performs better
 
-            # pivot_root = pick_pivot_row(pivot, remaining_nodes)
+            if not introduce_permutation:
+                pivot_root = pick_pivot_row(pivot, remaining_nodes)
 
             # sanatize all column elements, check that x is not 3
             column_z = [row for row in remaining_nodes if z_out(root, row) != 0]
@@ -470,11 +470,10 @@ class CliffordTableau:
             if x_out(root, root) != 1:
                 apply("S", (root,))
 
-            resulting_down_z, resulting_up_z = compute_steiner_tree_up_down(root,
-                                                                            pivot_root,
-                                                                            column_z,
-                                                                            remaining_nodes,
-                                                                            topo)
+            resulting_down_z, \
+            resulting_up_z = compute_steiner_tree_up_down(root, pivot_root, column_z,
+                                                          remaining_nodes, topo,
+                                                          introduce_permutation)
             for row, col in resulting_down_z:
 
                 assert (z_out(root, row) == 2 or z_out(root, row) == 0) and \
@@ -526,14 +525,13 @@ class CliffordTableau:
         G = topo.to_nx
 
         remaining_qubits = list(range(self.n_qubits))
-        for _ in range(topo.num_qubits):
+        while remaining_qubits:
             pivot = pick_best_node(G, remaining, topo)
             pivot_row = pick_pivot_row(pivot, remaining_qubits)
-            steiner_reduce_column(pivot, pivot_row, remaining_qubits)
-
+            steiner_reduce_column(pivot, pivot_row, remaining_qubits, False)
             remaining_qubits.remove(pivot)
             G.remove_node(pivot)
-            # removed_nodes.append(pivot) # TODO remove later
+
         signs_copy_z = remaining.signs[self.n_qubits:2 * self.n_qubits].copy()
         for col in range(self.n_qubits):
             if signs_copy_z[col] != 0:
@@ -554,51 +552,6 @@ class CliffordTableau:
                 apply("S", (col,))
 
         return qc
-
-    def to_clifford_bs(self, topo: Topology):
-        qc = QuantumCircuit(self.n_qubits)
-
-        remaining = self.inverse()
-
-        def apply(gate_name: str, gate_data: tuple):
-            if gate_name == "CNOT":
-                remaining.apply_cnot(gate_data[0], gate_data[1])
-                qc.cx(gate_data[0], gate_data[1])
-            elif gate_name == "H":
-                remaining.apply_h(gate_data[0])
-                qc.h(gate_data[0])
-            elif gate_name == "S":
-                remaining.apply_s(gate_data[0])
-                qc.s(gate_data[0])
-            else:
-                raise Exception("Unknown Gate")
-
-        def x_out(row, column):
-            return remaining.x_out(row, column)
-
-        def z_out(row, column):
-            return remaining.z_out(row, column)
-
-        def sanitize_field_z(row, column):
-            if z_out(row, column) == 3:
-                apply("S", (column,))
-
-            if z_out(row, column) == 1:
-                apply("H", (column,))
-
-        def sanitize_field_x(row, column):
-            if x_out(row, column) == 3:
-                apply("S", (column,))
-
-            if x_out(row, column) == 2:
-                apply("H", (column,))
-
-        for row in range(topo.num_qubits):
-            column_x = [col for col in range(topo.num_qubits) if x_out(row, col) != 0]
-            for col in column_x:
-                sanitize_field_x(row, col)
-
-        remaining.print_zx()
 
     def to_clifford_circuit(self):
         qc = QuantumCircuit(self.n_qubits)
