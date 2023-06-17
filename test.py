@@ -1,14 +1,12 @@
-import itertools
 from enum import Enum
 
-import networkx as nx
-
-import matplotlib.pyplot as plt
-import networkx as nx
+import galois
+import pytket
 import stim
-from qiskit import QuantumCircuit, transpile, QuantumRegister
+from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
+from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ
 from qiskit.circuit import Gate, CircuitInstruction
-from qiskit.providers.fake_provider import FakeVigo, FakeMumbai
+from qiskit.providers.fake_provider import FakeMumbai
 
 from pauliopt.pauli.anneal import anneal
 from pauliopt.pauli.clifford_tableau import CliffordTableau
@@ -280,43 +278,41 @@ def get_resulting_pauli(res_matrix, pauli2):
                 return sign, pauli
 
 
+def undo_permutation(qc: QuantumCircuit, perm):
+    circ_out = qiskit_to_tk(qc)
+    inv_map = {circ_out.qubits[v]: circ_out.qubits[k] for v, k in enumerate(perm)}
+    circ_out_ = pytket.Circuit(circ_out.n_qubits)
+    for cmd in circ_out:
+        if isinstance(cmd, pytket.circuit.Command):
+            remaped_qubits = list(map(lambda node: inv_map[node], cmd.qubits))
+            circ_out_.add_gate(cmd.op, remaped_qubits)
+    circ_out = tk_to_qiskit(circ_out_)
+    return circ_out
+
+
 def main():
-    # backend = FakeMumbai()
+    # login to IBMQ
+    #IBMQ.load_account()
 
-    PAULI_DICT = {}
-    for combinations in itertools.product(["X", "Y", "Z", "I"], repeat=2):
-        res_matrix = pauli_string_to_matrix(combinations[0]) @ \
-                     pauli_string_to_matrix(combinations[1])
-        sign, pauli = get_resulting_pauli(res_matrix, combinations)
-        PAULI_DICT[combinations] = (sign, pauli)
 
-    print(PAULI_DICT)
+    circ = QuantumCircuit.from_qasm_file("test6.qasm")
+    #circ = random_hscx_circuit(10, 5)
+    #circ.qasm(filename="test6.qasm")
+    topo = Topology.line(circ.num_qubits)
+    remaining = CliffordTableau.from_circuit(circ)
 
-    # circ = QuantumCircuit.from_qasm_file("test.qasm")
-    #
-    # topo = Topology.line(circ.num_qubits)
-    #
-    # # circ = QuantumCircuit.from_qasm_file("test.qasm")
-    #
-    # # nx.draw(topo.to_nx, with_labels=True)
-    # # plt.show()
-    #
-    # circ_out = transpile(circ,
-    #                      basis_gates=["h", "s", "cx"],
-    #                      approximation_degree=1.0,
-    #                      coupling_map=[[i, j] for (i, j) in topo.to_nx.edges()],
-    #                      optimization_level=0)
-    # print("Qiskit:", circ_out.count_ops())
-    #
-    # circ = transpile(circ, basis_gates=["h", "s", "cx"], optimization_level=0)
-    # ct = CliffordTableau.from_circuit(circ)
-    # circ_out = ct.to_cifford_circuit_arch_aware(topo)
-    # print("Clifford:", circ_out.count_ops())
-    # print(verify_equality(circ, circ_out))
-    # print("Original: ", circ.count_ops())
-    # print("Tableau:  ", circ_out.count_ops())
-    # print("Transpile: ", circ_.count_ops())
-    # assert verify_equality(circ, circ_out)
+    circ_out, perm = remaining.to_cifford_circuit_arch_aware(topo)
+
+    print(circ_out)
+    print(perm)
+    circ_out = undo_permutation(circ_out, perm)
+    print(verify_equality(circ, circ_out))
+    assert verify_equality(circ, circ_out)
+    circ = transpile(circ, basis_gates=["h", "s", "cx", "rz"],
+                     coupling_map=[[e1, e2] for e1, e2 in topo.to_nx.edges()])
+    print(circ)
+    print(circ.count_ops())
+    print(circ_out.count_ops())
 
 
 if __name__ == '__main__':

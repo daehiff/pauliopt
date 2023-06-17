@@ -1,5 +1,6 @@
 import itertools
 
+import pytket
 import pyzx
 from qiskit.circuit import Gate
 import pyzx as zx
@@ -173,74 +174,92 @@ def get_ops_count(qc: QuantumCircuit):
     return count
 
 
-def experiment(num_qubits=7):
-    backend = FakeMumbai()
+def undo_permutation(qc: QuantumCircuit, perm):
+    circ_out = qiskit_to_tk(qc)
+    inv_map = {circ_out.qubits[v]: circ_out.qubits[k] for v, k in enumerate(perm)}
+    circ_out_ = pytket.Circuit(circ_out.n_qubits)
+    for cmd in circ_out:
+        if isinstance(cmd, pytket.circuit.Command):
+            remaped_qubits = list(map(lambda node: inv_map[node], cmd.qubits))
+            circ_out_.add_gate(cmd.op, remaped_qubits)
+    circ_out = tk_to_qiskit(circ_out_)
+    return circ_out
+
+
+def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
+    tableau = Clifford.from_circuit(circ)
+    circ_out = tableau.to_circuit()
+    circ_out = transpile(circ_out, backend=backend, basis_gates=["cx", "h", "s"])
+    print("Qiskit Tableau: ", circ_out.count_ops())
+    column = get_ops_count(circ_out)
+    return column
+
+
+def qiskit_compilation(circ: QuantumCircuit, backend):
+    circ_out = transpile(circ, backend=backend, basis_gates=["cx", "h", "s"])
+    column = get_ops_count(circ_out)
+    print("Qiskit: ", circ_out.count_ops())
+    return column
+
+
+def our_compilation(circ: QuantumCircuit, backend):
+    topo = Topology.from_qiskit_backend(backend)
+    ct = CliffordTableau.from_circuit(circ)
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+    circ_out = undo_permutation(circ_out, perm)
+    column = get_ops_count(circ_out)
+    # assert verify_equality(circ, circ_out)
+    print("Our: ", circ_out.count_ops())
+    return column
+
+
+def experiment(df_name="test1.csv", backend=None):
+    if backend is None:
+        backend = FakeVigo()
     num_qubits = backend.configuration().num_qubits
     print(num_qubits)
     df = pd.DataFrame(
         columns=["n_rep", "num_qubits", "n_gadgets", "arch", "single", "two"])
-    for n_gadgets in range(10, 300, 10):  # range(10, 150, 5)
+    for n_gadgets in range(1, 30, 2):  # range(10, 150, 5)
         print(n_gadgets)
         for _ in range(10):
             print(_)
-            # normal no optimization
+
             circ = random_hscx_circuit(nr_qubits=num_qubits, nr_gates=n_gadgets)
-            circ_out = transpile(circ, backend=backend,
-                                 basis_gates=["h", "s", "cx"],
-                                 approximation_degree=1.0,
-                                 initial_layout=
-                                 [q for q in range(backend.configuration().num_qubits)])
+
+            ########################################
+            # Our clifford circuit
+            ########################################
             column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "original"} \
-                     | get_ops_count(circ_out)
+                      "arch": "tableau"} | our_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv("test1.csv")
-            print("Default: ", circ_out.count_ops())
+            df.to_csv(df_name)
 
-            # directly compilation to architecture
-            topo = Topology.from_qiskit_backend(backend)
-            ct = CliffordTableau.from_circuit(circ)
-            circ_out = ct.to_cifford_circuit_arch_aware(topo)
+            ########################################
+            # Qiskit compilation
+            ########################################
             column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "tableau"} \
-                     | get_ops_count(circ_out)
+                      "arch": "qiskit"} | qiskit_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv("test1.csv")
-            print("Tableau: ", circ_out.count_ops())
+            df.to_csv(df_name)
 
-            # conversion to qiskit Clifford and back
-            ct = Clifford(circ)
-            circ_out = ct.to_circuit()
-            circ_out = transpile(circ_out, backend=backend, basis_gates=["cx", "h", "s"])
+            ########################################
+            # Qiskit tableau compilation
+            ########################################
             column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "arch": "qiskit"} \
-                     | get_ops_count(circ_out)
+                      "arch": "qiskit_tableau"} | qiskit_tableau_compilation(circ,
+                                                                             backend)
             df.loc[len(df)] = column
-            df.to_csv("test1.csv")
+            df.to_csv(df_name)
 
-            # optimization with pyzx
-            # circ_out = qiskit_to_pyzx(circ)
-            # G = circ_out.to_graph()
-            # pyzx.simplify.clifford_simp(G)
-            # circ_out = pyzx.extract_circuit(G.copy()).to_basic_gates()
-            # circ_out = pyzx_to_qiskit(circ_out)
-            # circ_out = transpile(circ_out, backend=backend, optimization_level=0)
-            # print("pyzx: ", circ_out.count_ops())
-            # column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-            #           "arch": "pyzx"} \
-            #          | get_ops_count(circ_out)
-            # df.loc[len(df)] = column
-            # df.to_csv("test1.csv")
-
-    df.to_csv("test1.csv")
+    df.to_csv(df_name)
     # print(circ_out)
     # print(circ_stim)
 
 
 def plot():
-    nr_qubits = 27
     df = pd.read_csv("test1.csv")
-    # df = df[df.arch != "original"]
+    df = df[df.arch != "original"]
     #
     # sns.lineplot(df, x="n_gadgets", y="single", hue="arch")
     # plt.title("Single Qubits")
@@ -250,8 +269,9 @@ def plot():
     # plt.show()
 
     sns.lineplot(df, x="n_gadgets", y="two", hue="arch")
+    plt.xlabel("Number of Gadgets")
+    plt.ylabel("Number of Two Qubit Gates")
     # plot a horizontal line at nr_qubits**2/np.log2(nr_qubits)
-    plt.axhline(y=nr_qubits ** 2)
 
     plt.title("Two Qubits")
     # plt.savefig("two.png")
