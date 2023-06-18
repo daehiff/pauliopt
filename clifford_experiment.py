@@ -269,7 +269,7 @@ def plot():
     # plt.show()
 
     sns.lineplot(df, x="n_gadgets", y="two", hue="arch")
-    plt.xlabel("Number of Gadgets")
+    plt.xlabel("Number of input Gates")
     plt.ylabel("Number of Two Qubit Gates")
     # plot a horizontal line at nr_qubits**2/np.log2(nr_qubits)
 

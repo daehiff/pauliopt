@@ -54,7 +54,6 @@ def pick_pivots(G, remaining: "CliffordTableau"):
 
 
 def compute_steiner_tree(root: int, nodes: [int], sub_graph: nx.Graph):
-    # TODO there must be an other more efficient way (there is!)
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
     if len(steiner_stree.nodes()) < 1:
         return []
@@ -85,32 +84,87 @@ class CliffordTableau:
                 raise Exception(
                     f"Tableau of shape: {tableau.shape}, is not a factor of 2")
 
-    def apply_h(self, qubit):
+    def prepend_h(self, qubit):
+        cnot = stim.Tableau.from_named_gate("H")
+        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
+        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
+              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
+        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
+            np.bool8)
+        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
+            np.bool8)
+        tab = stim.Tableau.from_numpy(x2x=x2x,
+                                      x2z=x2z,
+                                      z2x=z2x,
+                                      z2z=z2z,
+                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
+                                          np.bool8),
+                                      z_signs=self.signs[
+                                              self.n_qubits:2 * self.n_qubits].copy().astype(
+                                          np.bool8))
+        tab.prepend(cnot, [qubit])
+        self.tableau = reconstruct_tableau(tab)
+        self.signs = reconstruct_tableau_signs(tab)
+
+    def append_h(self, qubit):
         self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
                                                             self.n_qubits + qubit]) % 2
 
         self.tableau[:, [self.n_qubits + qubit, qubit]] = self.tableau[:,
                                                           [qubit, self.n_qubits + qubit]]
 
-    def apply_s(self, qubit):
+    def prepend_s(self, qubit):
+        cnot = stim.Tableau.from_named_gate("s")
+        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
+        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
+              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
+        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
+            np.bool8)
+        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
+            np.bool8)
+        tab = stim.Tableau.from_numpy(x2x=x2x,
+                                      x2z=x2z,
+                                      z2x=z2x,
+                                      z2z=z2z,
+                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
+                                          np.bool8),
+                                      z_signs=self.signs[
+                                              self.n_qubits:2 * self.n_qubits].copy().astype(
+                                          np.bool8))
+        tab.prepend(cnot, [qubit])
+        self.tableau = reconstruct_tableau(tab)
+        self.signs = reconstruct_tableau_signs(tab)
+
+    def append_s(self, qubit):
         self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
                                                             self.n_qubits + qubit]) % 2
 
         self.tableau[:, self.n_qubits + qubit] = (self.tableau[:, self.n_qubits + qubit] +
                                                   self.tableau[:, qubit]) % 2
 
-    def swap_rows(self, a, b):
-        # swap in stabilizer basis
-        self.tableau[[a, b], :] = self.tableau[[b, a], :]
-        self.signs[[a, b]] = self.signs[[b, a]]
+    def prepend_cnot(self, control, target):
+        cnot = stim.Tableau.from_named_gate("CNOT")
+        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
+        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
+              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
+        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
+            np.bool8)
+        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
+            np.bool8)
+        tab = stim.Tableau.from_numpy(x2x=x2x,
+                                      x2z=x2z,
+                                      z2x=z2x,
+                                      z2z=z2z,
+                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
+                                          np.bool8),
+                                      z_signs=self.signs[
+                                              self.n_qubits:2 * self.n_qubits].copy().astype(
+                                          np.bool8))
+        tab.prepend(cnot, [control, target])
+        self.tableau = reconstruct_tableau(tab)
+        self.signs = reconstruct_tableau_signs(tab)
 
-        # swap in destabilizer basis
-        self.tableau[[a + self.n_qubits, b + self.n_qubits], :] = \
-            self.tableau[[b + self.n_qubits, a + self.n_qubits], :]
-        self.signs[[a + self.n_qubits, b + self.n_qubits]] = \
-            self.signs[[b + self.n_qubits, a + self.n_qubits]]
-
-    def apply_cnot(self, control, target):
+    def append_cnot(self, control, target):
         x_ia = self.tableau[:, control]
         x_ib = self.tableau[:, target]
 
@@ -126,15 +180,16 @@ class CliffordTableau:
         tmp_sum = ((x_ib + z_ia) % 2 + np.ones(z_ia.shape)) % 2
         self.signs = (self.signs + x_ia * z_ib * tmp_sum) % 2
 
-    def _apply_cnot_signs(self, control, target):
-        x_ia = self.tableau[:, control]
-        x_ib = self.tableau[:, target]
+    def swap_rows(self, a, b):
+        # swap in stabilizer basis
+        self.tableau[[a, b], :] = self.tableau[[b, a], :]
+        self.signs[[a, b]] = self.signs[[b, a]]
 
-        z_ia = self.tableau[:, self.n_qubits + control]
-        z_ib = self.tableau[:, self.n_qubits + target]
-
-        tmp_sum = ((x_ib + z_ia) % 2 + np.ones(z_ia.shape)) % 2
-        self.signs = (self.signs + x_ia * z_ib * tmp_sum) % 2
+        # swap in destabilizer basis
+        self.tableau[[a + self.n_qubits, b + self.n_qubits], :] = \
+            self.tableau[[b + self.n_qubits, a + self.n_qubits], :]
+        self.signs[[a + self.n_qubits, b + self.n_qubits]] = \
+            self.signs[[b + self.n_qubits, a + self.n_qubits]]
 
     def x_out(self, row, col):
         return self.tableau[row, col] + \
@@ -144,33 +199,72 @@ class CliffordTableau:
         return self.tableau[row + self.n_qubits, col] + \
                2 * self.tableau[row + self.n_qubits, col + self.n_qubits]
 
+    @property
+    def x(self):
+        return self.tableau[:, 0: self.n_qubits].astype(bool)
+
+    @property
+    def z(self):
+        return self.tableau[:, self.n_qubits: 2 * self.n_qubits].astype(bool)
+
+    @staticmethod
+    def get_lookup():
+        lookup = np.zeros((2, 2, 2, 2), dtype=int)
+        lookup[0, 1, 1, 0] = lookup[1, 0, 1, 1] = lookup[1, 1, 0, 1] = -1
+        lookup[0, 1, 1, 1] = lookup[1, 0, 0, 1] = lookup[1, 1, 1, 0] = 1
+        lookup.setflags(write=False)
+        return lookup
+
+    @staticmethod
+    def _compose_general(first: "CliffordTableau", second: "CliffordTableau"):
+        ifacts = np.sum(second.x & second.z, axis=1, dtype=int)
+
+        x1, z1 = first.x.astype(np.int64), first.z.astype(np.int64)
+        lookup = CliffordTableau.get_lookup()
+
+        for k, row2 in enumerate(second.tableau.astype(np.int64)):
+            x1_select = x1[row2, 0]
+            z1_select = z1[row2, 0]
+            x1_accum = np.logical_xor.accumulate(x1_select, axis=0).astype(np.uint8)
+            z1_accum = np.logical_xor.accumulate(z1_select, axis=0).astype(np.uint8)
+            indexer = (x1_select[1:], z1_select[1:], x1_accum[:-1], z1_accum[:-1])
+            ifacts[k] += np.sum(lookup[indexer])
+        p = np.mod(ifacts, 4) // 2
+
+        phase = (
+                (np.matmul(second.tableau.astype(np.int64), first.signs.astype(np.int64))
+                 + second.signs + p) % 2
+        ).astype(np.int64)
+        tableau = (second.tableau @ first.tableau) % 2
+        return CliffordTableau(tableau=tableau, signs=phase)
+
     def append_gate(self, gate: CliffordGate):
         if gate.c_type == CliffordType.H:
             assert isinstance(gate, SingleQubitGate)
-            self.apply_h(gate.qubit)
+            self.append_h(gate.qubit)
         elif gate.c_type == CliffordType.S:
             assert isinstance(gate, SingleQubitGate)
-            self.apply_s(gate.qubit)
+            self.append_s(gate.qubit)
         elif gate.c_type == CliffordType.V:
             assert isinstance(gate, SingleQubitGate)
-            self.apply_h(gate.qubit)
-            self.apply_s(gate.qubit)
-            self.apply_h(gate.qubit)
+            self.append_h(gate.qubit)
+            self.append_s(gate.qubit)
+            self.append_h(gate.qubit)
         elif gate.c_type == CliffordType.CX:
             assert isinstance(gate, ControlGate)
-            self.apply_cnot(gate.control, gate.target)
+            self.append_cnot(gate.control, gate.target)
         elif gate.c_type == CliffordType.CY:
             assert isinstance(gate, ControlGate)
-            self.apply_s(gate.target)
-            self.apply_s(gate.target)
-            self.apply_s(gate.target)
-            self.apply_cnot(gate.control, gate.target)
-            self.apply_s(gate.target)
+            self.append_s(gate.target)
+            self.append_s(gate.target)
+            self.append_s(gate.target)
+            self.append_cnot(gate.control, gate.target)
+            self.append_s(gate.target)
         elif gate.c_type == CliffordType.CZ:
             assert isinstance(gate, ControlGate)
-            self.apply_h(gate.target)
-            self.apply_cnot(gate.control, gate.target)
-            self.apply_h(gate.target)
+            self.append_h(gate.target)
+            self.append_cnot(gate.control, gate.target)
+            self.append_h(gate.target)
         else:
             raise TypeError(
                 f"Unrecongnized Gate type: {type(gate)} for Clifford Tableaus")
@@ -178,22 +272,31 @@ class CliffordTableau:
     def append_circuit(self, qc: QuantumCircuit):
         for op in qc:
             if op.operation.name == "h":
-                self.apply_h(op.qubits[0].index)
+                self.append_h(op.qubits[0].index)
             elif op.operation.name == "s":
-                self.apply_s(op.qubits[0].index)
+                self.append_s(op.qubits[0].index)
             elif op.operation.name == "cx":
-                self.apply_cnot(op.qubits[0].index, op.qubits[1].index)
+                self.append_cnot(op.qubits[0].index, op.qubits[1].index)
+
+    def prepend_circuit(self, qc: QuantumCircuit):
+        for op in reversed(qc):
+            if op.operation.name == "h":
+                self.prepend_h(op.qubits[0].index)
+            elif op.operation.name == "s":
+                self.prepend_s(op.qubits[0].index)
+            elif op.operation.name == "cx":
+                self.prepend_cnot(op.qubits[0].index, op.qubits[1].index)
 
     @staticmethod
     def from_circuit(circ: QuantumCircuit):
         tableau = CliffordTableau(n_qubits=circ.num_qubits)
         for op in circ:
             if op.operation.name == "h":
-                tableau.apply_h(op.qubits[0].index)
+                tableau.append_h(op.qubits[0].index)
             elif op.operation.name == "s":
-                tableau.apply_s(op.qubits[0].index)
+                tableau.append_s(op.qubits[0].index)
             elif op.operation.name == "cx":
-                tableau.apply_cnot(op.qubits[0].index, op.qubits[1].index)
+                tableau.append_cnot(op.qubits[0].index, op.qubits[1].index)
             else:
                 raise TypeError(
                     f"Unrecongnized Gate type: {op.operation.name} for Clifford Tableaus")
@@ -230,22 +333,6 @@ class CliffordTableau:
 
         return CliffordTableau(tableau=ct_inv, signs=ct_signs)
 
-    @property
-    def z_matrix(self):
-        z_matrix = np.zeros((self.n_qubits, self.n_qubits), dtype=np.int64)
-        for i in range(self.n_qubits):
-            for j in range(self.n_qubits):
-                z_matrix[i, j] = self.z_out(i, j)
-        return z_matrix
-
-    @property
-    def x_matrix(self):
-        x_matrix = np.zeros((self.n_qubits, self.n_qubits), dtype=np.int64)
-        for i in range(self.n_qubits):
-            for j in range(self.n_qubits):
-                x_matrix[i, j] = self.x_out(i, j)
-        return x_matrix
-
     def print_zx(self, X=True, Z=True):
 
         if X:
@@ -269,13 +356,13 @@ class CliffordTableau:
 
         def apply(gate_name: str, gate_data: tuple):
             if gate_name == "CNOT":
-                remaining.apply_cnot(gate_data[0], gate_data[1])
+                remaining.append_cnot(gate_data[0], gate_data[1])
                 qc.cx(gate_data[0], gate_data[1])
             elif gate_name == "H":
-                remaining.apply_h(gate_data[0])
+                remaining.append_h(gate_data[0])
                 qc.h(gate_data[0])
             elif gate_name == "S":
-                remaining.apply_s(gate_data[0])
+                remaining.append_s(gate_data[0])
                 qc.s(gate_data[0])
             else:
                 raise Exception("Unknown Gate")
@@ -382,13 +469,13 @@ class CliffordTableau:
 
         def apply(gate_name: str, gate_data: tuple):
             if gate_name == "CNOT":
-                remaining.apply_cnot(gate_data[0], gate_data[1])
+                remaining.append_cnot(gate_data[0], gate_data[1])
                 qc.cx(gate_data[0], gate_data[1])
             elif gate_name == "H":
-                remaining.apply_h(gate_data[0])
+                remaining.append_h(gate_data[0])
                 qc.h(gate_data[0])
             elif gate_name == "S":
-                remaining.apply_s(gate_data[0])
+                remaining.append_s(gate_data[0])
                 qc.s(gate_data[0])
             else:
                 raise Exception("Unknown Gate")

@@ -1,15 +1,18 @@
+import warnings
 from enum import Enum
 
 import galois
+import numpy as np
 import pytket
 import stim
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ
 from qiskit.circuit import Gate, CircuitInstruction
 from qiskit.providers.fake_provider import FakeMumbai
+from qiskit.quantum_info import Clifford
 
 from pauliopt.pauli.anneal import anneal
-from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.utils import Pauli
@@ -78,24 +81,6 @@ def verify_equality(qc_in, qc_out):
         raise Exception("Please install qiskit to compare to quantum circuits")
     return Statevector.from_instruction(qc_in) \
         .equiv(Statevector.from_instruction(qc_out))
-
-
-def random_hscx_circuit(nr_gates=20, nr_qubits=4):
-    gate_choice = ["H", "S", "CX"]
-    qc = QuantumCircuit(nr_qubits)
-    for _ in range(nr_gates):
-        gate_t = np.random.choice(gate_choice)
-        if gate_t == "H":
-            qubit = np.random.choice([i for i in range(nr_qubits)])
-            qc.h(qubit)
-        elif gate_t == "S":
-            qubit = np.random.choice([i for i in range(nr_qubits)])
-            qc.s(qubit)
-        elif gate_t == "CX":
-            control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice([i for i in range(nr_qubits) if i != control])
-            qc.cx(control, target)
-    return qc
 
 
 def are_non_zeros_clifford(matrix: np.array):
@@ -292,12 +277,11 @@ def undo_permutation(qc: QuantumCircuit, perm):
 
 def main():
     # login to IBMQ
-    #IBMQ.load_account()
-
+    # IBMQ.load_account()
 
     circ = QuantumCircuit.from_qasm_file("test6.qasm")
-    #circ = random_hscx_circuit(10, 5)
-    #circ.qasm(filename="test6.qasm")
+    # circ = random_hscx_circuit(10, 5)
+    # circ.qasm(filename="test6.qasm")
     topo = Topology.line(circ.num_qubits)
     remaining = CliffordTableau.from_circuit(circ)
 
@@ -315,5 +299,87 @@ def main():
     print(circ_out.count_ops())
 
 
+def append_circuit_to_tableau(circ: QuantumCircuit, tableau: stim.Tableau):
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    cnot = stim.Tableau.from_named_gate("CX")
+    had = stim.Tableau.from_named_gate("H")
+    s = stim.Tableau.from_named_gate("S")
+    for op in circ:
+        if op.operation.name == "h":
+            tableau.append(had, [op.qubits[0].index])
+        elif op.operation.name == "s":
+            tableau.append(s, [op.qubits[0].index])
+        elif op.operation.name == "cx":
+            tableau.append(cnot, [op.qubits[0].index, op.qubits[1].index])
+        else:
+            raise Exception("Unknown operation")
+    return tableau
+
+
+def prepend_circuit_to_tableau(circ: QuantumCircuit, tableau: stim.Tableau):
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    cnot = stim.Tableau.from_named_gate("CX")
+    had = stim.Tableau.from_named_gate("H")
+    s = stim.Tableau.from_named_gate("S")
+    for op in reversed(circ):
+        if op.operation.name == "h":
+            tableau.prepend(had, [op.qubits[0].index])
+        elif op.operation.name == "s":
+            tableau.prepend(s, [op.qubits[0].index])
+        elif op.operation.name == "cx":
+            tableau.prepend(cnot, [op.qubits[0].index, op.qubits[1].index])
+        else:
+            raise Exception("Unknown operation")
+    return tableau
+
+
+def parse_stim_to_qiskit(circ: stim.Circuit):
+    qc = QuantumCircuit(circ.num_qubits)
+    for gate in circ:
+        if gate.name == "CX":
+            targets = [target.value for target in gate.targets_copy()]
+            targets = [(targets[i], targets[i + 1]) for i in range(0, len(targets), 2)]
+            for (ctrl, target) in targets:
+                qc.cx(ctrl, target)
+        elif gate.name == "H":
+            targets = [target.value for target in gate.targets_copy()]
+            for qubit in targets:
+                qc.h(qubit)
+        elif gate.name == "S":
+            targets = [target.value for target in gate.targets_copy()]
+            for qubit in targets:
+                qc.s(qubit)
+        else:
+            raise TypeError(f"Unknown Name: {gate.name}")
+    return qc
+
+
+def test_prepedning():
+    circ_prev = random_hscx_circuit(100, 4)
+    circ_next = random_hscx_circuit(100, 4)
+    tableau = stim.Tableau(circ_prev.num_qubits)
+
+    tableau = append_circuit_to_tableau(circ_next, tableau)
+    tableau = prepend_circuit_to_tableau(circ_prev, tableau)
+    tableau_matrix = reconstruct_tableau(tableau)
+    tableau_signs = reconstruct_tableau_signs(tableau)
+    tableau = CliffordTableau(tableau=tableau_matrix, signs=tableau_signs)
+    circ_stim = tableau.to_clifford_circuit()
+
+    ct = CliffordTableau(circ_prev.num_qubits)
+    ct.append_circuit(circ_next)
+    ct.prepend_circuit(circ_prev)
+    circ_ct = ct.to_clifford_circuit()
+    # #
+    circ_out = circ_prev.compose(circ_next)
+    # print(circ_prev)
+    # print(circ_next)
+    # print(circ_out)
+
+    assert (verify_equality(circ_ct, circ_out))
+
+
 if __name__ == '__main__':
-    main()
+    for _ in range(1000):
+        print(_)
+        test_prepedning()
