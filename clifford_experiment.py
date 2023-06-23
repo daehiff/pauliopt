@@ -15,7 +15,8 @@ from pytket.extensions.pyzx import pyzx_to_tk, tk_to_pyzx
 from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import Gate
-from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeSherbrooke
+from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeSherbrooke, \
+    FakeGuadalupe
 from qiskit.quantum_info import Clifford
 
 from pauliopt.pauli.anneal import anneal
@@ -208,14 +209,14 @@ def our_compilation(circ: QuantumCircuit, backend):
     circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
     circ_out = undo_permutation(circ_out, perm)
     column = get_ops_count(circ_out)
-    # assert verify_equality(circ, circ_out)
+    #assert verify_equality(circ, circ_out)
     print("Our: ", circ_out.count_ops())
     return column
 
 
 def experiment(df_name="test1.csv", backend=None):
     if backend is None:
-        backend = FakeVigo()
+        backend = FakeGuadalupe()
     num_qubits = backend.configuration().num_qubits
     print(num_qubits)
     df = pd.DataFrame(

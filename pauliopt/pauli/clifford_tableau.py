@@ -9,6 +9,27 @@ from pauliopt.topologies import Topology
 import galois
 
 
+def mult_paulis(p1, p2, sign1, sign2, n_qubits):
+    x_1 = p1[:n_qubits].copy()
+    z_1 = p1[n_qubits:].copy()
+    x_2 = p2[:n_qubits].copy()
+    z_2 = p2[n_qubits:].copy()
+
+    x_1_z_2 = z_1 * x_2
+    z_1_x_2 = x_1 * z_2
+
+    ac = (x_1_z_2 + z_1_x_2) % 2
+
+    x_1 = (x_1 + x_2) % 2
+    z_1 = (z_1 + z_2) % 2
+
+    x_1_z_2 = ((x_1_z_2 + x_1 + z_1) % 2) * ac
+    sign_change = int(((np.sum(ac) + 2 * np.sum(x_1_z_2)) % 4) > 1)
+    new_sign = (sign1 + sign2 + sign_change) % 4
+    new_p1 = np.concatenate([x_1, z_1])
+    return new_p1, new_sign
+
+
 def reconstruct_tableau(tableau: stim.Tableau):
     xsx, xsz, zsx, zsz, x_signs, z_signs = tableau.to_numpy()
     x_row = np.concatenate([xsx, xsz], axis=1)
@@ -32,33 +53,105 @@ def get_possible_indices(remaining: "CliffordTableau", sub_graph: nx.Graph):
             yield i, j
 
 
-def pick_pivots(G, remaining: "CliffordTableau"):
-    scores = []
-    possible_indices = get_possible_indices(remaining, G)
-    for col, row in possible_indices:
-        if not is_cutting(col, G):
-            x_row = list(
-                set([v for v in G.nodes if remaining.x_out(row, v) != 0] + [col]))
-            z_row = list(
-                set([v for v in G.nodes if remaining.z_out(row, v) != 0] + [col]))
+def traversal_sum(pivot, traversal, remaining: "CliffordTableau"):
+    score = 0
+    for child, parent in traversal:
+        x_child = remaining.x_out(pivot, child) != 0
+        x_parent = remaining.x_out(pivot, parent) != 0
 
-            dist_x = len(compute_steiner_tree(col, x_row, G))
-            dist_z = len(compute_steiner_tree(col, z_row, G))
-            # dist_x = sum([nx.shortest_path_length(G, col, v) for v in G.nodes
-            #               if remaining.x_out(row, v) != 0])
-            # dist_z = sum([nx.shortest_path_length(G, col, v) for v in G.nodes
-            #               if remaining.z_out(row, v) != 0])
-            scores.append((col, row, dist_x + dist_z))
+        z_child = remaining.z_out(pivot, child) != 0
+        z_parent = remaining.z_out(pivot, parent) != 0
+        score += (x_child == x_parent) + (z_child == z_parent)
+    return score
+
+
+def pick_pivots(G, remaining: "CliffordTableau", possible_swaps):
+    scores = []
+    has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
+    for col in G.nodes:
+        if not is_cutting(col, G):
+            row_x = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
+                     if remaining.x_out(col, row) != 0]
+            row_z = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
+                     if remaining.z_out(col, row) != 0]
+            dist_x = len(row_x)
+            dist_z = len(row_z)
+            scores.append((col, col, dist_x + dist_z))
     assert len(scores) > 0
     return min(scores, key=lambda x: x[2])[:2]
 
 
-def compute_steiner_tree(root: int, nodes: [int], sub_graph: nx.Graph):
+def update_dfs(dfs, parent, child):
+    for i, (p, c) in enumerate(dfs):
+        if c == parent:
+            dfs[i] = (p, child)
+        if p == parent:
+            dfs[i] = (child, c)
+        if c == child:
+            dfs[i] = (p, parent)
+        if p == child:
+            dfs[i] = (parent, c)
+    return dfs
+
+
+def relabel_graph_inplace(G, parent, child):
+    swap = {parent: -1}
+    nx.relabel_nodes(G, swap, copy=False)
+    swap = {child: parent}
+    nx.relabel_nodes(G, swap, copy=False)
+    swap = {-1: child}
+    nx.relabel_nodes(G, swap, copy=False)
+
+
+def compute_steiner_tree(root: int, nodes: [int], sub_graph: nx.Graph, lookup: dict,
+                         swappable_nodes, permutation, remaining: "CliffordTableau"):
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
+    steiner_stree = nx.Graph(steiner_stree)
     if len(steiner_stree.nodes()) < 1:
         return []
+
+    dfs = list(reversed(list(nx.dfs_edges(steiner_stree, source=root))))
+    swapped = []
+    while dfs:
+        parent, child = dfs.pop(0)
+        if lookup[parent] == 0 and lookup[child] == 1 and \
+                child in swappable_nodes and parent in swappable_nodes:
+            relabel_graph_inplace(sub_graph, parent, child)
+            dfs = update_dfs(dfs, parent, child)
+
+            swapped.append(parent)
+            swapped.append(child)
+
+            permutation[permutation.index(parent)], \
+            permutation[permutation.index(child)] = \
+                permutation[permutation.index(child)], \
+                permutation[permutation.index(parent)]
+            # remove parent from the steiner tree
+            # remaining.swap_cols(parent, child)
+
+    for node in swapped:
+        if node in swappable_nodes:
+            swappable_nodes.remove(node)
+
+    steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
     traversal = nx.bfs_edges(steiner_stree, source=root)
     return list(reversed(list(traversal)))
+
+
+def sanitize_field_z(row, column, remaining, apply):
+    if remaining.z_out(row, column) == 3:
+        apply("S", (column,))
+
+    if remaining.z_out(row, column) == 1:
+        apply("H", (column,))
+
+
+def sanitize_field_x(row, column, remaining, apply):
+    if remaining.x_out(row, column) == 3:
+        apply("S", (column,))
+
+    if remaining.x_out(row, column) == 2:
+        apply("H", (column,))
 
 
 class CliffordTableau:
@@ -85,26 +178,10 @@ class CliffordTableau:
                     f"Tableau of shape: {tableau.shape}, is not a factor of 2")
 
     def prepend_h(self, qubit):
-        cnot = stim.Tableau.from_named_gate("H")
-        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
-        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
-              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
-        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
-            np.bool8)
-        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
-            np.bool8)
-        tab = stim.Tableau.from_numpy(x2x=x2x,
-                                      x2z=x2z,
-                                      z2x=z2x,
-                                      z2z=z2z,
-                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
-                                          np.bool8),
-                                      z_signs=self.signs[
-                                              self.n_qubits:2 * self.n_qubits].copy().astype(
-                                          np.bool8))
-        tab.prepend(cnot, [qubit])
-        self.tableau = reconstruct_tableau(tab)
-        self.signs = reconstruct_tableau_signs(tab)
+        self.signs[[qubit, self.n_qubits + qubit]] = \
+            self.signs[[self.n_qubits + qubit, qubit]]
+        self.tableau[[self.n_qubits + qubit, qubit], :] = \
+            self.tableau[[qubit, self.n_qubits + qubit], :]
 
     def append_h(self, qubit):
         self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
@@ -114,55 +191,43 @@ class CliffordTableau:
                                                           [qubit, self.n_qubits + qubit]]
 
     def prepend_s(self, qubit):
-        cnot = stim.Tableau.from_named_gate("s")
-        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
-        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
-              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
-        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
-            np.bool8)
-        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
-            np.bool8)
-        tab = stim.Tableau.from_numpy(x2x=x2x,
-                                      x2z=x2z,
-                                      z2x=z2x,
-                                      z2z=z2z,
-                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
-                                          np.bool8),
-                                      z_signs=self.signs[
-                                              self.n_qubits:2 * self.n_qubits].copy().astype(
-                                          np.bool8))
-        tab.prepend(cnot, [qubit])
-        self.tableau = reconstruct_tableau(tab)
-        self.signs = reconstruct_tableau_signs(tab)
+        stabilizer = self.tableau[qubit, :]
+        destabilizer = self.tableau[qubit + self.n_qubits, :]
+        stab_sign = self.signs[qubit]
+        destab_sign = self.signs[qubit + self.n_qubits]
+
+        destabilizer, destab_sign = \
+            mult_paulis(stabilizer, destabilizer, stab_sign, destab_sign, self.n_qubits)
+        self.insert_pauli_row(destabilizer, destab_sign, qubit)
 
     def append_s(self, qubit):
-        self.signs = (self.signs + self.tableau[:, qubit] * self.tableau[:,
-                                                            self.n_qubits + qubit]) % 2
+        self.signs = (self.signs + self.tableau[:, qubit] *
+                      self.tableau[:, self.n_qubits + qubit]) % 2
 
         self.tableau[:, self.n_qubits + qubit] = (self.tableau[:, self.n_qubits + qubit] +
                                                   self.tableau[:, qubit]) % 2
 
     def prepend_cnot(self, control, target):
-        cnot = stim.Tableau.from_named_gate("CNOT")
-        x2x = self.tableau[:self.n_qubits, :self.n_qubits].copy().astype(np.bool8)
-        z2z = self.tableau[self.n_qubits:2 * self.n_qubits,
-              self.n_qubits:2 * self.n_qubits].copy().astype(np.bool8)
-        x2z = self.tableau[:self.n_qubits, self.n_qubits:2 * self.n_qubits].copy().astype(
-            np.bool8)
-        z2x = self.tableau[self.n_qubits:2 * self.n_qubits, :self.n_qubits].copy().astype(
-            np.bool8)
-        tab = stim.Tableau.from_numpy(x2x=x2x,
-                                      x2z=x2z,
-                                      z2x=z2x,
-                                      z2z=z2z,
-                                      x_signs=self.signs[0:self.n_qubits].copy().astype(
-                                          np.bool8),
-                                      z_signs=self.signs[
-                                              self.n_qubits:2 * self.n_qubits].copy().astype(
-                                          np.bool8))
-        tab.prepend(cnot, [control, target])
-        self.tableau = reconstruct_tableau(tab)
-        self.signs = reconstruct_tableau_signs(tab)
+        stab_ctrl = self.tableau[control, :]
+        stab_target = self.tableau[target, :]
+        stab_sign_ctrl = self.signs[control]
+        stab_sign_target = self.signs[target]
+
+        destab_ctrl = self.tableau[control + self.n_qubits, :]
+        destab_target = self.tableau[target + self.n_qubits, :]
+        destab_sign_ctrl = self.signs[control + self.n_qubits]
+        destab_sign_target = self.signs[target + self.n_qubits]
+
+        stab_ctrl, stab_sign_ctrl = \
+            mult_paulis(stab_ctrl, stab_target, stab_sign_ctrl, stab_sign_target,
+                        self.n_qubits)
+
+        destab_target, destab_sign_target = \
+            mult_paulis(destab_target, destab_ctrl, destab_sign_target, destab_sign_ctrl,
+                        self.n_qubits)
+
+        self.insert_pauli_row(stab_ctrl, stab_sign_ctrl, control)
+        self.insert_pauli_row(destab_target, destab_sign_target, target + self.n_qubits)
 
     def append_cnot(self, control, target):
         x_ia = self.tableau[:, control]
@@ -191,6 +256,23 @@ class CliffordTableau:
         self.signs[[a + self.n_qubits, b + self.n_qubits]] = \
             self.signs[[b + self.n_qubits, a + self.n_qubits]]
 
+    def swap_cols(self, a, b):
+        # swap in stabilizer basis
+        self.append_cnot(a, b)
+        self.append_cnot(b, a)
+        self.append_cnot(a, b)
+
+    def insert_pauli_row(self, pauli, p_sing, row):
+        for i in range(self.n_qubits):
+            if (self.tableau[row, i] + pauli[i]) % 2 == 1:
+                self.tableau[row, i] = (self.tableau[row, i] + 1) % 2
+
+            if (self.tableau[row, i + self.n_qubits] + pauli[i + self.n_qubits]) % 2 == 1:
+                self.tableau[row, i + self.n_qubits] = (self.tableau[
+                                                            row, i + self.n_qubits] + 1) % 2
+        if (self.signs[row] + p_sing) % 2 == 1:
+            self.signs[row] = (self.signs[row] + 1) % 2
+
     def x_out(self, row, col):
         return self.tableau[row, col] + \
                2 * self.tableau[row, col + self.n_qubits]
@@ -200,8 +282,31 @@ class CliffordTableau:
                2 * self.tableau[row + self.n_qubits, col + self.n_qubits]
 
     @property
+    def x_matrix(self):
+        x_matrx = np.zeros((self.n_qubits, self.n_qubits), dtype=int)
+        for i in range(self.n_qubits):
+            for j in range(self.n_qubits):
+                x_matrx[i, j] = (self.tableau[i, j] +
+                                 2 * self.tableau[i, j + self.n_qubits])
+        return x_matrx
+
+    @property
+    def z_matrix(self):
+        z_matrx = np.zeros((self.n_qubits, self.n_qubits), dtype=int)
+        for i in range(self.n_qubits):
+            for j in range(self.n_qubits):
+                z_matrx[i, j] = (1 * self.tableau[i + self.n_qubits, j] +
+                                 2 * self.tableau[i + self.n_qubits, j + self.n_qubits])
+        return z_matrx
+
+    @property
+    def A(self):
+        A = (self.x_matrix + self.z_matrix)
+        return A
+
+    @property
     def x(self):
-        return self.tableau[:, 0: self.n_qubits].astype(bool)
+        return self.tableau[0: self.n_qubits, :].astype(int)
 
     @property
     def z(self):
@@ -214,29 +319,6 @@ class CliffordTableau:
         lookup[0, 1, 1, 1] = lookup[1, 0, 0, 1] = lookup[1, 1, 1, 0] = 1
         lookup.setflags(write=False)
         return lookup
-
-    @staticmethod
-    def _compose_general(first: "CliffordTableau", second: "CliffordTableau"):
-        ifacts = np.sum(second.x & second.z, axis=1, dtype=int)
-
-        x1, z1 = first.x.astype(np.int64), first.z.astype(np.int64)
-        lookup = CliffordTableau.get_lookup()
-
-        for k, row2 in enumerate(second.tableau.astype(np.int64)):
-            x1_select = x1[row2, 0]
-            z1_select = z1[row2, 0]
-            x1_accum = np.logical_xor.accumulate(x1_select, axis=0).astype(np.uint8)
-            z1_accum = np.logical_xor.accumulate(z1_select, axis=0).astype(np.uint8)
-            indexer = (x1_select[1:], z1_select[1:], x1_accum[:-1], z1_accum[:-1])
-            ifacts[k] += np.sum(lookup[indexer])
-        p = np.mod(ifacts, 4) // 2
-
-        phase = (
-                (np.matmul(second.tableau.astype(np.int64), first.signs.astype(np.int64))
-                 + second.signs + p) % 2
-        ).astype(np.int64)
-        tableau = (second.tableau @ first.tableau) % 2
-        return CliffordTableau(tableau=tableau, signs=phase)
 
     def append_gate(self, gate: CliffordGate):
         if gate.c_type == CliffordType.H:
@@ -260,6 +342,10 @@ class CliffordTableau:
             self.append_s(gate.target)
             self.append_cnot(gate.control, gate.target)
             self.append_s(gate.target)
+        elif gate.c_type == CliffordType.CXH:
+            assert isinstance(gate, ControlGate)
+            self.append_cnot(gate.control, gate.target)
+            self.append_h(gate.control)
         elif gate.c_type == CliffordType.CZ:
             assert isinstance(gate, ControlGate)
             self.append_h(gate.target)
@@ -353,11 +439,16 @@ class CliffordTableau:
 
         remaining = self.inverse()
         permutation = list(range(self.n_qubits))
+        swappable_nodes = list(range(self.n_qubits))
 
         def apply(gate_name: str, gate_data: tuple):
             if gate_name == "CNOT":
                 remaining.append_cnot(gate_data[0], gate_data[1])
                 qc.cx(gate_data[0], gate_data[1])
+                if gate_data[0] in swappable_nodes:
+                    swappable_nodes.remove(gate_data[0])
+                if gate_data[1] in swappable_nodes:
+                    swappable_nodes.remove(gate_data[1])
             elif gate_name == "H":
                 remaining.append_h(gate_data[0])
                 qc.h(gate_data[0])
@@ -367,23 +458,12 @@ class CliffordTableau:
             else:
                 raise Exception("Unknown Gate")
 
-        def sanitize_field_z(row, column):
-            if remaining.z_out(row, column) == 3:
-                apply("S", (column,))
-
-            if remaining.z_out(row, column) == 1:
-                apply("H", (column,))
-
-        def sanitize_field_x(row, column):
-            if remaining.x_out(row, column) == 3:
-                apply("S", (column,))
-
-            if remaining.x_out(row, column) == 2:
-                apply("H", (column,))
-
         def steiner_up_down_process_z(pivot, row_z, sub_graph):
             row_z_ = list(set([pivot] + row_z))
-            traversal = compute_steiner_tree(pivot, row_z_, sub_graph)
+            lookup = {node: int(remaining.z_out(pivot, node) != 0) for node in
+                      sub_graph.nodes}
+            traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+                                             swappable_nodes, permutation, remaining)
             for parent, child in traversal:
                 if remaining.z_out(pivot, parent) == 0:
                     apply("CNOT", (parent, child))
@@ -393,10 +473,13 @@ class CliffordTableau:
 
         def steiner_up_down_process_x(pivot, row_x, sub_graph):
             row_x_ = list(set([pivot] + row_x))
-            traversal = compute_steiner_tree(pivot, row_x_, sub_graph)
+            lookup = {node: int(remaining.x_out(pivot, node) != 0) for node in
+                      sub_graph.nodes}
+            traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+                                             swappable_nodes, permutation, remaining)
             for parent, child in traversal:
                 if remaining.x_out(pivot, parent) == 0:
-                    apply("CNOT", (child, parent))  # TODO check!
+                    apply("CNOT", (child, parent))
 
             for parent, child in traversal:
                 apply("CNOT", (parent, child))
@@ -404,14 +487,16 @@ class CliffordTableau:
         def steiner_reduce_column(pivot, sub_graph):
             row_x = [col for col in sub_graph.nodes if remaining.x_out(pivot, col) != 0]
             for col in row_x:
-                sanitize_field_x(pivot, col)
+                sanitize_field_x(pivot, col, remaining, apply)
             steiner_up_down_process_x(pivot, row_x, sub_graph)
 
             row_z = [col for col in sub_graph.nodes if remaining.z_out(pivot, col) != 0]
             for col in row_z:
-                sanitize_field_z(pivot, col)
+                sanitize_field_z(pivot, col, remaining, apply)
             if remaining.x_out(pivot, pivot) == 3:
                 apply("S", (pivot,))
+
+            row_z = [col for col in sub_graph.nodes if remaining.z_out(pivot, col) != 0]
             steiner_up_down_process_z(pivot, row_z, sub_graph)
 
             # ensure that the pivots are in ZX basis
@@ -426,19 +511,16 @@ class CliffordTableau:
 
         # reduction_order = produce_reduction_order_old(topo, remaining)
         G = topo.to_nx
-
-        remaining_qubits = list(range(self.n_qubits))
         while G.nodes:
-            pivot_col, pivot_row = pick_pivots(G, remaining)
-            if pivot_col != pivot_row:
-                remaining.swap_rows(pivot_row, pivot_col)
+            pivot_col, pivot_row = pick_pivots(G, remaining, swappable_nodes)
             steiner_reduce_column(pivot_col, G)
 
             # swap the pivot column and the pivot row in the permutation list
-            permutation[pivot_col], permutation[pivot_row] = \
-                permutation[pivot_row], permutation[pivot_col]
+            # permutation[pivot_col], permutation[pivot_row] = \
+            #     permutation[pivot_row], permutation[pivot_col]
 
-            remaining_qubits.remove(pivot_col)
+            if pivot_col in swappable_nodes:
+                swappable_nodes.remove(pivot_col)
             G.remove_node(pivot_col)
 
         signs_copy_z = remaining.signs[self.n_qubits:2 * self.n_qubits].copy()
@@ -459,7 +541,6 @@ class CliffordTableau:
             if remaining.signs[col] != 0:
                 apply("S", (col,))
                 apply("S", (col,))
-        print(remaining.signs)
         return qc, permutation
 
     def to_clifford_circuit(self):

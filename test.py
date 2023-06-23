@@ -8,14 +8,15 @@ import stim
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ
 from qiskit.circuit import Gate, CircuitInstruction
-from qiskit.providers.fake_provider import FakeMumbai
+from qiskit.providers.fake_provider import FakeMumbai, FakeVigo
 from qiskit.quantum_info import Clifford
 
 from pauliopt.pauli.anneal import anneal
+from pauliopt.pauli.clifford_gates import CliffordType
 from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pauliopt.pauli.utils import Pauli
+from pauliopt.pauli.utils import Pauli, apply_permutation
 from pauliopt.utils import pi
 
 
@@ -179,7 +180,7 @@ def n_times_kron(p_list):
 
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
-    gate_choice = ["H", "S", "CX"]
+    gate_choice = ["CX", "H", "S"]
     qc = QuantumCircuit(nr_qubits)
     for _ in range(nr_gates):
         gate_t = np.random.choice(gate_choice)
@@ -275,30 +276,6 @@ def undo_permutation(qc: QuantumCircuit, perm):
     return circ_out
 
 
-def main():
-    # login to IBMQ
-    # IBMQ.load_account()
-
-    circ = QuantumCircuit.from_qasm_file("test6.qasm")
-    # circ = random_hscx_circuit(10, 5)
-    # circ.qasm(filename="test6.qasm")
-    topo = Topology.line(circ.num_qubits)
-    remaining = CliffordTableau.from_circuit(circ)
-
-    circ_out, perm = remaining.to_cifford_circuit_arch_aware(topo)
-
-    print(circ_out)
-    print(perm)
-    circ_out = undo_permutation(circ_out, perm)
-    print(verify_equality(circ, circ_out))
-    assert verify_equality(circ, circ_out)
-    circ = transpile(circ, basis_gates=["h", "s", "cx", "rz"],
-                     coupling_map=[[e1, e2] for e1, e2 in topo.to_nx.edges()])
-    print(circ)
-    print(circ.count_ops())
-    print(circ_out.count_ops())
-
-
 def append_circuit_to_tableau(circ: QuantumCircuit, tableau: stim.Tableau):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     cnot = stim.Tableau.from_named_gate("CX")
@@ -355,11 +332,20 @@ def parse_stim_to_qiskit(circ: stim.Circuit):
 
 
 def test_prepedning():
-    circ_prev = random_hscx_circuit(100, 4)
-    circ_next = random_hscx_circuit(100, 4)
+    circ_prev = random_hscx_circuit(1000, 8)
+    circ_prev.s(0)
+    circ_prev.s(0)
+
+    # circ_prev.cx(1, 0)
+    # circ_prev.h(1)
+    # circ_prev.h(1)
+
+    # circ_prev.cx(0, 1)
+    # circ_prev.h(1)
+    # circ_next = random_hscx_circuit(1000, 4)
     tableau = stim.Tableau(circ_prev.num_qubits)
 
-    tableau = append_circuit_to_tableau(circ_next, tableau)
+    # tableau = append_circuit_to_tableau(circ_next, tableau)
     tableau = prepend_circuit_to_tableau(circ_prev, tableau)
     tableau_matrix = reconstruct_tableau(tableau)
     tableau_signs = reconstruct_tableau_signs(tableau)
@@ -367,11 +353,19 @@ def test_prepedning():
     circ_stim = tableau.to_clifford_circuit()
 
     ct = CliffordTableau(circ_prev.num_qubits)
-    ct.append_circuit(circ_next)
+    # ct.append_circuit(circ_next)
     ct.prepend_circuit(circ_prev)
     circ_ct = ct.to_clifford_circuit()
     # #
-    circ_out = circ_prev.compose(circ_next)
+    #print(ct.tableau)
+    #print(tableau_matrix)
+    assert np.allclose(ct.tableau, tableau_matrix), "Matrices don't match"
+
+    #print(ct.signs)
+    #print(tableau_signs)
+    assert np.allclose(ct.signs, tableau_signs), "Signs didn't match"
+    circ_out = circ_prev
+    # circ_out = circ_prev.compose(circ_next)
     # print(circ_prev)
     # print(circ_next)
     # print(circ_out)
@@ -379,7 +373,37 @@ def test_prepedning():
     assert (verify_equality(circ_ct, circ_out))
 
 
+def main_():
+    pp = generate_random_pauli_polynomial(4, 200)
+    topo = Topology.line(pp.num_qubits)
+
+    pp = simplify_pauli_polynomial(pp)
+
+    circ_base = pp.to_qiskit(topo)
+    circ_out, perm = anneal(pp, topo)
+
+    print("Base: ", circ_base.count_ops())
+    print("Out:  ", circ_out.count_ops())
+
+
+def main():
+    backend = FakeVigo()
+    circ = random_hscx_circuit(1000, 8)
+    # print(circ.count_ops())
+    # circ.qasm(filename="test8.qasm")
+
+    # circ = QuantumCircuit.from_qasm_file("test8.qasm")
+    topo = Topology.line(circ.num_qubits)
+    ct = CliffordTableau.from_circuit(circ)
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+    circ_out = apply_permutation(circ_out, perm)
+    # print(circ_out)
+    # print(circ)
+    print("Input: ", circ.count_ops())
+    print("Output: ", circ_out.count_ops())
+    assert (verify_equality(circ, circ_out))
+
+
 if __name__ == '__main__':
-    for _ in range(1000):
-        print(_)
+    for _ in range(100):
         test_prepedning()

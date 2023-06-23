@@ -73,3 +73,27 @@ I = Pauli.I
 X = Pauli.X
 Y = Pauli.Y
 Z = Pauli.Z
+
+
+def apply_permutation(qc: "qiskit.QuantumCircuit", permutation: list):
+    """
+    Applies a permutation to the qubits of a quantum circuit
+
+    Args:
+        qc (qiskit.QuantumCircuit): Quantum circuit to apply the permutation to
+        permutation (list): List of integers representing the permutation to apply
+    """
+    try:
+        from qiskit import QuantumCircuit
+    except ImportError:
+        raise ImportError("This function requires qiskit to be installed")
+
+    if len(qc.qregs) != 1:
+        raise ValueError("Quantum circuit must have exactly one quantum register")
+    register = qc.qregs[0]
+    qc_out = QuantumCircuit(register)
+    for instruction in qc:
+        op_qubits = [register[permutation[register.index(q)]] for q in instruction.qubits]
+        instruction.qubits = tuple(op_qubits)
+        qc_out.append(instruction, instruction.qubits)
+    return qc_out

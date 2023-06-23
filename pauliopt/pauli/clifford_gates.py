@@ -7,6 +7,7 @@ import numpy as np
 
 
 class CliffordType(Enum):
+    CXH = "cxh"  # custom type for cx followed by h on qubit 0
     CX = "cx"
     CY = "cy"
     CZ = "cz"
@@ -130,6 +131,28 @@ class CY(ControlGate):
         super().__init__(CliffordType.CY, control, target)
 
 
+class CXH(ControlGate):
+    rules = {'XX': (Z, I, 1),
+             'XY': (Y, Z, -1),
+             'XZ': (Y, Y, 1),
+             'XI': (Z, X, 1),
+             'YX': (Y, I, -1),
+             'YY': (Z, Z, -1),
+             'YZ': (Z, Y, 1),
+             'YI': (Y, X, -1),
+             'ZX': (X, X, 1),
+             'ZY': (I, Y, 1),
+             'ZZ': (I, Z, 1),
+             'ZI': (X, I, 1),
+             'IX': (I, X, 1),
+             'IY': (X, Y, 1),
+             'IZ': (X, Z, 1),
+             'II': (I, I, 1)}
+
+    def __init__(self, control, target):
+        super().__init__(CliffordType.CXH, control, target)
+
+
 class H(SingleQubitGate):
     rules = {'X': (Z, 1),
              'Y': (Y, -1),
@@ -164,6 +187,19 @@ class V(SingleQubitGate):
 # Refused to implement "higher order gates" like NCX, SWAP, DCX, ... but with this structure this can easily be done
 
 
+def generate_two_qubit_clifford(c_type: CliffordType, control: int, target: int):
+    if c_type == CliffordType.CX:
+        return CX(control, target)
+    elif c_type == CliffordType.CY:
+        return CY(control, target)
+    elif c_type == CliffordType.CZ:
+        return CZ(control, target)
+    elif c_type == CliffordType.CXH:
+        return CXH(control, target)
+    else:
+        raise ValueError("This Clifford type is not supported")
+
+
 def generate_random_clifford(c_type: CliffordType, n_qubits: int):
     qubit = np.random.choice(list(range(n_qubits)))
     if c_type == CliffordType.CX:
@@ -175,12 +211,16 @@ def generate_random_clifford(c_type: CliffordType, n_qubits: int):
     elif c_type == CliffordType.CZ:
         control = np.random.choice([i for i in range(n_qubits) if i != qubit])
         return CZ(control, qubit)
+    elif c_type == CliffordType.CXH:
+        control = np.random.choice([i for i in range(n_qubits) if i != qubit])
+        return CXH(control, qubit)
     elif c_type == CliffordType.H:
         return H(qubit)
     elif c_type == CliffordType.S:
         return S(qubit)
     elif c_type == CliffordType.V:
         return V(qubit)
+
     else:
         raise TypeError(f"Unknown Clifford Type: {c_type}")
 
