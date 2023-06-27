@@ -66,11 +66,12 @@ def traversal_sum(pivot, traversal, remaining: "CliffordTableau"):
     return score
 
 
-def pick_pivots(G, remaining: "CliffordTableau", possible_swaps):
+def pick_pivots(G, remaining: "CliffordTableau", possible_swaps, include_swaps):
     scores = []
     has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
     for col in G.nodes:
-        if not is_cutting(col, G) or (has_cutting_swappable and col in possible_swaps):
+        if not is_cutting(col, G) or \
+                (include_swaps and has_cutting_swappable and col in possible_swaps):
             row_x = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
                      if remaining.x_out(col, row) != 0]
             row_z = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
@@ -105,31 +106,34 @@ def relabel_graph_inplace(G, parent, child):
 
 
 def compute_steiner_tree(root: int, nodes: [int], sub_graph: nx.Graph, lookup: dict,
-                         swappable_nodes, permutation, remaining: "CliffordTableau"):
+                         swappable_nodes, permutation, remaining: "CliffordTableau",
+                         include_swaps):
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
     steiner_stree = nx.Graph(steiner_stree)
     if len(steiner_stree.nodes()) < 1:
         return []
-    for _ in range(remaining.n_qubits):
-        dfs = list(reversed(list(nx.dfs_edges(steiner_stree, source=root))))
-        swapped = []
-        while dfs:
-            parent, child = dfs.pop(0)
-            if parent == root:
-                continue
-            if lookup[parent] == 0 and lookup[child] == 1 and \
-                    child in swappable_nodes and parent in swappable_nodes:
-                relabel_graph_inplace(steiner_stree, parent, child)
-                relabel_graph_inplace(sub_graph, parent, child)
-                dfs = update_dfs(dfs, parent, child)
-                # remaining.swap_cols(parent, child)
-                permutation[parent], permutation[child] = \
-                    permutation[child], permutation[parent]
+    if include_swaps:
+        for _ in range(remaining.n_qubits):
+            dfs = list(reversed(list(nx.dfs_edges(steiner_stree, source=root))))
+            swapped = []
+            while dfs:
+                parent, child = dfs.pop(0)
+                if parent == root:
+                    continue
+                if lookup[parent] == 0 and lookup[child] == 1 and \
+                        child in swappable_nodes and parent in swappable_nodes:
+                    relabel_graph_inplace(steiner_stree, parent, child)
+                    relabel_graph_inplace(sub_graph, parent, child)
+                    dfs = update_dfs(dfs, parent, child)
+                    # remaining.swap_cols(parent, child)
+                    permutation[parent], permutation[child] = \
+                        permutation[child], permutation[parent]
 
-                swapped.append(parent)
-                swapped.append(child)
+                    swapped.append(parent)
+                    swapped.append(child)
 
-    steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
+        steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph,
+                                                                             nodes)
     traversal = nx.bfs_edges(steiner_stree, source=root)
     return list(reversed(list(traversal)))
 
@@ -316,6 +320,33 @@ class CliffordTableau:
         lookup.setflags(write=False)
         return lookup
 
+    def prepend_gate(self, gate: CliffordGate):
+        if gate.c_type == CliffordType.H:
+            assert isinstance(gate, SingleQubitGate)
+            self.prepend_h(gate.qubit)
+        elif gate.c_type == CliffordType.S:
+            assert isinstance(gate, SingleQubitGate)
+            self.prepend_s(gate.qubit)
+        elif gate.c_type == CliffordType.V:
+            assert isinstance(gate, SingleQubitGate)
+            self.prepend_h(gate.qubit)
+            self.prepend_s(gate.qubit)
+            self.prepend_h(gate.qubit)
+        elif gate.c_type == CliffordType.CX:
+            assert isinstance(gate, ControlGate)
+            self.prepend_cnot(gate.control, gate.target)
+        elif gate.c_type == CliffordType.CY:
+            assert isinstance(gate, ControlGate)
+            raise NotImplementedError("CY gate not implemented")
+        elif gate.c_type == CliffordType.CZ:
+            assert isinstance(gate, ControlGate)
+            raise NotImplementedError("CY gate not implemented")
+        elif gate.c_type == CliffordType.CXH:
+            assert isinstance(gate, ControlGate)
+            raise NotImplementedError("CY gate not implemented")
+        else:
+            raise ValueError("Invalid Clifford gate type")
+
     def append_gate(self, gate: CliffordGate):
         if gate.c_type == CliffordType.H:
             assert isinstance(gate, SingleQubitGate)
@@ -437,7 +468,7 @@ class CliffordTableau:
                     print(f" {int(self.z_out(i, j))} ", end="")
                 print()
 
-    def to_cifford_circuit_arch_aware(self, topo: Topology, improvements: bool = True):
+    def to_cifford_circuit_arch_aware(self, topo: Topology, include_swaps: bool = True):
         qc = QuantumCircuit(self.n_qubits)
 
         remaining = self.inverse()
@@ -472,7 +503,8 @@ class CliffordTableau:
             lookup = {node: int(remaining.z_out(pivot, node) != 0) for node in
                       sub_graph.nodes}
             traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
-                                             swappable_nodes, permutation, remaining)
+                                             swappable_nodes, permutation, remaining,
+                                             include_swaps)
             for parent, child in traversal:
                 if remaining.z_out(pivot, parent) == 0:
                     apply("CNOT", (parent, child))
@@ -485,7 +517,8 @@ class CliffordTableau:
             lookup = {node: int(remaining.x_out(pivot, node) != 0) for node in
                       sub_graph.nodes}
             traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
-                                             swappable_nodes, permutation, remaining)
+                                             swappable_nodes, permutation, remaining,
+                                             include_swaps)
             for parent, child in traversal:
                 if remaining.x_out(pivot, parent) == 0:
                     apply("CNOT", (child, parent))
@@ -517,9 +550,10 @@ class CliffordTableau:
                 apply("S", (pivot,))
 
         while G.nodes:
-            pivot_col, pivot_row = pick_pivots(G, remaining, swappable_nodes)
+            pivot_col, pivot_row = pick_pivots(G, remaining, swappable_nodes,
+                                               include_swaps)
 
-            if is_cutting(pivot_col, G):
+            if is_cutting(pivot_col, G) and include_swaps:
                 non_cutting_vectices = [(node, nx.shortest_path_length(G, source=node,
                                                                        target=pivot_col,
                                                                        weight="weight"))

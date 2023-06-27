@@ -96,6 +96,18 @@ class PauliGadget:
             leg_cache[col_id] = cnot_amount
         return cnot_amount
 
+    def mutual_legs(self, other: "PauliGadget"):
+        if len(self.paulis) != len(other.paulis):
+            raise Exception(
+                f"Paulis must be of equal length to have mutual legs. But are {len(self.paulis)}, "
+                f"{len(other.paulis)}")
+
+        match_count = 0
+        for p_1, p_2 in zip(self.paulis, other.paulis):
+            if p_1 != Pauli.I and p_2 != Pauli.I:
+                match_count += 1
+        return match_count
+
     def commutes(self, other: "PauliGadget"):
         if len(self.paulis) != len(other.paulis):
             raise Exception(
@@ -139,7 +151,7 @@ class PauliGadget:
             elif column[pauli_idx] == X:
                 circ.h(pauli_idx)  # Had
             elif column[pauli_idx] == Y:
-                circ.rx(0.5 * np.pi, pauli_idx)  # V = Rx(0.5)
+                circ.sx(pauli_idx)  # Sx = Rx(-0.5
             elif column[pauli_idx] == Z:  # Z
                 pass
             else:
@@ -163,7 +175,7 @@ class PauliGadget:
             elif column[pauli_idx] == Pauli.X:
                 circ.h(pauli_idx)  # Had
             elif column[pauli_idx] == Pauli.Y:
-                circ.rx(-0.5 * np.pi, pauli_idx)  # Vdg = Rx(-0.5)
+                circ.sxdg(pauli_idx)  # Sxdg = Rx(-0.5)
             elif column[pauli_idx] == Pauli.Z:
                 pass
             else:

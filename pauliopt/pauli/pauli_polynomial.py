@@ -144,6 +144,16 @@ class PauliPolynomial:
             count += gadget.two_qubit_count(topology, leg_cache=leg_cache)
         return count
 
+    def commutes(self, col1, col2):
+        gadet1 = self.pauli_gadgets[col1]
+        gadet2 = self.pauli_gadgets[col2]
+        return gadet1.commutes(gadet2)
+
+    def mutual_legs(self, col1, col2):
+        gadet1 = self.pauli_gadgets[col1]
+        gadet2 = self.pauli_gadgets[col2]
+        return gadet1.mutual_legs(gadet2)
+
     def to_svg(self, hscale: float = 1.0, vscale: float = 1.0, scale: float = 1.0,
                svg_code_only=False):
         vscale *= scale
@@ -287,6 +297,10 @@ class PauliPolynomial:
             with open(f"{file_name}.tex", "w") as f:
                 f.write(out_str)
         return out_str
+
+    def swap_gadgets(self, col1, col2):
+        self.pauli_gadgets[col1], self.pauli_gadgets[col2] = \
+            self.pauli_gadgets[col2], self.pauli_gadgets[col1]
 
 
 def remove_collapsed_pauli_gadegts(remaining_poly):

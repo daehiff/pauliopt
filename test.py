@@ -14,6 +14,7 @@ from qiskit.quantum_info import Clifford, StabilizerState, Pauli
 from pauliopt.pauli.anneal import anneal, global_leg_removal
 from pauliopt.pauli.clifford_gates import CliffordType
 from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
+from pauliopt.pauli.divide_conquer import synth_divide_and_conquer
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.utils import apply_permutation
@@ -455,26 +456,18 @@ def main():
 
 
 def test():
-    # circ = random_hscx_circuit(1000, 4)
-    # circ.qasm(filename="test.qasm")
-    circ = QuantumCircuit.from_qasm_file("test.qasm")
-    ct = CliffordTableau.from_circuit(circ)
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(Topology.line(circ.num_qubits))
+    pp = generate_random_pauli_polynomial(4, 200)
+    topo = Topology.complete(pp.num_qubits)
 
+    circ_in = pp.to_qiskit(topo)
+    pp = simplify_pauli_polynomial(pp)
 
-def apply_bs_clifford(ct: CliffordTableau, x, idx):
-    if x == 0:
-        ct.tableau[0, idx] = 0
-        ct.tableau[0, idx + ct.n_qubits] = 0
-    elif x == 1:
-        ct.tableau[0, idx] = 1
-        ct.tableau[0, idx + ct.n_qubits] = 0
-    elif x == 2:
-        ct.tableau[0, idx] = 0
-        ct.tableau[0, idx + ct.n_qubits] = 1
-    elif x == 3:
-        ct.tableau[0, idx] = 1
-        ct.tableau[0, idx + ct.n_qubits] = 1
+    circ_out = synth_divide_and_conquer(pp.copy(), topo, add_sort=False)
+    print("Ours:      ", circ_out.count_ops())
+    # circ_out = synth_divide_and_conquer(pp.copy(), topo, add_sort=True)
+    # print("Ours sort: ", circ_out.count_ops())
+    print("Normal:    ", circ_in.count_ops())
+    assert verify_equality(circ_out, circ_in)
 
 
 if __name__ == '__main__':
