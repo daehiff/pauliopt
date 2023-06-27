@@ -103,6 +103,12 @@ class PauliPolynomial:
     def num_gadgets(self):
         return len(self.pauli_gadgets)
 
+    def num_legs(self):
+        legs = 0
+        for gadget in self.pauli_gadgets:
+            legs += gadget.num_legs()
+        return legs
+
     def to_qiskit(self, topology=None):
         num_qubits = self.num_qubits
         if topology is None:

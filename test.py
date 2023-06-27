@@ -6,17 +6,17 @@ import numpy as np
 import pytket
 import stim
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
-from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ
+from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ, execute, Aer
 from qiskit.circuit import Gate, CircuitInstruction
 from qiskit.providers.fake_provider import FakeMumbai, FakeVigo
-from qiskit.quantum_info import Clifford
+from qiskit.quantum_info import Clifford, StabilizerState, Pauli
 
-from pauliopt.pauli.anneal import anneal
+from pauliopt.pauli.anneal import anneal, global_leg_removal
 from pauliopt.pauli.clifford_gates import CliffordType
 from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pauliopt.pauli.utils import Pauli, apply_permutation
+from pauliopt.pauli.utils import apply_permutation
 from pauliopt.utils import pi
 
 
@@ -31,9 +31,9 @@ def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
     legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
-    phase_gadget = [Pauli.I for _ in range(num_qubits)]
+    phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
-        phase_gadget[leg] = np.random.choice([Pauli.X, Pauli.Y, Pauli.Z])
+        phase_gadget[leg] = np.random.choice([X, Y, Z])
     return PPhase(angle) @ phase_gadget
 
 
@@ -158,18 +158,6 @@ def analyse_ops(qc: QuantumCircuit):
         "single_qubit": single_qubit,
         "single_qubit_clifford": clifford
     }
-
-
-def main(n_qubits=5):
-    topo = Topology.line(n_qubits)
-    pp = generate_random_pauli_polynomial(n_qubits, 200)
-
-    qc_base = pp.to_qiskit(topo)
-
-    qc_opt = anneal(pp, topo, nr_iterations=1500)
-    print("Base: ", analyse_ops(qc_base))
-    print("Opt : ", analyse_ops(qc_opt))
-    print(verify_equality(qc_base, qc_opt))
 
 
 def n_times_kron(p_list):
@@ -357,12 +345,12 @@ def test_prepedning():
     ct.prepend_circuit(circ_prev)
     circ_ct = ct.to_clifford_circuit()
     # #
-    #print(ct.tableau)
-    #print(tableau_matrix)
+    # print(ct.tableau)
+    # print(tableau_matrix)
     assert np.allclose(ct.tableau, tableau_matrix), "Matrices don't match"
 
-    #print(ct.signs)
-    #print(tableau_signs)
+    # print(ct.signs)
+    # print(tableau_signs)
     assert np.allclose(ct.signs, tableau_signs), "Signs didn't match"
     circ_out = circ_prev
     # circ_out = circ_prev.compose(circ_next)
@@ -373,37 +361,121 @@ def test_prepedning():
     assert (verify_equality(circ_ct, circ_out))
 
 
-def main_():
-    pp = generate_random_pauli_polynomial(4, 200)
-    topo = Topology.line(pp.num_qubits)
+def test_clifford_synthesis():
+    circ = random_hscx_circuit(1000, 8)
 
-    pp = simplify_pauli_polynomial(pp)
+    ct = CliffordTableau.from_circuit(circ)
+    topo = Topology.line(circ.num_qubits)
 
-    circ_base = pp.to_qiskit(topo)
-    circ_out, perm = anneal(pp, topo)
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
 
-    print("Base: ", circ_base.count_ops())
-    print("Out:  ", circ_out.count_ops())
+    assert verify_equality(circ, circ_out)
+
+
+def check_matching_architecture(qc: QuantumCircuit, G):
+    for gate in qc:
+        if gate.operation.num_qubits == 2:
+            ctrl, target = gate.qubits
+            ctrl, target = ctrl._index, target._index  # TODO refactor this to a non deprecated way
+            if not G.has_edge(ctrl, target):
+                return False
+    return True
+
+
+def random_rotation_circuit(num_gates, num_qubits):
+    circ = QuantumCircuit(num_qubits)
+    for i in range(num_gates):
+        qubit = np.random.randint(0, num_qubits)
+        angle = np.random.rand() * 2 * np.pi
+        gate = np.random.choice(["rx", "ry", "rz"])
+        if gate == "rx":
+            circ.rx(angle, qubit)
+        elif gate == "rz":
+            circ.rz(angle, qubit)
+        else:
+            circ.ry(angle, qubit)
+    return circ
+
+
+def transform_clifford_basis(measurements, clifford_circuit, shots=100):
+    new_measurements = {}
+    for measure, m_value in measurements.items():
+        p_string = "".join(["X" if m == '1' else "Z" for m in measure])
+        pauli = Pauli(p_string)
+        state = StabilizerState(pauli).evolve(clifford_circuit)
+        c_measurement = state.probabilities_dict()
+        # m_value = m_value / len(c_measurement)
+        for k, v in c_measurement.items():
+            if k in new_measurements:
+                new_measurements[k] += v * m_value
+            else:
+                new_measurements[k] = v * m_value
+    sum = 0
+    for k, v in new_measurements.items():
+        sum += v
+    print(sum)
+    return new_measurements
+
+
+def test_circuit_simulation():
+    # clifford_circ = QuantumCircuit(2)
+    # clifford_circ.cx(0, 1)
+    # clifford_circ.cx(1, 0)
+    clifford_circ = random_hscx_circuit(4, 2)
+    rotation_circ = random_rotation_circuit(10, 2)
+    circ = QuantumCircuit(8)
+    circ.compose(clifford_circ.inverse(), inplace=True)
+    circ.compose(rotation_circ, inplace=True)
+    circ.compose(clifford_circ, inplace=True)
+    print(circ)
+
+    result = execute(circ, Aer.get_backend("statevector_simulator")).result()
+    counts_ = result.get_counts()
+    print(counts_)
+
+    result = execute(rotation_circ, Aer.get_backend("statevector_simulator")).result()
+    counts = result.get_counts()
+    counts = transform_clifford_basis(counts, clifford_circ)
+    print(counts)
+    assert len(counts) == len(counts_)
+    for k in counts.keys():
+        assert k in counts_.keys()
+        assert np.allclose(counts_[k], counts[k])
 
 
 def main():
     backend = FakeVigo()
-    circ = random_hscx_circuit(1000, 8)
-    # print(circ.count_ops())
-    # circ.qasm(filename="test8.qasm")
+    pp = generate_random_pauli_polynomial(8, 10)
+    print(pp.num_legs())
+    pp = simplify_pauli_polynomial(pp)
+    print(pp.num_legs())
+    pp = global_leg_removal(pp, gate_set=[CliffordType.CX, CliffordType.CY,
+                                          CliffordType.CZ, CliffordType.CXH])
+    print(pp.num_legs())
 
-    # circ = QuantumCircuit.from_qasm_file("test8.qasm")
-    topo = Topology.line(circ.num_qubits)
+
+def test():
+    # circ = random_hscx_circuit(1000, 4)
+    # circ.qasm(filename="test.qasm")
+    circ = QuantumCircuit.from_qasm_file("test.qasm")
     ct = CliffordTableau.from_circuit(circ)
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
-    circ_out = apply_permutation(circ_out, perm)
-    # print(circ_out)
-    # print(circ)
-    print("Input: ", circ.count_ops())
-    print("Output: ", circ_out.count_ops())
-    assert (verify_equality(circ, circ_out))
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(Topology.line(circ.num_qubits))
+
+
+def apply_bs_clifford(ct: CliffordTableau, x, idx):
+    if x == 0:
+        ct.tableau[0, idx] = 0
+        ct.tableau[0, idx + ct.n_qubits] = 0
+    elif x == 1:
+        ct.tableau[0, idx] = 1
+        ct.tableau[0, idx + ct.n_qubits] = 0
+    elif x == 2:
+        ct.tableau[0, idx] = 0
+        ct.tableau[0, idx + ct.n_qubits] = 1
+    elif x == 3:
+        ct.tableau[0, idx] = 1
+        ct.tableau[0, idx + ct.n_qubits] = 1
 
 
 if __name__ == '__main__':
-    for _ in range(100):
-        test_prepedning()
+    test()

@@ -24,18 +24,21 @@ def pick_random_gate(num_qubits, gate_set=None):
     return generate_random_clifford(gate, num_qubits)
 
 
-def get_best_gate(pp: PauliPolynomial, topology: Topology,
-                  gate_set, leg_cache=None):
+def get_best_gate(pp: PauliPolynomial, control, target, gate_set):
     if gate_set is None:
         gate_set = [CliffordType.CXH, CliffordType.CX, CliffordType.CY, CliffordType.CZ]
     gate_scores = []
-    control = np.random.choice([i for i in range(pp.num_qubits)])
-    target = np.random.choice([i for i in range(pp.num_qubits) if i != control])
     for gate in gate_set:
         gate = generate_two_qubit_clifford(gate, control, target)
-        effect = compute_effect(pp, gate, topology, leg_cache=leg_cache)
+        effect = count_legs(pp, gate)
         gate_scores.append((gate, effect))
     return min(gate_scores, key=lambda x: x[1])
+
+
+def count_legs(pp: PauliPolynomial, gate: CliffordGate):
+    pp_ = pp.copy()
+    pp_.propagate(gate)
+    return pp_.num_legs() - pp.num_legs()
 
 
 def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology,
@@ -47,6 +50,21 @@ def compute_effect(pp: PauliPolynomial, gate: CliffordGate, topology: Topology,
            pp.two_qubit_count(topology, leg_cache=leg_cache)
 
 
+def global_leg_removal(pp: PauliPolynomial, gate_set=None):
+    pp_ = pp.copy()
+    if gate_set is None:
+        gate_set = [CliffordType.CXH, CliffordType.CX, CliffordType.CY, CliffordType.CZ]
+    for control in range(pp_.num_qubits):
+        for target in range(pp_.num_qubits):
+            if control == target:
+                continue
+            for _ in range(len(gate_set)):
+                gate, effect = get_best_gate(pp_, control, target, gate_set)
+                if effect <= 0:
+                    pp_.propagate(gate)
+    return pp_
+
+
 def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
            nr_iterations=100, gate_set=None):
     leg_cache = {}
@@ -55,6 +73,8 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
     schedule = _validate_temp_schedule(schedule)
     random_nrs = np.random.uniform(0.0, 1.0, size=(nr_iterations,))
     num_qubits = pp.num_qubits
+    print(pp.num_legs())
+    print("===")
     for it in range(nr_iterations):
         t = schedule(it, nr_iterations)
         gate, effect = get_best_gate(pp, topology, gate_set, leg_cache=leg_cache)
@@ -68,9 +88,9 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
 
     except:
         raise Exception("Please install qiskit to export the circuit")
-
-    #clifford_circ, perm = clifford_region.to_cifford_circuit_arch_aware(topology)
-    #+clifford_circ = apply_permutation(clifford_circ, perm)
+    print(pp.num_legs())
+    # clifford_circ, perm = clifford_region.to_cifford_circuit_arch_aware(topology)
+    # +clifford_circ = apply_permutation(clifford_circ, perm)
     pp_circuit = pp.to_qiskit(topology)
     # pp_circuit = apply_permutation(pp_circuit, perm)
     qc = QuantumCircuit(pp.num_qubits)

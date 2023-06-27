@@ -1,8 +1,5 @@
 from enum import Enum
 
-# create a dictionary of all the pauli operators if they are mutlplied together with (key, value) = (prefactor, resulting pauli)
-
-
 PAULI_DICT = {('X', 'X'): (1, 'I'),
               ('X', 'Y'): (1j, 'Z'),
               ('X', 'Z'): (-1j, 'Y'),

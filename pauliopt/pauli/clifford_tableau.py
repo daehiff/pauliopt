@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import stim
 from qiskit import QuantumCircuit
+from qiskit.quantum_info import Clifford
 
 from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, SingleQubitGate, \
     ControlGate
@@ -69,13 +70,13 @@ def pick_pivots(G, remaining: "CliffordTableau", possible_swaps):
     scores = []
     has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
     for col in G.nodes:
-        if not is_cutting(col, G):
+        if not is_cutting(col, G) or (has_cutting_swappable and col in possible_swaps):
             row_x = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
                      if remaining.x_out(col, row) != 0]
             row_z = [nx.shortest_path_length(G, source=col, target=row) for row in G.nodes
                      if remaining.z_out(col, row) != 0]
-            dist_x = len(row_x)
-            dist_z = len(row_z)
+            dist_x = sum(row_x)
+            dist_z = sum(row_z)
             scores.append((col, col, dist_x + dist_z))
     assert len(scores) > 0
     return min(scores, key=lambda x: x[2])[:2]
@@ -109,29 +110,24 @@ def compute_steiner_tree(root: int, nodes: [int], sub_graph: nx.Graph, lookup: d
     steiner_stree = nx.Graph(steiner_stree)
     if len(steiner_stree.nodes()) < 1:
         return []
+    for _ in range(remaining.n_qubits):
+        dfs = list(reversed(list(nx.dfs_edges(steiner_stree, source=root))))
+        swapped = []
+        while dfs:
+            parent, child = dfs.pop(0)
+            if parent == root:
+                continue
+            if lookup[parent] == 0 and lookup[child] == 1 and \
+                    child in swappable_nodes and parent in swappable_nodes:
+                relabel_graph_inplace(steiner_stree, parent, child)
+                relabel_graph_inplace(sub_graph, parent, child)
+                dfs = update_dfs(dfs, parent, child)
+                # remaining.swap_cols(parent, child)
+                permutation[parent], permutation[child] = \
+                    permutation[child], permutation[parent]
 
-    dfs = list(reversed(list(nx.dfs_edges(steiner_stree, source=root))))
-    swapped = []
-    while dfs:
-        parent, child = dfs.pop(0)
-        if lookup[parent] == 0 and lookup[child] == 1 and \
-                child in swappable_nodes and parent in swappable_nodes:
-            relabel_graph_inplace(sub_graph, parent, child)
-            dfs = update_dfs(dfs, parent, child)
-
-            swapped.append(parent)
-            swapped.append(child)
-
-            permutation[permutation.index(parent)], \
-            permutation[permutation.index(child)] = \
-                permutation[permutation.index(child)], \
-                permutation[permutation.index(parent)]
-            # remove parent from the steiner tree
-            # remaining.swap_cols(parent, child)
-
-    for node in swapped:
-        if node in swappable_nodes:
-            swappable_nodes.remove(node)
+                swapped.append(parent)
+                swapped.append(child)
 
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(sub_graph, nodes)
     traversal = nx.bfs_edges(steiner_stree, source=root)
@@ -374,6 +370,13 @@ class CliffordTableau:
                 self.prepend_cnot(op.qubits[0].index, op.qubits[1].index)
 
     @staticmethod
+    def from_qiskit(tableau: Clifford):
+        out = CliffordTableau(n_qubits=tableau.num_qubits)
+        out.tableau = tableau.symplectic_matrix.astype(np.float64)
+        out.signs = tableau.phase.astype(np.float64)
+        return out
+
+    @staticmethod
     def from_circuit(circ: QuantumCircuit):
         tableau = CliffordTableau(n_qubits=circ.num_qubits)
         for op in circ:
@@ -434,12 +437,17 @@ class CliffordTableau:
                     print(f" {int(self.z_out(i, j))} ", end="")
                 print()
 
-    def to_cifford_circuit_arch_aware(self, topo: Topology):
+    def to_cifford_circuit_arch_aware(self, topo: Topology, improvements: bool = True):
         qc = QuantumCircuit(self.n_qubits)
 
         remaining = self.inverse()
-        permutation = list(range(self.n_qubits))
+        permutation = {v: v for v in range(self.n_qubits)}
         swappable_nodes = list(range(self.n_qubits))
+
+        G = topo.to_nx
+        max_lenght = topo._dist.max()
+        for e1, e2 in G.edges:
+            G[e1][e2]["weight"] = 0
 
         def apply(gate_name: str, gate_data: tuple):
             if gate_name == "CNOT":
@@ -449,6 +457,7 @@ class CliffordTableau:
                     swappable_nodes.remove(gate_data[0])
                 if gate_data[1] in swappable_nodes:
                     swappable_nodes.remove(gate_data[1])
+                G[gate_data[0]][gate_data[1]]["weight"] = 2
             elif gate_name == "H":
                 remaining.append_h(gate_data[0])
                 qc.h(gate_data[0])
@@ -490,13 +499,11 @@ class CliffordTableau:
                 sanitize_field_x(pivot, col, remaining, apply)
             steiner_up_down_process_x(pivot, row_x, sub_graph)
 
-            row_z = [col for col in sub_graph.nodes if remaining.z_out(pivot, col) != 0]
+            row_z = [row for row in sub_graph.nodes if remaining.z_out(pivot, row) != 0]
             for col in row_z:
                 sanitize_field_z(pivot, col, remaining, apply)
             if remaining.x_out(pivot, pivot) == 3:
                 apply("S", (pivot,))
-
-            row_z = [col for col in sub_graph.nodes if remaining.z_out(pivot, col) != 0]
             steiner_up_down_process_z(pivot, row_z, sub_graph)
 
             # ensure that the pivots are in ZX basis
@@ -509,10 +516,22 @@ class CliffordTableau:
             if remaining.x_out(pivot, pivot) != 1:
                 apply("S", (pivot,))
 
-        # reduction_order = produce_reduction_order_old(topo, remaining)
-        G = topo.to_nx
         while G.nodes:
             pivot_col, pivot_row = pick_pivots(G, remaining, swappable_nodes)
+
+            if is_cutting(pivot_col, G):
+                non_cutting_vectices = [(node, nx.shortest_path_length(G, source=node,
+                                                                       target=pivot_col,
+                                                                       weight="weight"))
+                                        for node in G.nodes if not is_cutting(node,
+                                                                              G) and node in swappable_nodes]
+                non_cutting = min(non_cutting_vectices, key=lambda x: x[1])[0]
+
+                relabel_graph_inplace(G, non_cutting, pivot_col)
+                # remaining.swap_cols(parent, child)
+                permutation[pivot_col], permutation[non_cutting] = \
+                    permutation[non_cutting], permutation[pivot_col]
+
             steiner_reduce_column(pivot_col, G)
 
             # swap the pivot column and the pivot row in the permutation list
@@ -541,6 +560,7 @@ class CliffordTableau:
             if remaining.signs[col] != 0:
                 apply("S", (col,))
                 apply("S", (col,))
+        permutation = [permutation[i] for i in range(self.n_qubits)]
         return qc, permutation
 
     def to_clifford_circuit(self):

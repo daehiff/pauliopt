@@ -76,6 +76,9 @@ class PauliGadget:
     def __repr__(self):
         return f"({self.angle}) @ {{ {', '.join([pauli.value for pauli in self.paulis])} }}"
 
+    def num_legs(self):
+        return sum([1 for pauli in self.paulis if pauli != Pauli.I])
+
     def copy(self):
         return PauliGadget(self.angle, self.paulis.copy())
 
