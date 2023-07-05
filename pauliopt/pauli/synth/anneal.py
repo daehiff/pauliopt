@@ -6,13 +6,13 @@ from pauliopt.pauli.clifford_region import CliffordRegion
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.phase.optimized_circuits import _validate_temp_schedule
 from pauliopt.topologies import Topology
-from .clifford_gates import CX, CY, CZ, CliffordGate, ControlGate
-from .clifford_region import CliffordRegion
-from .clifford_tableau import CliffordTableau
-from .pauli_polynomial import PauliPolynomial
-from .utils import apply_permutation
-from ..phase.optimized_circuits import _validate_temp_schedule
-from ..topologies import Topology
+from pauliopt.pauli.clifford_gates import CX, CY, CZ, CliffordGate, ControlGate
+from pauliopt.pauli.clifford_region import CliffordRegion
+from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+from pauliopt.pauli.utils import apply_permutation
+from pauliopt.phase.optimized_circuits import _validate_temp_schedule
+from pauliopt.topologies import Topology
 
 
 def pick_random_gate(num_qubits, gate_set=None):

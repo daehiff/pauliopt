@@ -1,10 +1,14 @@
+import json
+import re
+from fractions import Fraction
+
 from pauliopt.pauli.clifford_gates import CliffordGate
 from pauliopt.pauli.pauli_gadget import PauliGadget
 
 from pauliopt.topologies import Topology
 import math
-from pauliopt.pauli.utils import X, Y, Z, I
-from pauliopt.utils import SVGBuilder
+from pauliopt.pauli.utils import X, Y, Z, I, Pauli
+from pauliopt.utils import SVGBuilder, Angle, pi
 import numpy as np
 
 LATEX_HEADER = """\documentclass[preview]{standalone}
@@ -99,6 +103,9 @@ class PauliPolynomial:
     def __len__(self):
         return len(self.pauli_gadgets)
 
+    def __getitem__(self, index):
+        return self.pauli_gadgets[index]
+
     @property
     def num_gadgets(self):
         return len(self.pauli_gadgets)
@@ -124,10 +131,16 @@ class PauliPolynomial:
 
         return qc
 
-    def propagate(self, gate: CliffordGate):
+    def propagate(self, gate: CliffordGate, sub_columns=None):
+        if sub_columns is None:
+            sub_columns = list(range(self.num_gadgets))
+
         pp_ = PauliPolynomial(self.num_qubits)
-        for gadget in self.pauli_gadgets:
-            pp_ >>= gate.propagate_pauli(gadget)
+        for idx, gadget in enumerate(self.pauli_gadgets):
+            if idx in sub_columns:
+                pp_ >>= gate.propagate_pauli(gadget)
+            else:
+                pp_ >>= gadget
         return pp_
 
     def copy(self):
@@ -302,6 +315,44 @@ class PauliPolynomial:
         self.pauli_gadgets[col1], self.pauli_gadgets[col2] = \
             self.pauli_gadgets[col2], self.pauli_gadgets[col1]
 
+    def swap_rows(self, row1, row2):
+        for l in range(self.num_gadgets):
+            self.pauli_gadgets[l].swap_rows(row1, row2)
+
+    def permute(self, permutation: dict):
+        for gadget in self.pauli_gadgets:
+            assert isinstance(gadget, PauliGadget)
+            gadget.permute(permutation)
+
+    def to_dict(self):
+        return {"num_qubits": self.num_qubits,
+                "pauli_gadgets": [gadget.to_dict() for gadget in self.pauli_gadgets]}
+
+    def to_file(self, file_name):
+        with open(file_name, "w") as f:
+            f.write(json.dumps(self.to_dict(), indent=4))
+
+    @staticmethod
+    def from_dict(dict):
+        pp = PauliPolynomial(dict["num_qubits"])
+        pp.pauli_gadgets = [PauliGadget.from_dict(gadget) for gadget in
+                            dict["pauli_gadgets"]]
+        return pp
+
+    #
+    # @staticmethod
+    # def from_file(file_name):
+    #     with open(file_name, "rb") as f:
+
+
+def string_to_num(str):
+    if "π" == str:
+        return pi
+    elif "π" in str:
+        return int(str.replace("π", "")) * pi
+    else:
+        return int(str)
+
 
 def remove_collapsed_pauli_gadegts(remaining_poly):
     return list(
@@ -316,20 +367,22 @@ def find_machting_parity_right(idx, remaining_poly):
     return None
 
 
-def is_commuting_region(idx, idx_right, remaining_poly):
+def is_commuting_region(idx, idx_right, remaining_poly, allow_acs=False):
+    if allow_acs:
+        return True
     for k in range(idx, idx_right):
         if not remaining_poly[idx].commutes(remaining_poly[k]):
             return False
     return True
 
 
-def propagate_phase_gadegts(remaining_poly):
+def propagate_phase_gadegts(remaining_poly, allow_acs=False):
     converged = True
     for idx, gadget in enumerate(remaining_poly):
         idx_right = find_machting_parity_right(idx, remaining_poly)
         if idx_right is None:
             continue
-        if not is_commuting_region(idx, idx_right, remaining_poly):
+        if not is_commuting_region(idx, idx_right, remaining_poly, allow_acs=allow_acs):
             continue
 
         remaining_poly[idx_right].angle = remaining_poly[idx_right].angle + gadget.angle
@@ -338,19 +391,13 @@ def propagate_phase_gadegts(remaining_poly):
     return converged
 
 
-def clamp(phase):
-    new_phase = phase % 2
-    if new_phase > 1:
-        return new_phase - 2
-    return phase
-
-
-def simplify_pauli_polynomial(pp: PauliPolynomial):
+def simplify_pauli_polynomial(pp: PauliPolynomial, allow_acs=False):
     remaining_poly = [gadet.copy() for gadet in pp.pauli_gadgets]
     converged = False
     while not converged:
         remaining_poly = remove_collapsed_pauli_gadegts(remaining_poly)
-        converged = propagate_phase_gadegts(remaining_poly)
+        converged = propagate_phase_gadegts(remaining_poly,
+                                            allow_acs=allow_acs)
 
     pp_ = PauliPolynomial(pp.num_qubits)
     for gadget in remaining_poly:

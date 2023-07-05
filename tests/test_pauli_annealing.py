@@ -10,7 +10,7 @@ from pytket._tket.transform import Transform
 from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit
 from qiskit import QuantumCircuit
 
-from pauliopt.pauli.anneal import anneal
+from pauliopt.pauli.synth.anneal import anneal
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import X, Y, Z, I

@@ -154,6 +154,65 @@ def sanitize_field_x(row, column, remaining, apply):
         apply("H", (column,))
 
 
+def steiner_up_down_process_z(pivot, row_z, sub_graph, remaining,
+                              apply, swappable_nodes, permutation, include_swaps):
+    row_z_ = list(set([pivot] + row_z))
+    lookup = {node: int(remaining.z_out(pivot, node) != 0) for node in
+              sub_graph.nodes}
+    traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+                                     swappable_nodes, permutation, remaining,
+                                     include_swaps)
+    for parent, child in traversal:
+        if remaining.z_out(pivot, parent) == 0:
+            apply("CNOT", (parent, child))
+
+    for parent, child in traversal:
+        apply("CNOT", (child, parent))
+
+
+def steiner_up_down_process_x(pivot, row_x, sub_graph, remaining,
+                              apply, swappable_nodes, permutation, include_swaps):
+    row_x_ = list(set([pivot] + row_x))
+    lookup = {node: int(remaining.x_out(pivot, node) != 0) for node in
+              sub_graph.nodes}
+    traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+                                     swappable_nodes, permutation, remaining,
+                                     include_swaps)
+    for parent, child in traversal:
+        if remaining.x_out(pivot, parent) == 0:
+            apply("CNOT", (child, parent))
+
+    for parent, child in traversal:
+        apply("CNOT", (parent, child))
+
+
+def steiner_reduce_column(pivot, sub_graph, remaining,
+                          apply, swappable_nodes, permutation, include_swaps):
+    row_x = [col for col in sub_graph.nodes if remaining.x_out(pivot, col) != 0]
+    for col in row_x:
+        sanitize_field_x(pivot, col, remaining, apply)
+    steiner_up_down_process_x(pivot, row_x, sub_graph, remaining,
+                              apply, swappable_nodes, permutation, include_swaps)
+
+    row_z = [row for row in sub_graph.nodes if remaining.z_out(pivot, row) != 0]
+    for col in row_z:
+        sanitize_field_z(pivot, col, remaining, apply)
+    if remaining.x_out(pivot, pivot) == 3:
+        apply("S", (pivot,))
+    steiner_up_down_process_z(pivot, row_z, sub_graph, remaining,
+                              apply, swappable_nodes, permutation, include_swaps)
+
+    # ensure that the pivots are in ZX basis
+    if remaining.z_out(pivot, pivot) == 3:
+        apply("S", (pivot,))
+
+    if remaining.z_out(pivot, pivot) != 2:
+        apply("H", (pivot,))
+
+    if remaining.x_out(pivot, pivot) != 1:
+        apply("S", (pivot,))
+
+
 class CliffordTableau:
     def __init__(self, n_qubits: int = None, tableau: np.array = None,
                  signs: np.array = None):
@@ -476,7 +535,6 @@ class CliffordTableau:
         swappable_nodes = list(range(self.n_qubits))
 
         G = topo.to_nx
-        max_lenght = topo._dist.max()
         for e1, e2 in G.edges:
             G[e1][e2]["weight"] = 0
 
@@ -498,57 +556,6 @@ class CliffordTableau:
             else:
                 raise Exception("Unknown Gate")
 
-        def steiner_up_down_process_z(pivot, row_z, sub_graph):
-            row_z_ = list(set([pivot] + row_z))
-            lookup = {node: int(remaining.z_out(pivot, node) != 0) for node in
-                      sub_graph.nodes}
-            traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
-                                             swappable_nodes, permutation, remaining,
-                                             include_swaps)
-            for parent, child in traversal:
-                if remaining.z_out(pivot, parent) == 0:
-                    apply("CNOT", (parent, child))
-
-            for parent, child in traversal:
-                apply("CNOT", (child, parent))
-
-        def steiner_up_down_process_x(pivot, row_x, sub_graph):
-            row_x_ = list(set([pivot] + row_x))
-            lookup = {node: int(remaining.x_out(pivot, node) != 0) for node in
-                      sub_graph.nodes}
-            traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
-                                             swappable_nodes, permutation, remaining,
-                                             include_swaps)
-            for parent, child in traversal:
-                if remaining.x_out(pivot, parent) == 0:
-                    apply("CNOT", (child, parent))
-
-            for parent, child in traversal:
-                apply("CNOT", (parent, child))
-
-        def steiner_reduce_column(pivot, sub_graph):
-            row_x = [col for col in sub_graph.nodes if remaining.x_out(pivot, col) != 0]
-            for col in row_x:
-                sanitize_field_x(pivot, col, remaining, apply)
-            steiner_up_down_process_x(pivot, row_x, sub_graph)
-
-            row_z = [row for row in sub_graph.nodes if remaining.z_out(pivot, row) != 0]
-            for col in row_z:
-                sanitize_field_z(pivot, col, remaining, apply)
-            if remaining.x_out(pivot, pivot) == 3:
-                apply("S", (pivot,))
-            steiner_up_down_process_z(pivot, row_z, sub_graph)
-
-            # ensure that the pivots are in ZX basis
-            if remaining.z_out(pivot, pivot) == 3:
-                apply("S", (pivot,))
-
-            if remaining.z_out(pivot, pivot) != 2:
-                apply("H", (pivot,))
-
-            if remaining.x_out(pivot, pivot) != 1:
-                apply("S", (pivot,))
-
         while G.nodes:
             pivot_col, pivot_row = pick_pivots(G, remaining, swappable_nodes,
                                                include_swaps)
@@ -566,11 +573,8 @@ class CliffordTableau:
                 permutation[pivot_col], permutation[non_cutting] = \
                     permutation[non_cutting], permutation[pivot_col]
 
-            steiner_reduce_column(pivot_col, G)
-
-            # swap the pivot column and the pivot row in the permutation list
-            # permutation[pivot_col], permutation[pivot_row] = \
-            #     permutation[pivot_row], permutation[pivot_col]
+            steiner_reduce_column(pivot_col, G, remaining,
+                                  apply, swappable_nodes, permutation, include_swaps)
 
             if pivot_col in swappable_nodes:
                 swappable_nodes.remove(pivot_col)

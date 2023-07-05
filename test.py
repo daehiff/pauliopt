@@ -1,24 +1,31 @@
+import pickle
 import warnings
 from enum import Enum
 
-import galois
 import numpy as np
 import pytket
 import stim
+from pytket._tket.architecture import Architecture
+from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
+from pytket._tket.placement import GraphPlacement
+from pytket._tket.predicates import CompilationUnit
+from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
-from qiskit import QuantumCircuit, QuantumRegister, transpile, IBMQ, execute, Aer
+from pytket.utils import gen_term_sequence_circuit
+from qiskit import QuantumCircuit, QuantumRegister, execute, Aer
 from qiskit.circuit import Gate, CircuitInstruction
-from qiskit.providers.fake_provider import FakeMumbai, FakeVigo
-from qiskit.quantum_info import Clifford, StabilizerState, Pauli
+from qiskit.providers.fake_provider import FakeVigo
+from qiskit.quantum_info import StabilizerState, Pauli, Clifford
 
-from pauliopt.pauli.anneal import anneal, global_leg_removal
+from pauliopt.pauli.synth.anneal import global_leg_removal
 from pauliopt.pauli.clifford_gates import CliffordType
 from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
-from pauliopt.pauli.divide_conquer import synth_divide_and_conquer
+from pauliopt.pauli.synth.divide_conquer import synth_divide_and_conquer
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
+from pauliopt.pauli.synth.cowtan import synth_cowtan
 from pauliopt.pauli.utils import apply_permutation
-from pauliopt.utils import pi
+from pauliopt.utils import pi, AngleVar, Angle
 
 
 def reconstruct_tableau(tableau: stim.Tableau):
@@ -45,8 +52,7 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64,
-                          pi / 128, pi / 256]
+        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64]
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -462,7 +468,7 @@ def test():
     circ_in = pp.to_qiskit(topo)
     pp = simplify_pauli_polynomial(pp)
 
-    circ_out = synth_divide_and_conquer(pp.copy(), topo, add_sort=False)
+    circ_out = synth_divide_and_conquer(pp.copy(), topo)
     print("Ours:      ", circ_out.count_ops())
     # circ_out = synth_divide_and_conquer(pp.copy(), topo, add_sort=True)
     # print("Ours sort: ", circ_out.count_ops())
@@ -470,5 +476,98 @@ def test():
     assert verify_equality(circ_out, circ_in)
 
 
+def build_pauli_string_tket(in_string, n_qubits):
+    p_string = [I for _ in range(n_qubits)]
+    for q, id in in_string:
+        register = q[0]
+        index = q[1][0]
+        if id == "I":
+            p_string[index] = I
+        elif id == "X":
+            p_string[index] = X
+        elif id == "Y":
+            p_string[index] = Y
+        elif id == "Z":
+            p_string[index] = Z
+        else:
+            raise ValueError("Invalid Pauli string")
+    return p_string
+
+
+def route_circuit_tket(circuit: pytket.Circuit, topo: Topology, transform="naive"):
+    if transform == "naive":
+        Transform.DecomposeBoxes().apply(circuit)
+    else:
+        Transform.UCCSynthesis(PauliSynthStrat.Sets, CXConfigType.Tree).apply(circuit)
+    tket_arch = Architecture([e for e in topo.to_nx.edges()])
+    unit = CompilationUnit(circuit)
+    passes = SequencePass([
+        PlacementPass(GraphPlacement(tket_arch)),
+        RoutingPass(tket_arch),
+    ])
+    passes.apply(unit)
+    circ_out = unit.circuit
+    Transform.RebaseToCliffordSingles().apply(circ_out)
+    Transform.RebaseToRzRx().apply(circ_out)
+    return circ_out
+
+
+def test_sto3g():
+    with open("H2_BK_sto3g.pickle", "rb") as pickle_in:
+        qubit_pauli_operator = pickle.load(pickle_in)
+
+    n_qubits = 4
+    topo = Topology.line(n_qubits)
+    pp = PauliPolynomial(n_qubits)
+    idx = 1
+    for el in qubit_pauli_operator.to_list():
+        p_string = build_pauli_string_tket(el["string"], n_qubits)
+        p_phase = Angle(np.pi / idx)
+        pp >>= PPhase(p_phase) @ p_string
+        idx += 1
+    print(pp)
+    pp = simplify_pauli_polynomial(pp, allow_acs=False)
+    circ_out, perm, _ = synth_cowtan(pp.copy(), topo)
+    circ_out = apply_permutation(circ_out, perm)
+    # assert verify_equality(circ_out, pp.to_qiskit(topo))
+
+    initial_circ = pytket.Circuit(n_qubits)
+    set_synth_circuit = gen_term_sequence_circuit(qubit_pauli_operator, initial_circ)
+    naive_circuit = route_circuit_tket(set_synth_circuit.copy(),
+                                       topo, transform="naive")
+    naive_circuit = tk_to_qiskit(naive_circuit)
+
+    uccds_circuit = route_circuit_tket(set_synth_circuit.copy(),
+                                       topo, transform="other")
+    uccds_circuit = tk_to_qiskit(uccds_circuit)
+    print("Naive with tket:  ", naive_circuit.count_ops())
+    print("Synth tket uccds: ", uccds_circuit.count_ops())
+    print("Ours:             ", circ_out.count_ops())
+
+
+def test_tableau_synth():
+    pp = PauliPolynomial(5)
+
+    pp >>= PPhase(pi / 4) @ [I, X, Y, X, X]
+    pp >>= PPhase(pi / 4) @ [I, Y, I, Z, X]
+    pp >>= PPhase(pi / 4) @ [Y, X, I, X, X]
+    pp >>= PPhase(pi / 4) @ [Z, Z, X, X, I]
+
+    #pp = generate_random_pauli_polynomial(5, 10)
+
+    topo = Topology.line(pp.num_qubits)
+    circ_in_original = pp.to_qiskit(topo)
+    pp = simplify_pauli_polynomial(pp)
+    circ_out, permutation, gadget_order = synth_cowtan(pp.copy(), topo)
+
+    pp_ = PauliPolynomial(pp.num_qubits)
+    pp_.pauli_gadgets = [pp.pauli_gadgets[i] for i in gadget_order]
+    circ_in = pp_.to_qiskit(topo)
+
+    print("Normal:    ", circ_in_original.count_ops())
+    print("Ours:      ", circ_out.count_ops())
+    assert verify_equality(circ_out, circ_in)
+
+
 if __name__ == '__main__':
-    test()
+    test_sto3g()

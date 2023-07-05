@@ -22,7 +22,7 @@ def decompose_cnot_ladder_z(ctrl: int, trg: int, arch: Topology):
     return reversed(cnot_ladder)
 
 
-def find_minimal_cx_assignment(column: np.array, arch: Topology):
+def find_minimal_cx_assignment(column: np.array, arch: Topology, q0=None):
     if not np.all(np.isin(column, [0, 1])):
         raise Exception(f"Expected binary array as column, got: {column}")
 
@@ -40,8 +40,9 @@ def find_minimal_cx_assignment(column: np.array, arch: Topology):
     for fst, snd in mst_branches:
         incident[fst].add((fst, snd))
         incident[snd].add((snd, fst))
-
-    q0 = np.argmax(column)  # Assume that 0 is always the first qubit aka first non zero
+    if q0 is None:
+        q0 = np.argmax(
+            column)  # Assume that 0 is always the first qubit aka first non zero
     visited = set()
     queue = deque([q0])
     cnot_ladder = []
@@ -76,11 +77,47 @@ class PauliGadget:
     def __repr__(self):
         return f"({self.angle}) @ {{ {', '.join([pauli.value for pauli in self.paulis])} }}"
 
+    def __getitem__(self, item):
+        return self.paulis[item]
+
+    @property
+    def num_qubits(self):
+        return len(self.paulis)
+
     def num_legs(self):
         return sum([1 for pauli in self.paulis if pauli != Pauli.I])
 
     def copy(self):
         return PauliGadget(self.angle, self.paulis.copy())
+
+    # TODO refactor to use decompose
+    def decompose(self, q0, topology: Topology = None):
+        from pauliopt.pauli.clifford_gates import H, S, CX
+        if topology is None:
+            topology = Topology.complete(self.num_qubits)
+
+        cliffords = []
+        column = np.asarray(self.paulis)
+        column_binary = np.where(column == I, 0, 1)
+        for pauli_idx in range(len(column)):
+            if column[pauli_idx] == I:
+                pass
+            elif column[pauli_idx] == X:
+                cliffords.append(H(pauli_idx))
+            elif column[pauli_idx] == Y:
+                cliffords.append(S(pauli_idx))
+            elif column[pauli_idx] == Z:  # Z
+                pass
+            else:
+                raise Exception(f"unknown column type: {column[pauli_idx]}")
+        cnot_ladder, q0 = find_minimal_cx_assignment(column_binary, topology, q0=q0)
+        if len(cnot_ladder) > 0:
+            for tail, head in cnot_ladder:
+                cliffords.append(CX(tail, head))
+        return cliffords, q0
+
+    def swap_rows(self, row1, row2):
+        self.paulis[row1], self.paulis[row2] = self.paulis[row2], self.paulis[row1]
 
     def two_qubit_count(self, topology, leg_cache=None):
         if leg_cache is None:
@@ -106,6 +143,8 @@ class PauliGadget:
         for p_1, p_2 in zip(self.paulis, other.paulis):
             if p_1 != Pauli.I and p_2 != Pauli.I:
                 match_count += 1
+            else:
+                match_count -= 1
         return match_count
 
     def commutes(self, other: "PauliGadget"):
@@ -181,3 +220,15 @@ class PauliGadget:
             else:
                 raise Exception(f"unknown column type: {column[pauli_idx]}")
         return circ
+
+    def permute(self, permutation: dict):
+        for k, v in permutation.items():
+            self.paulis[k], self.paulis[v] = self.paulis[v], self.paulis[k]
+
+    def to_dict(self):
+        # convert paulis to strings in place
+        return {"paulis": [p.value for p in self.paulis], "angle": self.angle.to_json()}
+
+    @staticmethod
+    def from_dict(gadget):
+        return PauliGadget(gadget["paulis"], gadget["angle"])

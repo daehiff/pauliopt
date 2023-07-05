@@ -98,6 +98,11 @@ class AngleExpr(ABC):
         ...
 
     @property
+    @abstractmethod
+    def to_json(self) -> Any:
+        pass
+
+    @property
     def is_zero(self) -> bool:
         return False
 
@@ -193,6 +198,9 @@ class Angle(AngleExpr):
 
     @property
     def to_qiskit(self) -> float:
+        return float(self)
+
+    def to_json(self) -> Any:
         return float(self)
 
     def __pos__(self) -> "Angle":
@@ -564,15 +572,15 @@ class AngleVar(AngleExpr):
 
     @property
     def to_qiskit(self) -> Any:
-        if self._id in AngleVar._qiskit_bindings:
-            return AngleVar._qiskit_bindings[self._id]
+        # if self._id in AngleVar._qiskit_bindings:
+        #     return AngleVar._qiskit_bindings[self._id]
         try:
             # pylint: disable = import-outside-toplevel
             from qiskit.circuit import Parameter  # type: ignore
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError("You must install the 'qiskit' library.") from e
-        p = Parameter(self._repr_latex_)
-        AngleVar._qiskit_bindings[self._id] = p
+        p = Parameter(str(self._repr_latex_))
+        # AngleVar._qiskit_bindings[self._id] = p
         return p
 
     def __hash__(self) -> int:
