@@ -75,7 +75,7 @@ class PauliGadget:
         return len(self.paulis)
 
     def __repr__(self):
-        return f"({self.angle}) @ {{ {', '.join([pauli.value for pauli in self.paulis])} }}"
+        return f"PPhase({self.angle}) @ [ {', '.join([pauli.value for pauli in self.paulis])} ]"
 
     def __getitem__(self, item):
         return self.paulis[item]
@@ -92,7 +92,7 @@ class PauliGadget:
 
     # TODO refactor to use decompose
     def decompose(self, q0, topology: Topology = None):
-        from pauliopt.pauli.clifford_gates import H, S, CX
+        from pauliopt.pauli.clifford_gates import H, V, CX
         if topology is None:
             topology = Topology.complete(self.num_qubits)
 
@@ -105,7 +105,7 @@ class PauliGadget:
             elif column[pauli_idx] == X:
                 cliffords.append(H(pauli_idx))
             elif column[pauli_idx] == Y:
-                cliffords.append(S(pauli_idx))
+                cliffords.append(V(pauli_idx))
             elif column[pauli_idx] == Z:  # Z
                 pass
             else:
@@ -113,7 +113,7 @@ class PauliGadget:
         cnot_ladder, q0 = find_minimal_cx_assignment(column_binary, topology, q0=q0)
         if len(cnot_ladder) > 0:
             for tail, head in cnot_ladder:
-                cliffords.append(CX(tail, head))
+                cliffords.append(CX(head, tail))
         return cliffords, q0
 
     def swap_rows(self, row1, row2):

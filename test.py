@@ -1,47 +1,54 @@
 import pickle
 import warnings
-from enum import Enum
 
 import numpy as np
 import pytket
 import stim
 from pytket._tket.architecture import Architecture
+from pytket._tket.partition import term_sequence, PauliPartitionStrat, GraphColourMethod
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
 from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit
-from qiskit import QuantumCircuit, QuantumRegister, execute, Aer
-from qiskit.circuit import Gate, CircuitInstruction
-from qiskit.providers.fake_provider import FakeVigo
-from qiskit.quantum_info import StabilizerState, Pauli, Clifford
+from qiskit import QuantumCircuit
 
-from pauliopt.pauli.synth.anneal import global_leg_removal
-from pauliopt.pauli.clifford_gates import CliffordType
-from pauliopt.pauli.clifford_tableau import CliffordTableau, reconstruct_tableau_signs
-from pauliopt.pauli.synth.divide_conquer import synth_divide_and_conquer
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pauliopt.pauli.synth.cowtan import synth_cowtan
+from pauliopt.pauli.synth.arch_aware_uccds import uccds_synthesis
+from pauliopt.pauli.synth.divide_conquer import synth_divide_and_conquer
+from pauliopt.pauli.synth.tableau_synth import pauli_polynomial_steiner_gray_synth_nc
 from pauliopt.pauli.utils import apply_permutation
-from pauliopt.utils import pi, AngleVar, Angle
+from pauliopt.utils import pi
 
 
-def reconstruct_tableau(tableau: stim.Tableau):
-    xsx, xsz, zsx, zsz, x_signs, z_signs = tableau.to_numpy()
-    x_row = np.concatenate([xsx, xsz], axis=1)
-    z_row = np.concatenate([zsx, zsz], axis=1)
-    return np.concatenate([x_row, z_row], axis=0).astype(np.int64)
+def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
+                                 max_legs=None, allowed_angels=None):
+    if min_legs is None:
+        min_legs = 2
+    if max_legs is None:
+        max_legs = num_qubits
+    if allowed_angels is None:
+        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64]
+    allowed_legs = [Z]
+    pp = PauliPolynomial(num_qubits)
+    for _ in range(num_gadgets):
+        pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs,
+                                          allowed_angels, allowed_legs=allowed_legs)
+    return pp
 
 
-def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
+def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels,
+                               allowed_legs=None):
+    if allowed_legs is None:
+        allowed_legs = [X, Y, Z]
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
     legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
     phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
-        phase_gadget[leg] = np.random.choice([X, Y, Z])
+        phase_gadget[leg] = np.random.choice(allowed_legs)
     return PPhase(angle) @ phase_gadget
 
 
@@ -52,7 +59,7 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64]
+        allowed_angels = [pi, pi / 2, pi / 4, pi / 8, pi / 16]
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -84,94 +91,11 @@ def verify_equality(qc_in, qc_out):
     :return:
     """
     try:
-        from qiskit.quantum_info import Statevector
+        from qiskit.quantum_info import Statevector, Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
     return Statevector.from_instruction(qc_in) \
         .equiv(Statevector.from_instruction(qc_out))
-
-
-def are_non_zeros_clifford(matrix: np.array):
-    matrix_ = np.round(matrix, decimals=np.finfo(matrix.dtype).precision - 1)
-    for non_zero in matrix_[matrix_.nonzero()]:
-        if non_zero not in [1.0, -1.0, 1.j, -1.j]:
-            return False
-    return True
-
-
-def generate_pauli(j: int, n: int, p_type="x"):
-    assert p_type == "x" or p_type == "z"
-    pauli_x = np.asarray([[0.0, 1.0], [1.0, 0.0]])
-    pauli_z = np.asarray([[1.0, 0.0], [0.0, -1.0]])
-    if j == 0:
-        pauli = pauli_x if p_type == "x" else pauli_z
-    else:
-        pauli = np.identity(2)
-
-    for i in range(1, n):
-        if i == j:
-            pauli = np.kron(pauli, pauli_x if p_type == "x" else pauli_z)
-        else:
-            pauli = np.kron(pauli, np.identity(2))
-    return pauli
-
-
-def is_clifford(gate: Gate):
-    gate_unitary = gate.to_matrix()
-    for j in range(gate.num_qubits):
-        pauli_x_j = generate_pauli(j, gate.num_qubits, p_type="x")
-        pauli_z_j = generate_pauli(j, gate.num_qubits, p_type="z")
-        if not are_non_zeros_clifford(gate_unitary @ pauli_x_j @ gate_unitary.conj().T) or \
-                not are_non_zeros_clifford(
-                    gate_unitary @ pauli_z_j @ gate_unitary.conj().T):
-            return False
-
-    return True
-
-
-def count_single_qubit_cliffords(qc: QuantumCircuit):
-    count = 0
-    for instr, _, _ in qc.data:
-        assert isinstance(instr, Gate)
-        if is_clifford(instr) and instr.num_qubits < 2:
-            count += 1
-    return count
-
-
-def count_single_qubit_non_cliffords(qc: QuantumCircuit):
-    count = 0
-    for instr, _, _ in qc.data:
-        assert isinstance(instr, Gate)
-        if not is_clifford(instr) and instr.num_qubits < 2:
-            count += 1
-    return count
-
-
-def two_qubit_count(count_ops):
-    two_qubit_ops = ["cy", "cx", "cz", "swap", "cz"]
-    count = 0
-    for op in count_ops:
-        if op in two_qubit_ops:
-            count += count_ops[op]
-    return count
-
-
-def analyse_ops(qc: QuantumCircuit):
-    two_qubit = two_qubit_count(qc.count_ops())
-    single_qubit = count_single_qubit_non_cliffords(qc)
-    clifford = count_single_qubit_cliffords(qc)
-    return {
-        "two_qubit": two_qubit,
-        "single_qubit": single_qubit,
-        "single_qubit_clifford": clifford
-    }
-
-
-def n_times_kron(p_list):
-    a = p_list[0]
-    for pauli in p_list[1:]:
-        a = np.kron(a, pauli)
-    return a
 
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
@@ -200,65 +124,6 @@ def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     return qc
 
 
-class GateType(Enum):
-    H = 0
-    S = 1
-    CX = 2
-    Rx = 3
-
-
-class Gate:
-    def __init__(self, type, qubits):
-        self.type = type
-        self.qubits = qubits
-
-    @staticmethod
-    def from_op(op: CircuitInstruction):
-        if op.operation.name == "h":
-            return Gate(GateType.H, [op.qubits[0].index])
-        elif op.operation.name == "s":
-            return Gate(GateType.S, [op.qubits[0].index])
-        elif op.operation.name == "cx":
-            return Gate(GateType.CX, [op.qubits[0].index, op.qubits[1].index])
-        elif op.operation.name == "rz":
-            return Gate(GateType.Rx, [op.qubits[0].index])
-
-
-def build_model_circuit(n):
-    """Create quantum fourier transform circuit on quantum register qreg."""
-    qreg = QuantumRegister(n)
-    circuit = QuantumCircuit(qreg, name="qft")
-
-    for i in range(n):
-        for j in range(i):
-            # Using negative exponents so we safely underflow to 0 rather than
-            # raise `OverflowError`.
-            circuit.cp(math.pi * (2.0 ** (j - i)), qreg[i], qreg[j])
-        circuit.h(qreg[i])
-
-    return circuit
-
-
-def pauli_string_to_matrix(pauli_string):
-    if pauli_string == "I":
-        return np.eye(2)
-    elif pauli_string == "X":
-        return np.array([[0, 1], [1, 0]])
-    elif pauli_string == "Y":
-        return np.array([[0, -1j], [1j, 0]])
-    elif pauli_string == "Z":
-        return np.array([[1, 0], [0, -1]])
-    else:
-        raise Exception("Invalid pauli string")
-
-
-def get_resulting_pauli(res_matrix, pauli2):
-    for sign in [-1, 1, 1.j, -1.j]:
-        for pauli in ["X", "Y", "Z", "I"]:
-            if np.allclose(res_matrix, sign * pauli_string_to_matrix(pauli)):
-                return sign, pauli
-
-
 def undo_permutation(qc: QuantumCircuit, perm):
     circ_out = qiskit_to_tk(qc)
     inv_map = {circ_out.qubits[v]: circ_out.qubits[k] for v, k in enumerate(perm)}
@@ -271,114 +136,6 @@ def undo_permutation(qc: QuantumCircuit, perm):
     return circ_out
 
 
-def append_circuit_to_tableau(circ: QuantumCircuit, tableau: stim.Tableau):
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    cnot = stim.Tableau.from_named_gate("CX")
-    had = stim.Tableau.from_named_gate("H")
-    s = stim.Tableau.from_named_gate("S")
-    for op in circ:
-        if op.operation.name == "h":
-            tableau.append(had, [op.qubits[0].index])
-        elif op.operation.name == "s":
-            tableau.append(s, [op.qubits[0].index])
-        elif op.operation.name == "cx":
-            tableau.append(cnot, [op.qubits[0].index, op.qubits[1].index])
-        else:
-            raise Exception("Unknown operation")
-    return tableau
-
-
-def prepend_circuit_to_tableau(circ: QuantumCircuit, tableau: stim.Tableau):
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    cnot = stim.Tableau.from_named_gate("CX")
-    had = stim.Tableau.from_named_gate("H")
-    s = stim.Tableau.from_named_gate("S")
-    for op in reversed(circ):
-        if op.operation.name == "h":
-            tableau.prepend(had, [op.qubits[0].index])
-        elif op.operation.name == "s":
-            tableau.prepend(s, [op.qubits[0].index])
-        elif op.operation.name == "cx":
-            tableau.prepend(cnot, [op.qubits[0].index, op.qubits[1].index])
-        else:
-            raise Exception("Unknown operation")
-    return tableau
-
-
-def parse_stim_to_qiskit(circ: stim.Circuit):
-    qc = QuantumCircuit(circ.num_qubits)
-    for gate in circ:
-        if gate.name == "CX":
-            targets = [target.value for target in gate.targets_copy()]
-            targets = [(targets[i], targets[i + 1]) for i in range(0, len(targets), 2)]
-            for (ctrl, target) in targets:
-                qc.cx(ctrl, target)
-        elif gate.name == "H":
-            targets = [target.value for target in gate.targets_copy()]
-            for qubit in targets:
-                qc.h(qubit)
-        elif gate.name == "S":
-            targets = [target.value for target in gate.targets_copy()]
-            for qubit in targets:
-                qc.s(qubit)
-        else:
-            raise TypeError(f"Unknown Name: {gate.name}")
-    return qc
-
-
-def test_prepedning():
-    circ_prev = random_hscx_circuit(1000, 8)
-    circ_prev.s(0)
-    circ_prev.s(0)
-
-    # circ_prev.cx(1, 0)
-    # circ_prev.h(1)
-    # circ_prev.h(1)
-
-    # circ_prev.cx(0, 1)
-    # circ_prev.h(1)
-    # circ_next = random_hscx_circuit(1000, 4)
-    tableau = stim.Tableau(circ_prev.num_qubits)
-
-    # tableau = append_circuit_to_tableau(circ_next, tableau)
-    tableau = prepend_circuit_to_tableau(circ_prev, tableau)
-    tableau_matrix = reconstruct_tableau(tableau)
-    tableau_signs = reconstruct_tableau_signs(tableau)
-    tableau = CliffordTableau(tableau=tableau_matrix, signs=tableau_signs)
-    circ_stim = tableau.to_clifford_circuit()
-
-    ct = CliffordTableau(circ_prev.num_qubits)
-    # ct.append_circuit(circ_next)
-    ct.prepend_circuit(circ_prev)
-    circ_ct = ct.to_clifford_circuit()
-    # #
-    # print(ct.tableau)
-    # print(tableau_matrix)
-    assert np.allclose(ct.tableau, tableau_matrix), "Matrices don't match"
-
-    # print(ct.signs)
-    # print(tableau_signs)
-    assert np.allclose(ct.signs, tableau_signs), "Signs didn't match"
-    circ_out = circ_prev
-    # circ_out = circ_prev.compose(circ_next)
-    # print(circ_prev)
-    # print(circ_next)
-    # print(circ_out)
-
-    assert (verify_equality(circ_ct, circ_out))
-
-
-def test_clifford_synthesis():
-    circ = random_hscx_circuit(1000, 8)
-
-    ct = CliffordTableau.from_circuit(circ)
-    topo = Topology.line(circ.num_qubits)
-
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
-
-    assert verify_equality(circ, circ_out)
-
-
 def check_matching_architecture(qc: QuantumCircuit, G):
     for gate in qc:
         if gate.operation.num_qubits == 2:
@@ -387,111 +144,6 @@ def check_matching_architecture(qc: QuantumCircuit, G):
             if not G.has_edge(ctrl, target):
                 return False
     return True
-
-
-def random_rotation_circuit(num_gates, num_qubits):
-    circ = QuantumCircuit(num_qubits)
-    for i in range(num_gates):
-        qubit = np.random.randint(0, num_qubits)
-        angle = np.random.rand() * 2 * np.pi
-        gate = np.random.choice(["rx", "ry", "rz"])
-        if gate == "rx":
-            circ.rx(angle, qubit)
-        elif gate == "rz":
-            circ.rz(angle, qubit)
-        else:
-            circ.ry(angle, qubit)
-    return circ
-
-
-def transform_clifford_basis(measurements, clifford_circuit, shots=100):
-    new_measurements = {}
-    for measure, m_value in measurements.items():
-        p_string = "".join(["X" if m == '1' else "Z" for m in measure])
-        pauli = Pauli(p_string)
-        state = StabilizerState(pauli).evolve(clifford_circuit)
-        c_measurement = state.probabilities_dict()
-        # m_value = m_value / len(c_measurement)
-        for k, v in c_measurement.items():
-            if k in new_measurements:
-                new_measurements[k] += v * m_value
-            else:
-                new_measurements[k] = v * m_value
-    sum = 0
-    for k, v in new_measurements.items():
-        sum += v
-    print(sum)
-    return new_measurements
-
-
-def test_circuit_simulation():
-    # clifford_circ = QuantumCircuit(2)
-    # clifford_circ.cx(0, 1)
-    # clifford_circ.cx(1, 0)
-    clifford_circ = random_hscx_circuit(4, 2)
-    rotation_circ = random_rotation_circuit(10, 2)
-    circ = QuantumCircuit(8)
-    circ.compose(clifford_circ.inverse(), inplace=True)
-    circ.compose(rotation_circ, inplace=True)
-    circ.compose(clifford_circ, inplace=True)
-    print(circ)
-
-    result = execute(circ, Aer.get_backend("statevector_simulator")).result()
-    counts_ = result.get_counts()
-    print(counts_)
-
-    result = execute(rotation_circ, Aer.get_backend("statevector_simulator")).result()
-    counts = result.get_counts()
-    counts = transform_clifford_basis(counts, clifford_circ)
-    print(counts)
-    assert len(counts) == len(counts_)
-    for k in counts.keys():
-        assert k in counts_.keys()
-        assert np.allclose(counts_[k], counts[k])
-
-
-def main():
-    backend = FakeVigo()
-    pp = generate_random_pauli_polynomial(8, 10)
-    print(pp.num_legs())
-    pp = simplify_pauli_polynomial(pp)
-    print(pp.num_legs())
-    pp = global_leg_removal(pp, gate_set=[CliffordType.CX, CliffordType.CY,
-                                          CliffordType.CZ, CliffordType.CXH])
-    print(pp.num_legs())
-
-
-def test():
-    pp = generate_random_pauli_polynomial(4, 200)
-    topo = Topology.complete(pp.num_qubits)
-
-    circ_in = pp.to_qiskit(topo)
-    pp = simplify_pauli_polynomial(pp)
-
-    circ_out = synth_divide_and_conquer(pp.copy(), topo)
-    print("Ours:      ", circ_out.count_ops())
-    # circ_out = synth_divide_and_conquer(pp.copy(), topo, add_sort=True)
-    # print("Ours sort: ", circ_out.count_ops())
-    print("Normal:    ", circ_in.count_ops())
-    assert verify_equality(circ_out, circ_in)
-
-
-def build_pauli_string_tket(in_string, n_qubits):
-    p_string = [I for _ in range(n_qubits)]
-    for q, id in in_string:
-        register = q[0]
-        index = q[1][0]
-        if id == "I":
-            p_string[index] = I
-        elif id == "X":
-            p_string[index] = X
-        elif id == "Y":
-            p_string[index] = Y
-        elif id == "Z":
-            p_string[index] = Z
-        else:
-            raise ValueError("Invalid Pauli string")
-    return p_string
 
 
 def route_circuit_tket(circuit: pytket.Circuit, topo: Topology, transform="naive"):
@@ -512,25 +164,62 @@ def route_circuit_tket(circuit: pytket.Circuit, topo: Topology, transform="naive
     return circ_out
 
 
+def operator_to_pp(operator, n_qubits,
+                   partition_strat=PauliPartitionStrat.CommutingSets,
+                   colour_method=GraphColourMethod.Lazy, ):
+    qps_list = list(operator._dict.keys())
+    qps_list_list = term_sequence(qps_list, partition_strat, colour_method)
+    pp = PauliPolynomial(n_qubits)
+    for out_qps_list in qps_list_list:
+        for qps in out_qps_list:
+            coeff = operator[qps]
+            qps_map = qps.map
+            if qps_map:
+                paulis = [I for _ in range(n_qubits)]
+                for qb, pauli in qps_map.items():
+                    if pauli == 0:
+                        continue
+                    elif pauli == 1:
+                        paulis[qb.index[0]] = X
+                    elif pauli == 2:
+                        paulis[qb.index[0]] = Y
+                    elif pauli == 3:
+                        paulis[qb.index[0]] = Z
+                pp >>= PPhase(pi / 4) @ paulis
+            # idx += 1
+    return pp
+
+
+def permute_pp(pp: PauliPolynomial, permutation: list):
+    swapped = [False] * pp.num_qubits
+
+    for idx, i in enumerate(permutation):
+        if i != idx and not swapped[i] and not swapped[idx]:
+            swapped[i] = True
+            swapped[idx] = True
+            pp.swap_rows(idx, i)
+    return pp
+
+
 def test_sto3g():
+    # H2_BK_sto3g
+    # H2_P_631g
     with open("H2_BK_sto3g.pickle", "rb") as pickle_in:
         qubit_pauli_operator = pickle.load(pickle_in)
 
-    n_qubits = 4
+    n_qubits = 6
     topo = Topology.line(n_qubits)
-    pp = PauliPolynomial(n_qubits)
-    idx = 1
-    for el in qubit_pauli_operator.to_list():
-        p_string = build_pauli_string_tket(el["string"], n_qubits)
-        p_phase = Angle(np.pi / idx)
-        pp >>= PPhase(p_phase) @ p_string
-        idx += 1
-    print(pp)
-    pp = simplify_pauli_polynomial(pp, allow_acs=False)
-    circ_out, perm, _ = synth_cowtan(pp.copy(), topo)
-    circ_out = apply_permutation(circ_out, perm)
-    # assert verify_equality(circ_out, pp.to_qiskit(topo))
 
+    pp = operator_to_pp(qubit_pauli_operator, n_qubits)
+    # pp = simplify_pauli_polynomial(pp, allow_acs=False)
+    circ_out, gadget_parm, perm = pauli_polynomial_steiner_gray_synth_nc(pp.copy(), topo)
+    pp_ = PauliPolynomial(pp.num_qubits)
+    pp_.pauli_gadgets = [pp[i].copy() for i in gadget_parm]
+    assert verify_equality(circ_out, pp_.to_qiskit(topo))
+    circ_out = apply_permutation(circ_out, perm)
+    assert check_matching_architecture(circ_out, topo.to_nx)
+    # circ_out = apply_permutation(circ_out, perm)
+    # print(circ_out)
     initial_circ = pytket.Circuit(n_qubits)
     set_synth_circuit = gen_term_sequence_circuit(qubit_pauli_operator, initial_circ)
     naive_circuit = route_circuit_tket(set_synth_circuit.copy(),
@@ -540,34 +229,33 @@ def test_sto3g():
     uccds_circuit = route_circuit_tket(set_synth_circuit.copy(),
                                        topo, transform="other")
     uccds_circuit = tk_to_qiskit(uccds_circuit)
-    print("Naive with tket:  ", naive_circuit.count_ops())
-    print("Synth tket uccds: ", uccds_circuit.count_ops())
-    print("Ours:             ", circ_out.count_ops())
+    print("Naive with tket:  ", naive_circuit.count_ops(), naive_circuit.depth())
+    print("Synth tket uccds: ", uccds_circuit.count_ops(), uccds_circuit.depth())
+    print("Ours:             ", circ_out.count_ops(), circ_out.depth())
 
 
-def test_tableau_synth():
-    pp = PauliPolynomial(5)
+def main():
+    pp = PauliPolynomial(4)
 
-    pp >>= PPhase(pi / 4) @ [I, X, Y, X, X]
-    pp >>= PPhase(pi / 4) @ [I, Y, I, Z, X]
-    pp >>= PPhase(pi / 4) @ [Y, X, I, X, X]
-    pp >>= PPhase(pi / 4) @ [Z, Z, X, X, I]
-
-    #pp = generate_random_pauli_polynomial(5, 10)
-
+    pp >>= PPhase(pi / 2) @ [I, I, I, Y]
+    pp >>= PPhase(pi / 4) @ [Y, I, I, Y]
+    pp = generate_random_pauli_polynomial(4, 100)
+    print(pp)
     topo = Topology.line(pp.num_qubits)
-    circ_in_original = pp.to_qiskit(topo)
-    pp = simplify_pauli_polynomial(pp)
-    circ_out, permutation, gadget_order = synth_cowtan(pp.copy(), topo)
-
+    circ_out, gadget_perm, perm = uccds_synthesis(pp.copy(), topo)
+    print(perm)
+    # circ_out_, _ = synth_divide_and_conquer(pp.copy(), topo)
     pp_ = PauliPolynomial(pp.num_qubits)
-    pp_.pauli_gadgets = [pp.pauli_gadgets[i] for i in gadget_order]
-    circ_in = pp_.to_qiskit(topo)
-
-    print("Normal:    ", circ_in_original.count_ops())
-    print("Ours:      ", circ_out.count_ops())
-    assert verify_equality(circ_out, circ_in)
+    pp_.pauli_gadgets = [pp[i] for i in gadget_perm]
+    assert (verify_equality(circ_out, pp_.to_qiskit()))
+    circ_out = apply_permutation(circ_out, perm)
+    assert check_matching_architecture(circ_out, topo.to_nx)
+    print(circ_out)
+    print("Ours:   ", circ_out.count_ops()["cx"])
+    print("PP:     ", pp_.to_qiskit(topology=topo).count_ops()["cx"])
+    print("Ours:   ", circ_out.depth())
+    print("PP:     ", pp_.to_qiskit(topology=topo).depth())
 
 
 if __name__ == '__main__':
-    test_sto3g()
+    main()

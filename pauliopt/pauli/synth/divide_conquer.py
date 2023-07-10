@@ -66,7 +66,10 @@ def optimize_pauli_polynomial(c_l: CliffordRegion, pp: PauliPolynomial,
                               c_r: CliffordRegion, topology: Topology,
                               gate_set=None, leg_cache=None):
     if gate_set is None:
-        gate_set = [CliffordType.CX]
+        gate_set = [CliffordType.CX,
+                    CliffordType.CY,
+                    CliffordType.CZ, CliffordType.CXH]
+
     for c in range(pp.num_qubits):
         for t in range(pp.num_qubits):
             if c != t:

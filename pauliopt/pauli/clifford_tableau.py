@@ -315,12 +315,6 @@ class CliffordTableau:
         self.signs[[a + self.n_qubits, b + self.n_qubits]] = \
             self.signs[[b + self.n_qubits, a + self.n_qubits]]
 
-    def swap_cols(self, a, b):
-        # swap in stabilizer basis
-        self.append_cnot(a, b)
-        self.append_cnot(b, a)
-        self.append_cnot(a, b)
-
     def insert_pauli_row(self, pauli, p_sing, row):
         for i in range(self.n_qubits):
             if (self.tableau[row, i] + pauli[i]) % 2 == 1:

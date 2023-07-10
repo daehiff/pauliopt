@@ -7,7 +7,7 @@ import numpy as np
 
 
 class CliffordType(Enum):
-    CXH = "cxh"  # custom type for cx followed by h on qubit 0
+    CXH = "cxh"  # bell state
     CX = "cx"
     CY = "cy"
     CZ = "cz"

@@ -1,3 +1,6 @@
+from qiskit.quantum_info import Clifford
+from qiskit.synthesis import synth_clifford_full
+
 from pauliopt.pauli.clifford_gates import *
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.topologies import Topology
@@ -36,7 +39,8 @@ class CliffordRegion:
             ct.append_gate(gate)
         return ct
 
-    def to_qiskit(self, method, topology: Topology = None, include_swaps=False):
+    def to_qiskit(self, method="naive_apply", topology: Topology = None,
+                  include_swaps=False):
         if method == "ct_resynthesis":
             ct = self.to_tableau()
             return ct.to_cifford_circuit_arch_aware(topology, include_swaps=include_swaps)
@@ -57,5 +61,9 @@ class CliffordRegion:
                 elif isinstance(gate, S):
                     qc.s(gate.qubit)
             return qc, None
+        elif method == "qiskit":
+            qc, _ = self.to_qiskit(method="naive_apply")
+            ct = Clifford.from_circuit(qc)
+            return synth_clifford_full(ct, method="greedy"), None
         else:
             raise NotImplementedError(f"Method {method} not implemented")

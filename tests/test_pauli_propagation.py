@@ -128,7 +128,9 @@ class TestPauliConversion(unittest.TestCase):
 
                 topology = topo_creation(pp.num_qubits)
                 tket_pp = pauli_poly_to_tket(pp)
+                print(tket_pp)
                 our_synth = pp.to_qiskit(topology)
+                print(our_synth)
                 self.assertTrue(verify_equality(tket_pp, our_synth),
                                 "The resulting Quantum Circuits were not equivalent")
                 self.assertTrue(check_matching_architecture(our_synth, topology.to_nx),
