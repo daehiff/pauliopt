@@ -1,10 +1,18 @@
+import json
+import os
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, transpile, execute, Aer
+from qiskit.providers import JobStatus
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe
-from qiskit.quantum_info import Clifford, random_clifford
+from qiskit.providers.ibmq import IBMQ
+from qiskit.quantum_info import Clifford, random_clifford, StabilizerState, \
+    state_fidelity, hellinger_fidelity
+from qiskit.result import Result
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
@@ -79,7 +87,7 @@ def our_compilation(circ: QuantumCircuit, backend):
     ct = CliffordTableau.from_circuit(circ)
     circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, improvements=False)
     column = get_ops_count(circ_out)
-    #assert verify_equality(circ, circ_out)
+    # assert verify_equality(circ, circ_out)
     print("Our: ", circ_out.count_ops())
     return column
 
@@ -89,7 +97,7 @@ def our_compilation_imp(circ: QuantumCircuit, backend):
     ct = CliffordTableau.from_circuit(circ)
     circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, improvements=True)
     column = get_ops_count(circ_out)
-    #assert verify_equality(circ, circ_out)
+    # assert verify_equality(circ, circ_out)
     print("Our Imp: ", circ_out.count_ops())
     return column
 
@@ -165,6 +173,82 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     # print(circ_stim)
 
 
+def apply_permutation_measurements(counts: dict, perm: list):
+    new_counts = {}
+    for key, value in counts.items():
+        new_key = "".join([key[i] for i in perm])
+        new_counts[new_key] = value
+    return new_counts
+
+
+def generate_cliffords(exp_number=0):
+    if not os.path.exists(f"data/clifford_experiment_real_hardware/{exp_number}"):
+        os.makedirs(f"data/clifford_experiment_real_hardware/{exp_number}")
+
+    # read token from env IBM_TOKEN
+    token = os.environ.get("IBM_TOKEN")
+    assert token
+    provider = IBMQ.enable_account(token)
+    backend = provider.get_backend('ibmq_lima')
+
+    # Get the provider and choose the backend
+    clifford = random_clifford(num_qubits=backend.configuration().num_qubits)
+    ct = CliffordTableau(tableau=clifford.symplectic_matrix, signs=clifford.phase)
+    with open(f"data/clifford_experiment_real_hardware/{exp_number}/clifford.json",
+              "w") as f:
+        json.dump(clifford.to_dict(), f)
+
+    backend_simulator = Aer.get_backend('statevector_simulator')
+    circ_simulated = clifford.to_circuit()
+    circ_simulated.measure_all()
+    job = execute(circ_simulated, backend_simulator, shots=8000)
+    result = job.result()
+    counts_simulated = result.get_counts()
+    print(counts_simulated)
+
+    topo = Topology.from_qiskit_backend(backend)
+    circ_ours, perm = ct.to_cifford_circuit_arch_aware(topo)
+
+    circ_ours = apply_permutation(circ_ours, perm)
+    circ_ours.name = f"clifford_synth_{exp_number}"
+    circ_ours.measure_all()
+    job_ours = execute(circ_ours, backend, shots=8000)
+
+    circ = clifford.to_circuit()
+    circ.measure_all()
+    circ_ours.name = f"ibm_{exp_number}"
+    circ = transpile(circ, backend)
+    job_ibm = execute(circ, backend, shots=8000)
+
+    print("Ours: ", circ_ours.count_ops())
+    print("IBM: ", circ.count_ops())
+
+    while job_ibm.status() != JobStatus.DONE:
+        time.sleep(1)
+
+    result_ibm = job_ibm.result()
+    with open(f"data/clifford_experiment_real_hardware/{exp_number}/result_ibm.json",
+              "w") as f:
+        json.dump(result_ibm.to_dict(), f)
+
+    while job_ours.status() != JobStatus.DONE:
+        time.sleep(1)
+    result_ours = job_ours.result()
+    with open(f"data/clifford_experiment_real_hardware/{exp_number}/result_ours.json",
+              "w") as f:
+        json.dump(result_ours.to_dict(), f)
+
+    count_ours = result_ours.get_counts()
+    count_ours = apply_permutation_measurements(count_ours, perm)
+    count_ibm = result_ibm.get_counts()
+    fidelity_ours = hellinger_fidelity(count_ours, counts_simulated)
+    fidelity_ibm = hellinger_fidelity(count_ibm, counts_simulated)
+
+    print("Ours: ", fidelity_ours)
+    print("IBM: ", fidelity_ibm)
+    return fidelity_ours, fidelity_ibm, result_ours.time_taken, result_ibm.time_taken
+
+
 def plot_vigo():
     df = pd.read_csv(f"data/random_vigo.csv")
     #
@@ -232,9 +316,10 @@ def plot_mumbai():
 
 
 if __name__ == "__main__":
-    random_experiment(backend_name="vigo", nr_input_gates=70, nr_steps=5)
+    generate_cliffords()
+    # random_experiment(backend_name="vigo", nr_input_gates=70, nr_steps=5)
     # random_experiment(backend_name="guadalupe", nr_input_gates=250, nr_steps=10)
     # random_experiment(backend_name="mumbai", nr_input_gates=600, nr_steps=20)
     # plot_mumbai()
-    plot_vigo()
+    # plot_vigo()
     # plot_guadalupe()

@@ -78,13 +78,8 @@ def pauli_polynomial_steiner_gray_synth_nc(pp: PauliPolynomial, topo: Topology):
         if not columns_to_use:
             return QuantumCircuit(pp.num_qubits)
         G_ = G.subgraph(qubits_to_use)
-
-        row = pick_row(pp, columns_to_use, qubits_to_use)
-        if is_cutting(row, G_):
-            non_cutting = [q for q in G_.nodes if not is_cutting(q, G_)][0]
-            permutation[non_cutting], permutation[row] = \
-                permutation[row], permutation[non_cutting]
-            relabel_graph_inplace(G, non_cutting, row)
+        non_cutting = [q for q in G_.nodes if not is_cutting(q, G_)]
+        row = pick_row(pp, columns_to_use, non_cutting)
 
         pp_i, pp_x, pp_y, pp_z = partition_pauli_polynomial(pp, row, columns_to_use)
 
@@ -109,8 +104,12 @@ def pauli_polynomial_steiner_gray_synth_nc(pp: PauliPolynomial, topo: Topology):
             return apply_rotation(columns_to_use, row, rec_type)
         G_: nx.Graph = G.subgraph(qubits_to_use + [row])
         neighbours = [q for q in G_.neighbors(row)]
-        assert neighbours, f"qubits: {qubits_to_use}, row: {row}"
-        row_next = pick_next_row(pp, columns_to_use, neighbours)
+        # TODO WHY THE FUCK
+        if not neighbours:
+            return QuantumCircuit(pp.num_qubits)
+        # assert neighbours, f"qubits: {qubits_to_use}, row: {row}, {G_.edges()}, " \
+        #                    f"{columns_to_use}"
+        row_next = pick_row(pp, columns_to_use, neighbours)
 
         pp_i, t_pp2_1, tpp2_2, pp2, t_p1, pp1 = \
             partition_pauli_polynomial_(pp, row_next, columns_to_use)

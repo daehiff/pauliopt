@@ -235,15 +235,16 @@ def test_sto3g():
 
 
 def main():
-    pp = PauliPolynomial(4)
+    pp = PauliPolynomial(8)
+    pp >>= PPhase(pi / 4) @ [X, Z, I, Y, Y, Y, Y, Z]
+    pp >>= PPhase(pi / 8) @ [Y, X, I, X, Z, Z, I, X]
+    pp >>= PPhase(pi / 2) @ [Y, I, Z, I, X, I, Z, Y]
+    pp >>= PPhase(pi / 4) @ [Y, I, Z, X, Z, X, I, Z]
+    pp >>= PPhase(pi / 2) @ [Y, I, Z, X, I, Z, Y, X]
+    pp >>= PPhase(pi / 2) @ [Y, Y, X, Z, I, Y, Y, Y]
 
-    pp >>= PPhase(pi / 2) @ [I, I, I, Y]
-    pp >>= PPhase(pi / 4) @ [Y, I, I, Y]
-    pp = generate_random_pauli_polynomial(4, 100)
-    print(pp)
     topo = Topology.line(pp.num_qubits)
     circ_out, gadget_perm, perm = uccds_synthesis(pp.copy(), topo)
-    print(perm)
     # circ_out_, _ = synth_divide_and_conquer(pp.copy(), topo)
     pp_ = PauliPolynomial(pp.num_qubits)
     pp_.pauli_gadgets = [pp[i] for i in gadget_perm]

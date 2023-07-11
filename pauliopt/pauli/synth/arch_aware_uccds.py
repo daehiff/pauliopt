@@ -316,17 +316,14 @@ def uccds_synthesis(pp: PauliPolynomial, topo: Topology):
     global_cliffords = CliffordRegion(pp.num_qubits)
 
     for region in sub_regions:
-        print(region)
         remaining_cols = list(filter(lambda x: x not in region, remaining_cols))
         pp_sub = PauliPolynomial(pp.num_qubits)
         pp_sub.pauli_gadgets = [pp.pauli_gadgets[l].copy() for l in region]
-        print(pp_sub)
         pp_sub, c_diag = diagonalize_pauli_polynomial(pp_sub, topo)
-        print("===")
         c_circ, _ = c_diag.to_qiskit("ct_resynthesis", topology=topo)
         if not is_z_phase_poly(pp_sub):
-            print(pp_sub)
             raise Exception("Not a Z-phase polynomial")
+
         sub_circ, sub_gadget_perm, rem_cliff = \
             pauli_polynomial_steiner_gray_synth(pp_sub, topo)
 
@@ -346,5 +343,3 @@ def uccds_synthesis(pp: PauliPolynomial, topo: Topology):
                inplace=True)
     perm = list(range(pp.num_qubits))
     return qc, gadget_order, perm
-
-# TODO unit testing

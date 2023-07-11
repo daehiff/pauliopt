@@ -86,7 +86,8 @@ def optimize_pauli_polynomial(c_l: CliffordRegion, pp: PauliPolynomial,
 
 
 def compare(pp: PauliPolynomial, prev, now, next):
-    return pp.mutual_legs(prev, now) < pp.mutual_legs(prev, next)
+    return pp.commutes(now, next) and \
+           (pp.mutual_legs(prev, now) < pp.mutual_legs(prev, next))
 
 
 def sort_pauli_polynomial(pp: PauliPolynomial):
@@ -143,8 +144,8 @@ def synth_divide_and_conquer(pp: PauliPolynomial, topology: Topology):
     perm = list(range(pp.num_qubits))
     for i, j in permutation.items():
         perm[i], perm[j] = perm[j], perm[i]
-
-    return circ_out, perm
+    gadget_perm = list(range(pp.num_gadgets))
+    return circ_out, gadget_perm, perm
 
 
 def synth_divide_and_conquer_(c_l: CliffordTableau, pp: PauliPolynomial,
@@ -155,7 +156,7 @@ def synth_divide_and_conquer_(c_l: CliffordTableau, pp: PauliPolynomial,
         return [c_l, pp, c_r]
 
     c_center = CliffordRegion(pp.num_qubits)
-    pp = sort_pauli_polynomial(pp)
+    # pp = sort_pauli_polynomial(pp)
     pp_left, pp_right = split_pauli_polynomial(pp)
     regions_left = synth_divide_and_conquer_(c_l, pp_left, c_center, topology,
                                              leg_cache=leg_cache)

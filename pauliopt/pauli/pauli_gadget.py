@@ -91,14 +91,11 @@ class PauliGadget:
         return PauliGadget(self.angle, self.paulis.copy())
 
     # TODO refactor to use decompose
-    def decompose(self, q0, topology: Topology = None):
+    def decompose(self, q0):
         from pauliopt.pauli.clifford_gates import H, V, CX
-        if topology is None:
-            topology = Topology.complete(self.num_qubits)
 
         cliffords = []
         column = np.asarray(self.paulis)
-        column_binary = np.where(column == I, 0, 1)
         for pauli_idx in range(len(column)):
             if column[pauli_idx] == I:
                 pass
@@ -110,10 +107,11 @@ class PauliGadget:
                 pass
             else:
                 raise Exception(f"unknown column type: {column[pauli_idx]}")
-        cnot_ladder, q0 = find_minimal_cx_assignment(column_binary, topology, q0=q0)
-        if len(cnot_ladder) > 0:
-            for tail, head in cnot_ladder:
-                cliffords.append(CX(head, tail))
+        for q in range(self.num_qubits):
+            if q == q0:
+                continue
+            if self[q] != I:
+                cliffords.append(CX(q, q0))
         return cliffords, q0
 
     def swap_rows(self, row1, row2):
