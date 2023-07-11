@@ -9,6 +9,7 @@ from qiskit.providers.fake_provider import FakeLima, FakeLagos
 
 from pauliopt.pauli.clifford_gates import H, S, V, CX, CY, CZ
 from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
 
 
@@ -177,11 +178,12 @@ class TestCliffordTableau(unittest.TestCase):
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
 
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out = ct.to_cifford_circuit_arch_aware(topo)
+                circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
 
                 self.assertTrue(verify_equality(circ, circ_out),
                                 "The resulting circuit from the clifford tableau did not match")
 
+                circ_out = apply_permutation(circ_out, perm)
                 self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
                                 "The resulting circuit did no match the architecture")
 
@@ -218,7 +220,7 @@ class TestCliffordTableau(unittest.TestCase):
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out = ct.to_cifford_circuit_arch_aware(topo)
+                circ_out, _ = ct.to_cifford_circuit_arch_aware(topo, include_swaps=False)
 
                 self.assertTrue(verify_equality(circ, circ_out),
                                 "The resulting circuit from the clifford tableau did not match")

@@ -20,9 +20,6 @@ DESIRED_NEIGHBORS = [(X, X), (Y, X), (Z, Z), (Z, Y)]
 UNDESIRABLE_NEIGHBORS = [(X, I), (Y, I), (Z, I)]
 
 
-# TODO II?
-
-
 def compute_effect(pp, gate, topology, leg_cache=None):
     pp_ = pp.copy()
     pp_.propagate(gate)
