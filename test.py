@@ -1,4 +1,5 @@
 import pickle
+import time
 import warnings
 
 import numpy as np
@@ -16,9 +17,10 @@ from qiskit import QuantumCircuit
 
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
-from pauliopt.pauli.synth.arch_aware_uccds import uccds_synthesis
-from pauliopt.pauli.synth.divide_conquer import synth_divide_and_conquer
-from pauliopt.pauli.synth.tableau_synth import pauli_polynomial_steiner_gray_synth_nc
+from pauliopt.pauli.synth.uccds import uccds
+from pauliopt.pauli.synth.divide_and_conquer import divide_and_conquer
+from pauliopt.pauli.synth.steiner_gray_nc import pauli_polynomial_steiner_gray_nc
+from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.utils import pi
 
@@ -212,7 +214,7 @@ def test_sto3g():
 
     pp = operator_to_pp(qubit_pauli_operator, n_qubits)
     # pp = simplify_pauli_polynomial(pp, allow_acs=False)
-    circ_out, gadget_parm, perm = pauli_polynomial_steiner_gray_synth_nc(pp.copy(), topo)
+    circ_out, gadget_parm, perm = pauli_polynomial_steiner_gray_nc(pp.copy(), topo)
     pp_ = PauliPolynomial(pp.num_qubits)
     pp_.pauli_gadgets = [pp[i].copy() for i in gadget_parm]
     assert verify_equality(circ_out, pp_.to_qiskit(topo))
@@ -235,27 +237,18 @@ def test_sto3g():
 
 
 def main():
-    pp = PauliPolynomial(8)
-    pp >>= PPhase(pi / 4) @ [X, Z, I, Y, Y, Y, Y, Z]
-    pp >>= PPhase(pi / 8) @ [Y, X, I, X, Z, Z, I, X]
-    pp >>= PPhase(pi / 2) @ [Y, I, Z, I, X, I, Z, Y]
-    pp >>= PPhase(pi / 4) @ [Y, I, Z, X, Z, X, I, Z]
-    pp >>= PPhase(pi / 2) @ [Y, I, Z, X, I, Z, Y, X]
-    pp >>= PPhase(pi / 2) @ [Y, Y, X, Z, I, Y, Y, Y]
-
+    pp = generate_random_pauli_polynomial(4, 100)
     topo = Topology.line(pp.num_qubits)
-    circ_out, gadget_perm, perm = uccds_synthesis(pp.copy(), topo)
-    # circ_out_, _ = synth_divide_and_conquer(pp.copy(), topo)
-    pp_ = PauliPolynomial(pp.num_qubits)
-    pp_.pauli_gadgets = [pp[i] for i in gadget_perm]
-    assert (verify_equality(circ_out, pp_.to_qiskit()))
-    circ_out = apply_permutation(circ_out, perm)
-    assert check_matching_architecture(circ_out, topo.to_nx)
-    print(circ_out)
+    start = time.time()
+    synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
+    synthesizer.synthesize()
+    print("Time taken: ", time.time() - start)
+    circ_out = synthesizer.circ_out
+
     print("Ours:   ", circ_out.count_ops()["cx"])
-    print("PP:     ", pp_.to_qiskit(topology=topo).count_ops()["cx"])
+    print("PP:     ", pp.to_qiskit(topology=topo).count_ops()["cx"])
     print("Ours:   ", circ_out.depth())
-    print("PP:     ", pp_.to_qiskit(topology=topo).depth())
+    print("PP:     ", pp.to_qiskit(topology=topo).depth())
 
 
 if __name__ == '__main__':
