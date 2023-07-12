@@ -4,6 +4,7 @@ from pauliopt.pauli.clifford_gates import CliffordGate
 from pauliopt.pauli.clifford_gates import CliffordType, \
     generate_two_qubit_clifford
 from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.phase.optimized_circuits import _validate_temp_schedule
 
@@ -61,12 +62,12 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
         raise Exception("Please install qiskit to export the circuit")
     clifford_circ, _ = clifford_region.to_cifford_circuit_arch_aware(topology,
                                                                      include_swaps=False)
-    pp_circuit = pp.to_qiskit(topology)
+    pp_circuit = pp.to_circuit(topology)
 
-    qc = QuantumCircuit(pp.num_qubits)
-    qc.compose(clifford_circ, inplace=True)
-    qc.compose(pp_circuit, inplace=True)
-    qc.compose(clifford_circ.inverse(), inplace=True)
+    qc = PauliCircuit(pp.num_qubits)
+    qc += clifford_circ
+    qc += pp_circuit
+    qc += clifford_circ.inverse()
 
     perm = list(range(pp.num_qubits))
     gadget_perm = list(range(pp.num_gadgets))

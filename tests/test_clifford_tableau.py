@@ -178,7 +178,7 @@ class TestCliffordTableau(unittest.TestCase):
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
 
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+                circ_out, perm = ct.to_clifford_circuit_arch_aware_qiskit(topo)
 
                 self.assertTrue(verify_equality(circ, circ_out),
                                 "The resulting circuit from the clifford tableau did not match")
@@ -220,7 +220,7 @@ class TestCliffordTableau(unittest.TestCase):
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out, _ = ct.to_cifford_circuit_arch_aware(topo, include_swaps=False)
+                circ_out, _ = ct.to_clifford_circuit_arch_aware_qiskit(topo, include_swaps=False)
 
                 self.assertTrue(verify_equality(circ, circ_out),
                                 "The resulting circuit from the clifford tableau did not match")

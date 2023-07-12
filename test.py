@@ -1,18 +1,21 @@
 import pickle
 import time
 import warnings
+from numbers import Number
 
 import numpy as np
 import pytket
 import stim
+import sympy
 from pytket._tket.architecture import Architecture
 from pytket._tket.partition import term_sequence, PauliPartitionStrat, GraphColourMethod
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
+from pytket._tket.pauli import QubitPauliString
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
 from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
-from pytket.utils import gen_term_sequence_circuit
+from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
 from qiskit import QuantumCircuit
 
 from pauliopt.pauli.pauli_gadget import PPhase
@@ -22,7 +25,9 @@ from pauliopt.pauli.synth.divide_and_conquer import divide_and_conquer
 from pauliopt.pauli.synth.steiner_gray_nc import pauli_polynomial_steiner_gray_nc
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.pauli.utils import apply_permutation
-from pauliopt.utils import pi
+from pauliopt.utils import pi, AngleVar
+
+from sympy.core.symbol import Symbol
 
 
 def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
@@ -166,29 +171,34 @@ def route_circuit_tket(circuit: pytket.Circuit, topo: Topology, transform="naive
     return circ_out
 
 
-def operator_to_pp(operator, n_qubits,
-                   partition_strat=PauliPartitionStrat.CommutingSets,
-                   colour_method=GraphColourMethod.Lazy, ):
+def operator_to_pp(operator, n_qubits):
     qps_list = list(operator._dict.keys())
-    qps_list_list = term_sequence(qps_list, partition_strat, colour_method)
     pp = PauliPolynomial(n_qubits)
-    for out_qps_list in qps_list_list:
-        for qps in out_qps_list:
-            coeff = operator[qps]
-            qps_map = qps.map
-            if qps_map:
-                paulis = [I for _ in range(n_qubits)]
-                for qb, pauli in qps_map.items():
-                    if pauli == 0:
-                        continue
-                    elif pauli == 1:
-                        paulis[qb.index[0]] = X
-                    elif pauli == 2:
-                        paulis[qb.index[0]] = Y
-                    elif pauli == 3:
-                        paulis[qb.index[0]] = Z
-                pp >>= PPhase(pi / 4) @ paulis
-            # idx += 1
+    for qps in qps_list:
+        coeff = operator[qps]
+        qps_map = qps.map
+        if qps_map:
+            paulis = [I for _ in range(n_qubits)]
+            for qb, pauli in qps_map.items():
+                if pauli == 0:
+                    continue
+                elif pauli == 1:
+                    paulis[qb.index[0]] = X
+                elif pauli == 2:
+                    paulis[qb.index[0]] = Y
+                elif pauli == 3:
+                    paulis[qb.index[0]] = Z
+            if isinstance(coeff, float):
+                pp >>= PPhase(Angle(coeff)) @ paulis
+            elif isinstance(coeff, complex):
+                pp >>= PPhase(Angle(coeff.real)) @ paulis
+            elif isinstance(coeff, Number):
+                pp >>= PPhase(Angle(float(coeff))) @ paulis
+            elif isinstance(coeff, Symbol):
+                pp >>= PPhase(AngleVar(coeff.name)) @ paulis
+            else:
+                raise Exception("Unknown type")
+        # idx += 1
     return pp
 
 
@@ -203,6 +213,22 @@ def permute_pp(pp: PauliPolynomial, permutation: list):
     return pp
 
 
+def pp_to_operator(pp: PauliPolynomial):
+    operator_list = []
+    for l in range(pp.num_gadgets):
+        temp_op = {}
+        p_string = [[['q', [q]], pp[l][q].value] for q in range(pp.num_qubits)
+                    if pp[l][q] != I]
+        temp_op["string"] = p_string
+        if isinstance(pp[l].angle, AngleVar):
+            temp_op["coefficient"] = pp[l].angle.repr_latex
+        else:
+            temp_op["coefficient"] = [pp[l].angle.to_qiskit, 0]
+        operator_list.append(temp_op)
+    qubit_operator = QubitPauliOperator.from_list(operator_list)
+    return qubit_operator
+
+
 def test_sto3g():
     # H2_BK_sto3g
     # H2_P_631g
@@ -213,15 +239,12 @@ def test_sto3g():
     topo = Topology.line(n_qubits)
 
     pp = operator_to_pp(qubit_pauli_operator, n_qubits)
-    # pp = simplify_pauli_polynomial(pp, allow_acs=False)
-    circ_out, gadget_parm, perm = pauli_polynomial_steiner_gray_nc(pp.copy(), topo)
-    pp_ = PauliPolynomial(pp.num_qubits)
-    pp_.pauli_gadgets = [pp[i].copy() for i in gadget_parm]
-    assert verify_equality(circ_out, pp_.to_qiskit(topo))
-    circ_out = apply_permutation(circ_out, perm)
-    assert check_matching_architecture(circ_out, topo.to_nx)
-    # circ_out = apply_permutation(circ_out, perm)
-    # print(circ_out)
+    synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+    synthesizer.synthesize()
+    #assert synthesizer.check_connectivity_predicate()
+    #assert synthesizer.check_circuit_equivalence()
+    circ_out = synthesizer.circ_out_qiskit
+
     initial_circ = pytket.Circuit(n_qubits)
     set_synth_circuit = gen_term_sequence_circuit(qubit_pauli_operator, initial_circ)
     naive_circuit = route_circuit_tket(set_synth_circuit.copy(),
@@ -237,19 +260,35 @@ def test_sto3g():
 
 
 def main():
-    pp = generate_random_pauli_polynomial(4, 100)
+    pp = generate_random_pauli_polynomial(14, 300)
     topo = Topology.line(pp.num_qubits)
     start = time.time()
+    synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+    synthesizer.synthesize()
+    print("Time taken: ", time.time() - start)
+    circ_out = synthesizer.circ_out_qiskit
+
+    print("Steiner:   ", circ_out.count_ops()["cx"])
+    print("PP:     ", pp.to_qiskit(topology=topo).count_ops()["cx"])
+
+    synthesizer = PauliSynthesizer(pp, SynthMethod.UCCDS, topo)
+    synthesizer.synthesize()
+    print("Time taken: ", time.time() - start)
+    circ_out = synthesizer.circ_out_qiskit
+
+    print("UCCDS:   ", circ_out.count_ops()["cx"])
+    print("PP:     ", pp.to_qiskit(topology=topo).count_ops()["cx"])
+
     synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
     synthesizer.synthesize()
     print("Time taken: ", time.time() - start)
-    circ_out = synthesizer.circ_out
+    circ_out = synthesizer.circ_out_qiskit
 
-    print("Ours:   ", circ_out.count_ops()["cx"])
+    print("Divide:   ", circ_out.count_ops()["cx"])
     print("PP:     ", pp.to_qiskit(topology=topo).count_ops()["cx"])
-    print("Ours:   ", circ_out.depth())
-    print("PP:     ", pp.to_qiskit(topology=topo).depth())
+    # print("Ours:   ", circ_out.depth())
+    # print("PP:     ", pp.to_qiskit(topology=topo).depth())
 
 
 if __name__ == '__main__':
-    main()
+    test_sto3g()

@@ -38,7 +38,8 @@ class SingleQubitGate(CliffordGate, ABC):
         p_string = gadget.paulis[self.qubit].value
         new_p, phase_change = self.rules[p_string]
         gadget.paulis[self.qubit] = new_p
-        gadget.angle *= phase_change
+        if phase_change == -1:
+            gadget.angle *= phase_change
         return gadget
 
 
@@ -61,7 +62,8 @@ class ControlGate(CliffordGate, ABC):
         p_c, p_t, phase_change = self.rules[p_string]
         gadget.paulis[self.control] = p_c
         gadget.paulis[self.target] = p_t
-        gadget.angle *= phase_change
+        if phase_change == -1:
+            gadget.angle *= phase_change
         return gadget
 
 

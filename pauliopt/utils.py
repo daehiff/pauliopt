@@ -28,7 +28,7 @@ def calculate_orthogonal_point(a, b, d, left):
     return int(orthogonal_point[0]), int(orthogonal_point[1])
 
 
-AngleInitT = Union[int, Fraction, str, Decimal]
+AngleInitT = Union[int, Fraction, str, Decimal, float]
 
 
 class AngleExpr(ABC):
@@ -98,11 +98,6 @@ class AngleExpr(ABC):
         ...
 
     @property
-    @abstractmethod
-    def to_json(self) -> Any:
-        pass
-
-    @property
     def is_zero(self) -> bool:
         return False
 
@@ -137,7 +132,10 @@ class Angle(AngleExpr):
     def __init__(self, theta: Union["Angle", AngleInitT]):
         if isinstance(theta, Angle):
             self._value = theta.value
+        elif isinstance(theta, float):
+            self._value = Fraction.from_float(theta)
         else:
+
             self._value = Fraction(theta)
 
     @property
@@ -198,9 +196,6 @@ class Angle(AngleExpr):
 
     @property
     def to_qiskit(self) -> float:
-        return float(self)
-
-    def to_json(self) -> Any:
         return float(self)
 
     def __pos__(self) -> "Angle":
@@ -453,8 +448,15 @@ class _SumprodAngleExpr(AngleExpr):
 
     @property
     def to_qiskit(self) -> Any:
-        return sum((c * e.to_qiskit for e, c in self.coeffs.items()),
-                   self.const.to_qiskit)
+        try:
+            from qiskit.circuit import Parameter, ParameterExpression
+        except:
+            raise ImportError("Please install qiskit to use this feature.")
+        out = 0
+        for e, c in self.coeffs.items():
+            out += e.to_qiskit * float(c)
+        out += self.const.to_qiskit
+        return out
 
     def __hash__(self) -> int:
         return hash((_SumprodAngleExpr, tuple(self.coeffs.items()), self.const))
@@ -555,36 +557,39 @@ class _ModAngleExpr(AngleExpr):
         return NotImplemented
 
 
+_qiskit_bindings: Dict[str, Any] = {}
+_global_id: int = 0
+
+
 class AngleVar(AngleExpr):
-    _global_id: ClassVar[int] = 0
-    _qiskit_bindings: ClassVar[Dict[int, Any]]
-    _id: int
     _label: str
     _latex_label: str
 
     def __init__(self, label: str, latex_label: Optional[str] = None):
+        global _global_id
         self._label = label
         if latex_label is None:
             latex_label = label
+
+        # TODO this is far from optimal and needs resolving on our circuit
         self._latex_label = latex_label
-        self._id = AngleVar._global_id
-        AngleVar._global_id += 1
 
     @property
     def to_qiskit(self) -> Any:
-        # if self._id in AngleVar._qiskit_bindings:
-        #     return AngleVar._qiskit_bindings[self._id]
+        global _qiskit_bindings
+        if self._label in _qiskit_bindings:
+            return _qiskit_bindings[self._label]
         try:
             # pylint: disable = import-outside-toplevel
             from qiskit.circuit import Parameter  # type: ignore
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError("You must install the 'qiskit' library.") from e
-        p = Parameter(str(self._repr_latex_))
-        # AngleVar._qiskit_bindings[self._id] = p
+        p = Parameter(str(self._repr_latex_()))
+        _qiskit_bindings[self._label] = p
         return p
 
     def __hash__(self) -> int:
-        return hash((AngleVar, self._id))
+        return hash((AngleVar, self._label))
 
     def __str__(self) -> str:
         return self._label

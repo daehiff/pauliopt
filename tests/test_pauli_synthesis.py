@@ -1,14 +1,11 @@
 import unittest
+
 import numpy as np
-from qiskit import QuantumCircuit
 
 from pauliopt.pauli.pauli_gadget import PPhase
-from pauliopt.pauli.pauli_polynomial import PauliPolynomial, simplify_pauli_polynomial
-from pauliopt.pauli.synth.anneal import anneal
-from pauliopt.pauli.synth.arch_aware_uccds import uccds_synthesis
-from pauliopt.pauli.synth.divide_conquer import synth_divide_and_conquer
-from pauliopt.pauli.synth.tableau_synth import pauli_polynomial_steiner_gray_synth_nc
-from pauliopt.pauli.utils import X, Y, Z, I, apply_permutation
+from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
+from pauliopt.pauli.utils import X, Y, Z, I
 from pauliopt.topologies import Topology
 from pauliopt.utils import pi
 
@@ -42,25 +39,6 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
     return pp
 
 
-def verify_equality(qc_in, qc_out):
-    try:
-        from qiskit.quantum_info import Statevector
-    except:
-        raise Exception("Please install qiskit to compare to quantum circuits")
-    return Statevector.from_instruction(qc_in) \
-        .equiv(Statevector.from_instruction(qc_out))
-
-
-def check_matching_architecture(qc: QuantumCircuit, G):
-    for gate in qc:
-        if gate.operation.num_qubits == 2:
-            ctrl, target = gate.qubits
-            ctrl, target = ctrl._index, target._index  # TODO refactor this to a non deprecated way
-            if not G.has_edge(ctrl, target):
-                return False
-    return True
-
-
 class TestPauliSynthesis(unittest.TestCase):
     def test_uccds(self):
         for num_gadgets in [100, 200]:
@@ -70,16 +48,13 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.cycle(8),
                          Topology.grid(2, 3)]:
                 print(topo._named)
-            pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-            circ_out, gadget_perm, perm = uccds_synthesis(pp.copy(), topo)
-            pp_ = PauliPolynomial(pp.num_qubits)
-            pp_.pauli_gadgets = [pp[i] for i in gadget_perm]
-            self.assertTrue(
-                verify_equality(circ_out, pp_.to_qiskit(topology=topo)),
-                "Circuits did not match")
-            circ_out = apply_permutation(circ_out, perm)
-            self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
-                            "architecture did not match")
+                pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
+                synthesizer = PauliSynthesizer(pp, SynthMethod.UCCDS, topo)
+                synthesizer.synthesize()
+                self.assertTrue(synthesizer.check_circuit_equivalence(),
+                                "Circuits did not match")
+                self.assertTrue(synthesizer.check_connectivity_predicate(),
+                                "Connectivity predicate not satisfied")
 
     def test_divide_and_conquer(self):
         for num_gadgets in [10, 30]:
@@ -89,16 +64,14 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.grid(2, 3)]:
                 print(topo._named)
                 pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-                circ_out, _, perm = \
-                    synth_divide_and_conquer(pp.copy(), topo)
-                self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
-                                "architecture did not match")
-                circ_out = apply_permutation(circ_out, perm)
-                self.assertTrue(
-                    verify_equality(circ_out, pp.to_qiskit(topology=topo)),
-                    "Circuits did not match")
+                synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
+                synthesizer.synthesize()
+                self.assertTrue(synthesizer.check_circuit_equivalence(),
+                                "Circuits did not match")
+                self.assertTrue(synthesizer.check_connectivity_predicate(),
+                                "Connectivity predicate not satisfied")
 
-    def test_steiner_divide_and_conquer(self):
+    def test_steiner_gray_nc(self):
         for num_gadgets in [100, 200]:
             for topo in [Topology.line(4),
                          Topology.line(6),
@@ -106,16 +79,12 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.grid(2, 4)]:
                 print(topo._named)
                 pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-                circ_out, gadget_perm, perm = \
-                    pauli_polynomial_steiner_gray_synth_nc(pp.copy(), topo)
-                pp_ = PauliPolynomial(pp.num_qubits)
-                pp_.pauli_gadgets = [pp[i] for i in gadget_perm]
-                self.assertTrue(
-                    verify_equality(circ_out, pp_.to_qiskit(topology=topo)),
-                    "Circuits did not match")
-                circ_out = apply_permutation(circ_out, perm)
-                self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
-                                "architecture did not match")
+                synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+                synthesizer.synthesize()
+                self.assertTrue(synthesizer.check_circuit_equivalence(),
+                                "Circuits did not match")
+                self.assertTrue(synthesizer.check_connectivity_predicate(),
+                                "Connectivity predicate not satisfied")
 
     def test_pauli_annealing(self):
         for num_gadgets in [100, 200]:
@@ -125,12 +94,9 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.grid(2, 4)]:
                 print(topo._named)
                 pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-                circ_out, gadget_perm, perm = anneal(pp.copy(), topo)
-                pp_ = PauliPolynomial(pp.num_qubits)
-                pp_.pauli_gadgets = [pp[i] for i in gadget_perm]
-                self.assertTrue(
-                    verify_equality(circ_out, pp_.to_qiskit(topology=topo)),
-                    "Circuits did not match")
-                circ_out = apply_permutation(circ_out, perm)
-                self.assertTrue(check_matching_architecture(circ_out, topo.to_nx),
-                                "architecture did not match")
+                synthesizer = PauliSynthesizer(pp, SynthMethod.ANNEAL, topo)
+                synthesizer.synthesize()
+                self.assertTrue(synthesizer.check_circuit_equivalence(),
+                                "Circuits did not match")
+                self.assertTrue(synthesizer.check_connectivity_predicate(),
+                                "Connectivity predicate not satisfied")

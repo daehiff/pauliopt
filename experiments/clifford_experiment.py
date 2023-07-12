@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from datetime import datetime, date
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +9,8 @@ import pandas as pd
 import seaborn as sns
 from qiskit import QuantumCircuit, transpile, execute, Aer
 from qiskit.providers import JobStatus
-from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe
+from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, FakeQuito, \
+    FakeNairobi
 from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, random_clifford, StabilizerState, \
     state_fidelity, hellinger_fidelity
@@ -67,14 +69,6 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
     return column
 
 
-def qiskit_tableau_compilation_tableau(tableau: Clifford, backend):
-    circ_out = tableau.to_circuit()
-    circ_out = transpile(circ_out, backend=backend, basis_gates=["cx", "h", "s"])
-    print("Qiskit Tableau: ", circ_out.count_ops())
-    column = get_ops_count(circ_out)
-    return column
-
-
 def qiskit_compilation(circ: QuantumCircuit, backend):
     circ_out = transpile(circ, backend=backend, basis_gates=["cx", "h", "s"])
     column = get_ops_count(circ_out)
@@ -85,20 +79,11 @@ def qiskit_compilation(circ: QuantumCircuit, backend):
 def our_compilation(circ: QuantumCircuit, backend):
     topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_circuit(circ)
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, improvements=False)
+    circ_out, _ = ct.to_cifford_circuit_arch_aware(topo, include_swaps=True)
+    circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out)
     # assert verify_equality(circ, circ_out)
     print("Our: ", circ_out.count_ops())
-    return column
-
-
-def our_compilation_imp(circ: QuantumCircuit, backend):
-    topo = Topology.from_qiskit_backend(backend)
-    ct = CliffordTableau.from_circuit(circ)
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, improvements=True)
-    column = get_ops_count(circ_out)
-    # assert verify_equality(circ, circ_out)
-    print("Our Imp: ", circ_out.count_ops())
     return column
 
 
@@ -123,6 +108,12 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     elif backend_name == "guadalupe":
         backend = FakeGuadalupe()
         df_name = f"{df_name}_guadalupe.csv"
+    elif backend_name == "quito":
+        backend = FakeQuito()
+        df_name = f"{df_name}_quito.csv"
+    elif backend_name == "nairobi":
+        backend = FakeNairobi()
+        df_name = f"{df_name}_nairobi.csv"
     else:
         raise ValueError(f"Unknown backend: {backend_name}")
     num_qubits = backend.configuration().num_qubits
@@ -139,32 +130,26 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
             # Our clifford circuit
             ########################################
             column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "tableau"} | our_compilation(circ, backend)
-            df.loc[len(df)] = column
-            df.to_csv(df_name)
-
-            ########################################
-            # Our clifford circuit Improvements
-            ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "tableau_imp"} | our_compilation_imp(circ, backend)
+                      "method": "tableau"} | \
+                     our_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
             # ########################################
             # # Qiskit compilation
             # ########################################
-            # column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-            #           "method": "qiskit"} | qiskit_compilation(circ, backend)
-            # df.loc[len(df)] = column
-            # df.to_csv(df_name)
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "qiskit"} | \
+                     qiskit_compilation(circ, backend)
+            df.loc[len(df)] = column
+            df.to_csv(df_name)
 
             ########################################
             # Qiskit tableau compilation
             ########################################
             column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "qiskit_tableau"} \
-                     | qiskit_compilation(circ, backend)
+                      "method": "qiskit_tableau"} | \
+                     qiskit_tableau_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
@@ -181,21 +166,34 @@ def apply_permutation_measurements(counts: dict, perm: list):
     return new_counts
 
 
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+
+    return str(obj)
+
+
 def generate_cliffords(exp_number=0):
-    if not os.path.exists(f"data/clifford_experiment_real_hardware/{exp_number}"):
-        os.makedirs(f"data/clifford_experiment_real_hardware/{exp_number}")
+    if not os.path.exists(
+            f"experiments/data/clifford_experiment_real_hardware/{exp_number}"):
+        os.makedirs(f"experiments/data/clifford_experiment_real_hardware/{exp_number}")
 
     # read token from env IBM_TOKEN
     token = os.environ.get("IBM_TOKEN")
     assert token
     provider = IBMQ.enable_account(token)
-    backend = provider.get_backend('ibmq_lima')
+    backend = provider.get_backend('ibmq_quito')
 
     # Get the provider and choose the backend
-    clifford = random_clifford(num_qubits=backend.configuration().num_qubits)
+    clifford_circ = random_hscx_circuit(nr_gates=40,
+                                        nr_qubits=backend.configuration().num_qubits)
+    clifford = Clifford.from_circuit(clifford_circ)
     ct = CliffordTableau(tableau=clifford.symplectic_matrix, signs=clifford.phase)
-    with open(f"data/clifford_experiment_real_hardware/{exp_number}/clifford.json",
-              "w") as f:
+    with open(
+            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/clifford.json",
+            "w") as f:
         json.dump(clifford.to_dict(), f)
 
     backend_simulator = Aer.get_backend('statevector_simulator')
@@ -227,16 +225,18 @@ def generate_cliffords(exp_number=0):
         time.sleep(1)
 
     result_ibm = job_ibm.result()
-    with open(f"data/clifford_experiment_real_hardware/{exp_number}/result_ibm.json",
-              "w") as f:
-        json.dump(result_ibm.to_dict(), f)
+    with open(
+            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/result_ibm.json",
+            "w") as f:
+        json.dump(result_ibm.to_dict(), f, default=json_serial)
 
     while job_ours.status() != JobStatus.DONE:
         time.sleep(1)
     result_ours = job_ours.result()
-    with open(f"data/clifford_experiment_real_hardware/{exp_number}/result_ours.json",
-              "w") as f:
-        json.dump(result_ours.to_dict(), f)
+    with open(
+            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/result_ours.json",
+            "w") as f:
+        json.dump(result_ours.to_dict(), f, default=json_serial)
 
     count_ours = result_ours.get_counts()
     count_ours = apply_permutation_measurements(count_ours, perm)
@@ -315,11 +315,59 @@ def plot_mumbai():
     plt.show()
 
 
+def plot_quito():
+    df = pd.read_csv(f"data/random_quito.csv")
+
+    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
+    plt.title("H-Gates (Quito)")
+    plt.xlabel("Number of input Gates")
+    plt.ylabel("Number of H-Gates")
+    plt.show()
+
+    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
+    plt.title("S-Gates (Quito)")
+    plt.xlabel("Number of input gates")
+    plt.ylabel("Number of S-Gates")
+    plt.show()
+
+    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
+    plt.title("CNOT-Gates (Quito)")
+    plt.xlabel("Number of input Gates")
+    plt.ylabel("Number of CNOT-Gates")
+    plt.show()
+
+
+def plot_nairobi():
+    df = pd.read_csv(f"data/random_nairobi.csv")
+
+    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
+    plt.title("H-Gates (Nairobi)")
+    plt.xlabel("Number of input Gates")
+    plt.ylabel("Number of H-Gates")
+    plt.show()
+
+    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
+    plt.title("S-Gates (Nairobi)")
+    plt.xlabel("Number of input gates")
+    plt.ylabel("Number of S-Gates")
+    plt.show()
+
+    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
+    plt.title("CNOT-Gates (Nairobi)")
+    plt.xlabel("Number of input Gates")
+    plt.ylabel("Number of CNOT-Gates")
+    plt.show()
+
+
 if __name__ == "__main__":
-    generate_cliffords()
-    # random_experiment(backend_name="vigo", nr_input_gates=70, nr_steps=5)
+    # generate_cliffords(0)
+    random_experiment(backend_name="nairobi", nr_input_gates=70, nr_steps=5)
+
+    # random_experiment(backend_name="quito", nr_input_gates=70, nr_steps=5)
     # random_experiment(backend_name="guadalupe", nr_input_gates=250, nr_steps=10)
     # random_experiment(backend_name="mumbai", nr_input_gates=600, nr_steps=20)
     # plot_mumbai()
     # plot_vigo()
     # plot_guadalupe()
+    # plot_nairobi()
+    # plot_quito()

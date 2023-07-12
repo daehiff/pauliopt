@@ -6,6 +6,7 @@ from qiskit.quantum_info import Clifford
 
 from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, SingleQubitGate, \
     ControlGate
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.topologies import Topology
 import galois
 
@@ -390,13 +391,20 @@ class CliffordTableau:
             self.prepend_cnot(gate.control, gate.target)
         elif gate.c_type == CliffordType.CY:
             assert isinstance(gate, ControlGate)
-            raise NotImplementedError("CY gate not implemented")
-        elif gate.c_type == CliffordType.CZ:
-            assert isinstance(gate, ControlGate)
-            raise NotImplementedError("CY gate not implemented")
+            self.prepend_s(gate.target)
+            self.prepend_cnot(gate.control, gate.target)
+            self.prepend_s(gate.target)
+            self.prepend_s(gate.target)
+            self.prepend_s(gate.target)
         elif gate.c_type == CliffordType.CXH:
             assert isinstance(gate, ControlGate)
-            raise NotImplementedError("CY gate not implemented")
+            self.prepend_h(gate.control)
+            self.prepend_cnot(gate.control, gate.target)
+        elif gate.c_type == CliffordType.CZ:
+            assert isinstance(gate, ControlGate)
+            self.prepend_h(gate.target)
+            self.prepend_cnot(gate.control, gate.target)
+            self.prepend_h(gate.target)
         else:
             raise ValueError("Invalid Clifford gate type")
 
@@ -522,7 +530,7 @@ class CliffordTableau:
                 print()
 
     def to_cifford_circuit_arch_aware(self, topo: Topology, include_swaps: bool = True):
-        qc = QuantumCircuit(self.n_qubits)
+        qc = PauliCircuit(self.n_qubits)
 
         remaining = self.inverse()
         permutation = {v: v for v in range(self.n_qubits)}
@@ -594,6 +602,11 @@ class CliffordTableau:
                 apply("S", (col,))
         permutation = [permutation[i] for i in range(self.n_qubits)]
         return qc, permutation
+
+    def to_clifford_circuit_arch_aware_qiskit(self, topo: Topology,
+                                              include_swaps: bool = True):
+        circ, perm = self.to_cifford_circuit_arch_aware(topo, include_swaps)
+        return circ.to_qiskit(), perm
 
     def to_clifford_circuit(self):
         qc = QuantumCircuit(self.n_qubits)

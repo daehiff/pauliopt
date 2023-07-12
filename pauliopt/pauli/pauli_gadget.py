@@ -1,9 +1,11 @@
 from collections import deque
-from typing import List
+from typing import List, Collection, Callable, Dict
 
 import networkx as nx
+import numba
 import numpy as np
 
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.utils import Pauli, X, Y, Z, I
 from pauliopt.topologies import Topology
 from pauliopt.utils import AngleExpr
@@ -90,7 +92,6 @@ class PauliGadget:
     def copy(self):
         return PauliGadget(self.angle, self.paulis.copy())
 
-    # TODO refactor to use decompose
     def decompose(self, q0):
         from pauliopt.pauli.clifford_gates import H, V, CX
 
@@ -121,13 +122,13 @@ class PauliGadget:
         if leg_cache is None:
             leg_cache = {}
 
-        column = np.asarray(self.paulis)
-        col_binary = np.where(column == Pauli.I, 0, 1)
+        col_binary = [1 if self[q] != I else 0 for q in range(self.num_qubits)]
         col_id = "".join([str(int(el)) for el in col_binary])
         if col_id in leg_cache.keys():
             return leg_cache[col_id]
         else:
-            cnot_amount = 2 * len(find_minimal_cx_assignment(col_binary, topology)[0])
+            cnot_amount = 2 * len(find_minimal_cx_assignment(np.asarray(col_binary),
+                                                             topology)[0])
             leg_cache[col_id] = cnot_amount
         return cnot_amount
 
@@ -157,30 +158,18 @@ class PauliGadget:
                 mismatchcount += 1
         return mismatchcount % 2 == 0
 
-    def to_qiskit(self, topology=None):
-
-        if isinstance(self.angle, float):
-            angle = self.angle
-        elif isinstance(self.angle, AngleExpr):
-            angle = self.angle.to_qiskit
-        else:
-            raise TypeError(
-                f"Angle must either be float or AngleExpr, but got {type(self.angle)}")
-        num_qubits = len(self.paulis)
+    def to_circuit(self, topology=None):
+        num_qubits = self.num_qubits
         if topology is None:
             topology = Topology.complete(num_qubits)
-        try:
-            from qiskit import QuantumCircuit
-        except:
-            raise Exception("Please install qiskit to export Clifford Regions")
-        circ = QuantumCircuit(num_qubits)
+
+        circ = PauliCircuit(num_qubits)
 
         column = np.asarray(self.paulis)
         column_binary = np.where(column == I, 0, 1)
         if np.all(column_binary == 0):
-            circ.global_phase += angle
+            circ.global_phase += self.angle.to_qiskit
             return circ
-
         cnot_ladder, q0 = find_minimal_cx_assignment(column_binary, topology)
         for pauli_idx in range(len(column)):
             if column[pauli_idx] == I:
@@ -188,7 +177,7 @@ class PauliGadget:
             elif column[pauli_idx] == X:
                 circ.h(pauli_idx)  # Had
             elif column[pauli_idx] == Y:
-                circ.sx(pauli_idx)  # Sx = Rx(-0.5
+                circ.v(pauli_idx)  # V
             elif column[pauli_idx] == Z:  # Z
                 pass
             else:
@@ -198,13 +187,13 @@ class PauliGadget:
             for (pauli_idx, target) in reversed(cnot_ladder):
                 circ.cx(pauli_idx, target)
 
-            circ.rz(angle, q0)
+            circ.rz(self.angle, q0)
 
             for (pauli_idx, target) in cnot_ladder:
                 circ.cx(pauli_idx, target)
         else:
             target = np.argmax(column_binary)
-            circ.rz(angle, target)
+            circ.rz(self.angle, target)
 
         for pauli_idx in range(len(column)):
             if column[pauli_idx] == Pauli.I:
@@ -212,21 +201,16 @@ class PauliGadget:
             elif column[pauli_idx] == Pauli.X:
                 circ.h(pauli_idx)  # Had
             elif column[pauli_idx] == Pauli.Y:
-                circ.sxdg(pauli_idx)  # Sxdg = Rx(-0.5)
+                circ.vdg(pauli_idx)  # Vdg
             elif column[pauli_idx] == Pauli.Z:
                 pass
             else:
                 raise Exception(f"unknown column type: {column[pauli_idx]}")
         return circ
 
+    def to_qiskit(self, topology=None):
+        return self.to_circuit(topology).to_qiskit()
+
     def permute(self, permutation: dict):
         for k, v in permutation.items():
             self.paulis[k], self.paulis[v] = self.paulis[v], self.paulis[k]
-
-    def to_dict(self):
-        # convert paulis to strings in place
-        return {"paulis": [p.value for p in self.paulis], "angle": self.angle.to_json()}
-
-    @staticmethod
-    def from_dict(gadget):
-        return PauliGadget(gadget["paulis"], gadget["angle"])

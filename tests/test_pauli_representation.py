@@ -3,6 +3,7 @@ import unittest
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import *
+from pauliopt.topologies import Topology
 from pauliopt.utils import Angle, pi
 import os
 
@@ -138,3 +139,13 @@ class TestPauliConversion(unittest.TestCase):
             content = f.read()
             self.assertEqual(LATEX_CODE_PAULI, content)
         os.remove("./test.tex")
+
+    def test_two_qubit_count(self):
+        pp = PauliPolynomial(5)
+
+        pp >>= PPhase(Angle(pi)) @ [I, I, X, Z, Y]
+        pp >>= PPhase(Angle(pi)) @ [I, I, X, Z, Y]
+        pp >>= PPhase(Angle(pi / 2)) @ [I, I, X, Z, Y]
+
+        self.assertEqual(pp.two_qubit_count(Topology.complete(pp.num_qubits)),
+                         pp.to_qiskit().count_ops()["cx"])

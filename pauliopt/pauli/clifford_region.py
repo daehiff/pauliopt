@@ -3,6 +3,7 @@ from qiskit.synthesis import synth_clifford_full
 
 from pauliopt.pauli.clifford_gates import *
 from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.topologies import Topology
 
 
@@ -38,6 +39,37 @@ class CliffordRegion:
         for gate in self.gates:
             ct.append_gate(gate)
         return ct
+
+    def to_circuit(self, method="naive_apply", **kwargs):
+        if method == "ct_resynthesis":
+            # check if topology and include swaps is in kwargs
+            if "topology" not in kwargs:
+                # set complete topology into kwargs
+                topo = Topology.complete(self.num_qubits)
+            else:
+                topo = kwargs["topology"]
+            if "include_swaps" not in kwargs:
+                kwargs["include_swaps"] = False
+            ct = self.to_tableau()
+            return ct.to_cifford_circuit_arch_aware(topo,
+                                                    include_swaps=kwargs["include_swaps"])
+        elif method == "naive_apply":
+            qc = PauliCircuit(self.num_qubits)
+            for gate in self.gates:
+                if isinstance(gate, CX):
+                    qc.cx(gate.control, gate.target)
+                elif isinstance(gate, CY):
+                    qc.cy(gate.control, gate.target)
+                elif isinstance(gate, CZ):
+                    qc.cz(gate.control, gate.target)
+                elif isinstance(gate, H):
+                    qc.h(gate.qubit)
+                elif isinstance(gate, V):
+                    qc.sx(gate.qubit)
+                elif isinstance(gate, S):
+                    qc.s(gate.qubit)
+        else:
+            raise NotImplementedError(f"Method {method} not implemented")
 
     def to_qiskit(self, method="naive_apply", topology: Topology = None,
                   include_swaps=False):

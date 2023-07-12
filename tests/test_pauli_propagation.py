@@ -128,14 +128,12 @@ class TestPauliConversion(unittest.TestCase):
 
                 topology = topo_creation(pp.num_qubits)
                 tket_pp = pauli_poly_to_tket(pp)
-                print(tket_pp)
                 our_synth = pp.to_qiskit(topology)
-                print(our_synth)
                 self.assertTrue(verify_equality(tket_pp, our_synth),
                                 "The resulting Quantum Circuits were not equivalent")
                 self.assertTrue(check_matching_architecture(our_synth, topology.to_nx),
                                 "The Pauli Polynomial did not match the architecture")
-                self.assertEqual(get_two_qubit_count(our_synth),
+                self.assertEqual(our_synth.count_ops()["cx"],
                                  pp.two_qubit_count(topology),
                                  "Two qubit count needs to be equivalent to to two qubit count of the circuit")
 
@@ -172,3 +170,16 @@ class TestPauliConversion(unittest.TestCase):
                 qc_pp_simplified = pp_simplified.to_qiskit()
                 self.assertTrue(verify_equality(qc_pp, qc_pp_simplified),
                                 "The resulting Quantum Circuits were not equivalent")
+
+    def test_pauli_construction(self):
+        num_qubits = 4
+        topology = Topology.complete(num_qubits)
+        pp = generate_random_pauli_polynomial(num_qubits, 5)
+        tket_pp = pauli_poly_to_tket(pp)
+        our_synth = pp.to_qiskit(topology)
+
+        print(tket_pp)
+        print(our_synth)
+
+        self.assertTrue(verify_equality(tket_pp, our_synth),
+                        "The resulting Quantum Circuits were not equivalent")

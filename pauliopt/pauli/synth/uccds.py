@@ -4,6 +4,7 @@ from qiskit import QuantumCircuit
 from pauliopt.pauli.clifford_gates import CX
 from pauliopt.pauli.clifford_gates import H, V
 from pauliopt.pauli.clifford_region import CliffordRegion
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_gadget import PauliGadget
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
@@ -55,7 +56,7 @@ def is_zero_column(pp, row_n, columns_to_use):
 
 def pauli_polynomial_steiner_gray_synth(pp: PauliPolynomial, topo: Topology):
     remaining_cliffords = CliffordRegion(pp.num_qubits)
-    circ_out = QuantumCircuit(pp.num_qubits)
+    circ_out = PauliCircuit(pp.num_qubits)
     remaining_columns = list(range(pp.num_gadgets))
     perm_gadgets = []
     G = topo.to_nx
@@ -71,7 +72,7 @@ def pauli_polynomial_steiner_gray_synth(pp: PauliPolynomial, topo: Topology):
             legs = [q for q in range(pp.num_qubits) if pp.pauli_gadgets[col][q] != I]
             if len(legs) == 1:
                 q = legs[0]
-                circ_out.rz(pp[col].angle.to_qiskit, q)
+                circ_out.rz(pp[col].angle, q)
                 perm_gadgets.append(col)
                 remaining_columns.remove(col)
             else:
@@ -113,10 +114,6 @@ def pauli_polynomial_steiner_gray_synth(pp: PauliPolynomial, topo: Topology):
     columns = reduce_columns(columns)
     identity_recurse(columns, list(range(pp.num_qubits)))
 
-    # TODO test rec steiner gauss vs tableau synthesis
-    # circ_out.compose(remaining_cliffords.to_qiskit(method="ct_resynthesis",
-    #                                                topology=topo)[0],
-    #                  inplace=True)
     return circ_out, perm_gadgets, remaining_cliffords
 
 
@@ -307,10 +304,10 @@ def is_z_phase_poly(pp: PauliPolynomial):
     return True
 
 
-def uccds_synthesis(pp: PauliPolynomial, topo: Topology):
+def uccds(pp: PauliPolynomial, topo: Topology):
     remaining_cols = list(range(pp.num_gadgets))
     sub_regions = sequence_pauli_polynomial(pp)
-    qc = QuantumCircuit(pp.num_qubits)
+    qc = PauliCircuit(pp.num_qubits)
     gadget_order = []
 
     global_cliffords = CliffordRegion(pp.num_qubits)
@@ -320,7 +317,8 @@ def uccds_synthesis(pp: PauliPolynomial, topo: Topology):
         pp_sub = PauliPolynomial(pp.num_qubits)
         pp_sub.pauli_gadgets = [pp.pauli_gadgets[l].copy() for l in region]
         pp_sub, c_diag = diagonalize_pauli_polynomial(pp_sub, topo)
-        c_circ, _ = c_diag.to_qiskit("ct_resynthesis", topology=topo)
+        c_circ, _ = c_diag.to_circuit("ct_resynthesis", topology=topo,
+                                      include_swaps=False)
         if not is_z_phase_poly(pp_sub):
             raise Exception("Not a Z-phase polynomial")
 
@@ -335,11 +333,13 @@ def uccds_synthesis(pp: PauliPolynomial, topo: Topology):
             global_cliffords.prepend_gate(gate)
             pp = pp.propagate(gate)
 
-        qc.compose(c_circ.inverse(), inplace=True)
-        qc.compose(sub_circ, inplace=True)
+        qc += c_circ.inverse()
+        qc += sub_circ
         gadget_order += [region[i] for i in sub_gadget_perm]
 
-    qc.compose(global_cliffords.to_qiskit("ct_resynthesis", topology=topo)[0],
-               inplace=True)
+    global_clifford_circ, _ = global_cliffords.to_circuit("ct_resynthesis",
+                                                          topology=topo,
+                                                          include_swaps=False)
+    qc += global_clifford_circ
     perm = list(range(pp.num_qubits))
     return qc, gadget_order, perm
