@@ -70,8 +70,11 @@ class PauliSynthesizer:
     def check_circuit_equivalence(self):
         pp_ = PauliPolynomial(self.pp.num_qubits)
         pp_.pauli_gadgets = [self.pp[i].copy() for i in self.gadget_placement]
-        circ = apply_permutation(self.circ_out_qiskit.copy(), self.qubit_placement)
+        circ = self.circ_out_qiskit.copy()
+        circ = apply_permutation(circ, self.qubit_placement)
+        print(circ)
         pp_circ = pp_.to_qiskit()
+
         return verify_equality(circ, pp_circ)
 
 

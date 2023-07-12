@@ -1,5 +1,4 @@
 import networkx as nx
-from qiskit import QuantumCircuit
 
 from pauliopt.pauli.clifford_gates import CX
 from pauliopt.pauli.clifford_gates import H, V

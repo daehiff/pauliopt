@@ -119,7 +119,7 @@ class Rz(SingleQubitGate):
         return RZGate(angle), self.qubits
 
     def inverse(self):
-        return Rz(self.qubits[0], -self.angle)
+        return Rz(-self.angle, self.qubits[0])
 
     def __repr__(self):
         return f"Rz({self.qubits[0]}, {self.angle})"
@@ -182,8 +182,8 @@ class PauliCircuit:
         self.gates.append(Vdg(qubit))
         return self
 
-    def rz(self, qubit, angle):
-        self.gates.append(Rz(qubit, angle))
+    def rz(self, angle, qubit):
+        self.gates.append(Rz(angle, qubit))
         return self
 
     def cx(self, control, target):

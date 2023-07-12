@@ -1,6 +1,7 @@
 import json
 import re
 from fractions import Fraction
+from operator import itemgetter
 
 from pauliopt.pauli.clifford_gates import CliffordGate
 from pauliopt.pauli.pauli_circuit import PauliCircuit
@@ -106,7 +107,17 @@ class PauliPolynomial:
         return len(self.pauli_gadgets)
 
     def __getitem__(self, index):
-        return self.pauli_gadgets[index]
+        if isinstance(index, tuple):
+            index = list(index)
+            pp_ = PauliPolynomial(self.num_qubits)
+            pp_.pauli_gadgets = [self[i] for i in index]
+            return pp_
+        elif isinstance(index, list):
+            pp_ = PauliPolynomial(self.num_qubits)
+            pp_.pauli_gadgets = [self[i] for i in index]
+            return pp_
+        else:
+            return self.pauli_gadgets[index]
 
     @property
     def num_gadgets(self):
@@ -157,6 +168,13 @@ class PauliPolynomial:
             else:
                 pp_ >>= gadget
         return pp_
+
+    def propagate_inplace(self, gate: CliffordGate, sub_columns=None):
+        if sub_columns is None:
+            sub_columns = list(range(self.num_gadgets))
+
+        for col in sub_columns:
+            gate.propagate_pauli(self[col])
 
     def copy(self):
         pp_ = PauliPolynomial(self.num_qubits)

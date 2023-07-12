@@ -1,21 +1,11 @@
-import numpy as np
-
-from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, \
-    generate_random_clifford, generate_two_qubit_clifford
-from pauliopt.pauli.clifford_region import CliffordRegion
-from pauliopt.pauli.pauli_circuit import PauliCircuit
-from pauliopt.pauli.pauli_polynomial import PauliPolynomial
-from pauliopt.phase.optimized_circuits import _validate_temp_schedule
-from pauliopt.topologies import Topology
-from pauliopt.pauli.clifford_gates import CX, CY, CZ, CliffordGate, ControlGate
-from pauliopt.pauli.clifford_region import CliffordRegion
+from pauliopt.pauli.clifford_gates import CliffordType, \
+    generate_two_qubit_clifford
 from pauliopt.pauli.clifford_tableau import CliffordTableau
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_gadget import PauliGadget
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
-from pauliopt.pauli.utils import apply_permutation
-from pauliopt.phase.optimized_circuits import _validate_temp_schedule
-from pauliopt.topologies import Topology
 from pauliopt.pauli.utils import X, Y, Z, I
+from pauliopt.topologies import Topology
 
 DESIRED_NEIGHBORS = [(X, X), (Y, X), (Z, Z), (Z, Y)]
 UNDESIRABLE_NEIGHBORS = [(X, I), (Y, I), (Z, I)]
