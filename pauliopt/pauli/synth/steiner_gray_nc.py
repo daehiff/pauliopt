@@ -5,7 +5,6 @@ from pauliopt.pauli.clifford_gates import H, V
 from pauliopt.pauli.clifford_tableau import is_cutting
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
-from pauliopt.pauli.synth.uccds import find_common_paulis
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
 from pauliopt.topologies import Topology
 
@@ -56,11 +55,22 @@ def update_gadget_single_column(pp: PauliPolynomial, qc: PauliCircuit, q: int,
         raise ValueError("Invalid Pauli")
 
 
+def find_common_paulis(q, pp: PauliPolynomial, columns_to_use):
+    common_paulis = []
+    for col in columns_to_use:
+        if pp[col][q] != I:
+            common_paulis.append(pp[col][q])
+    common_paulis = list(set(common_paulis))
+    if len(common_paulis) == 1:
+        return common_paulis[0]
+    return None
+
+
 def update_single_qubits(pp: PauliPolynomial, c: PauliCircuit,
                          qubits: list, columns_to_use):
     change = False
     for q in qubits:
-        p = find_common_paulis(q, pp)
+        p = find_common_paulis(q, pp, columns_to_use)
         if p is not None:
             update_gadget_single_column(pp, c, q, p, columns_to_use)
             change = True
@@ -132,28 +142,42 @@ def partition_pauli_polynomial(pp: PauliPolynomial, row: int, columns_to_use: li
 
 def partition_pauli_polynomial_(pp: PauliPolynomial, row: int, columns_to_use: list):
     col_i, col_x, col_y, col_z = partition_pauli_polynomial(pp, row, columns_to_use)
+    cols = []
+    if not col_x:
+        return col_i, X, Z, col_y, Z, col_z
+    if not col_y:
+        return col_i, X, Y, col_x, Z, col_z
+    # if not col_z:
+    #     return col_i, X, Y, col_x, Y, col_y
 
-    cols = [
-        (X, Y, col_x + col_y, Z, col_z, len(col_x) + len(col_y)),
-        (X, Z, col_x + col_z, Y, col_y, len(col_x) + len(col_z)),
-        (Y, Z, col_y + col_z, X, col_x, len(col_y) + len(col_z))
-    ]
-    type_two_1, type_two_2, cols_2, type_col1, col1, _ = max(cols, key=lambda x: x[-1])
+    if len(col_x) != 0 and len(col_y) != 0:
+        cols.append((X, Y, col_x + col_y, Z, col_z, len(col_x) + len(col_y)))
+    if len(col_x) != 0 and len(col_z) != 0:
+        cols.append((X, Z, col_x + col_z, Y, col_y, len(col_x) + len(col_z)))
+    if len(col_y) != 0 and len(col_z):
+        cols.append((Y, Z, col_y + col_z, X, col_x, len(col_y) + len(col_z)))
+
+    if cols:
+        type_two_1, type_two_2, cols_2, type_col1, col1, _ \
+            = max(cols, key=lambda x: x[-1])
+    else:
+        raise Exception("")
     return col_i, type_two_1, type_two_2, cols_2, type_col1, col1
 
 
 def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
-    remaining_columns = list(range(pp.num_gadgets))
     perm_gadgets = []
     permutation = {k: k for k in range(pp.num_qubits)}
     G = topo.to_nx
 
     def identity_recurse(columns_to_use, qubits_to_use):
-        if not columns_to_use:
+        if not columns_to_use or not qubits_to_use:
             return PauliCircuit(pp.num_qubits)
         qc_diag = PauliCircuit(pp.num_qubits)
-        update_single_qubits(pp, qc_diag, qubits_to_use, columns_to_use)
-        update_pair_qubits(pp, qc_diag, topo, qubits_to_use, columns_to_use)
+
+        # update_single_qubits(pp, qc_diag, qubits_to_use, columns_to_use)
+        # update_pair_qubits(pp, qc_diag, topo, qubits_to_use, columns_to_use)
+        # qc_reduced = check_columns(columns_to_use)
 
         G_ = G.subgraph(qubits_to_use)
         non_cutting = [q for q in qubits_to_use if not is_cutting(q, G_)]
@@ -162,16 +186,15 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         pp_i, pp_x, pp_y, pp_z = partition_pauli_polynomial(pp, row, columns_to_use)
 
         remaining_qubits = [q for q in qubits_to_use if q != row]
-        if remaining_qubits:
-            qc_i = identity_recurse(pp_i, remaining_qubits)
-        else:
-            qc_i = apply_rotation(pp_i, row, I)
-        qc_x = p_recurse(pp_x, remaining_qubits, row, X)
-        qc_y = p_recurse(pp_y, remaining_qubits, row, Y)
-        qc_z = p_recurse(pp_z, remaining_qubits, row, Z)
+
+        qc_i = identity_recurse(pp_i, remaining_qubits)
+        qc_x = p_recurse(pp_x, qubits_to_use, row, X)
+        qc_y = p_recurse(pp_y, qubits_to_use, row, Y)
+        qc_z = p_recurse(pp_z, qubits_to_use, row, Z)
 
         qc_out = PauliCircuit(pp.num_qubits)
         qc_out += qc_diag.inverse()
+        # qc_out += qc_reduced
         qc_out += qc_i
         qc_out += qc_x
         qc_out += qc_y
@@ -181,33 +204,30 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
 
     def p_recurse(columns_to_use, qubits_to_use, row, rec_type):
         assert rec_type in [X, Y, Z]
-        if not columns_to_use:
+        if not columns_to_use or not qubits_to_use:
             return PauliCircuit(pp.num_qubits)
-        elif not qubits_to_use:
-            return apply_rotation(columns_to_use, row, rec_type)
-        G_: nx.Graph = G.subgraph(qubits_to_use + [row])
+        G_: nx.Graph = G.subgraph(qubits_to_use)
         neighbours = [q for q in G_.neighbors(row)]
         assert neighbours, "No neighbours found"
+
         # if not neighbours:
         #     return apply_rotation(columns_to_use, row, rec_type)
         qc_diag = PauliCircuit(pp.num_qubits)
-        # update_single_qubits(pp, qc_diag, qubits_to_use, columns_to_use)
-        # update_pair_qubits(pp, qc_diag, topo, qubits_to_use, columns_to_use)
 
         row_next = pick_row(pp, columns_to_use, neighbours)
 
         pp_i, t_pp2_1, tpp2_2, pp2, t_p1, pp1 = \
             partition_pauli_polynomial_(pp, row_next, columns_to_use)
+
         remaining_qubits = [q for q in qubits_to_use if q != row_next]
-
         if not is_cutting(row_next, G_):
-            qc_i = identity_recurse(pp_i, remaining_qubits + [row])
+            qc_i = identity_recurse(pp_i, remaining_qubits)
         else:
-            qc_i = check_identity(pp_i, remaining_qubits, row, row_next, rec_type)
+            qc_i = check_identity(pp_i, qubits_to_use, row, row_next, rec_type)
 
-        qc_two = simplify_twp_p(pp2, remaining_qubits, row, rec_type, row_next,
+        qc_two = simplify_twp_p(pp2, qubits_to_use, row, rec_type, row_next,
                                 t_pp2_1, tpp2_2)
-        qc_one = simplify_one_p(pp1, remaining_qubits, row, rec_type, row_next, t_p1)
+        qc_one = simplify_one_p(pp1, qubits_to_use, row, rec_type, row_next, t_p1)
 
         qc_out = PauliCircuit(pp.num_qubits)
         qc_out += qc_diag.inverse()
@@ -217,21 +237,30 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         qc_out += qc_diag
         return qc_out
 
-    def apply_rotation(columns_to_use, row, rec_type):
+    def check_columns(columns_to_use):
         qc = PauliCircuit(pp.num_qubits)
-        if rec_type == X:
-            qc.h(row)
-        elif rec_type == Y:
-            qc.v(row)
-
+        to_remove = []
         for col in columns_to_use:
-            qc.rz(pp.pauli_gadgets[col].angle, row)
-            perm_gadgets.append(col)
+            if pp[col].num_legs() == 1:
 
-        if rec_type == X:
-            qc.h(row)
-        elif rec_type == Y:
-            qc.vdg(row)
+                row = [q for q in range(pp.num_qubits) if pp[col][q] != I][0]
+                rec_type = pp[col][row]
+
+                if rec_type == X:
+                    qc.h(row)
+                elif rec_type == Y:
+                    qc.v(row)
+
+                qc.rz(pp.pauli_gadgets[col].angle, row)
+                perm_gadgets.append(col)
+                to_remove.append(col)
+
+                if rec_type == X:
+                    qc.h(row)
+                elif rec_type == Y:
+                    qc.vdg(row)
+        for col in to_remove:
+            columns_to_use.remove(col)
         return qc
 
     def check_identity(columns_to_use, remaining_qubits, row, row_next, rec_type):
@@ -246,10 +275,10 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             pp.propagate(V(row), columns_to_use)
         qc.cx(row_next, row)
         qc.cx(row, row_next)
-
         pp.propagate(CX(row_next, row), columns_to_use)
         pp.propagate(CX(row, row_next), columns_to_use)
-        qc_i = p_recurse(columns_to_use, remaining_qubits, row_next, Z)
+
+        qc_i = identity_recurse(columns_to_use, remaining_qubits)
         qc += qc_i
 
         qc.cx(row, row_next)
@@ -260,7 +289,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.v(row)
         return qc
 
-    def simplify_twp_p(columns_to_use, remaining_qubits, row, rec_type, row_next,
+    def simplify_twp_p(columns_to_use, qubits_to_use, row, rec_type, row_next,
                        rec_type_next_1, rec_type_next_2):
         qc = PauliCircuit(pp.num_qubits)
         if len(columns_to_use) == 0:
@@ -284,11 +313,12 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
 
         qc.cx(row, row_next)
         pp.propagate(CX(row, row_next), columns_to_use)
+        qc += check_columns(columns_to_use)
 
         columns_to_use_1 = [col for col in columns_to_use if pp[col][row_next] == Z]
         columns_to_use_2 = [col for col in columns_to_use if pp[col][row_next] == Y]
-        qc_z = p_recurse(columns_to_use_1, remaining_qubits, row_next, Z)
-        qc_y = p_recurse(columns_to_use_2, remaining_qubits, row_next, Y)
+        qc_z = p_recurse(columns_to_use_1, qubits_to_use, row_next, Z)
+        qc_y = p_recurse(columns_to_use_2, qubits_to_use, row_next, Y)
         qc += qc_z
         qc += qc_y
 
@@ -305,7 +335,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.v(row_next)
         return qc
 
-    def simplify_one_p(columns_to_use, remaining_qubits, row, rec_type, row_next,
+    def simplify_one_p(columns_to_use, qubits_to_use, row, rec_type, row_next,
                        rec_type_next):
         qc = PauliCircuit(pp.num_qubits)
         if len(columns_to_use) == 0:
@@ -327,8 +357,10 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
 
         qc.cx(row, row_next)
         pp.propagate(CX(row, row_next), columns_to_use)
+        qc += check_columns(columns_to_use)
 
-        qc_ = p_recurse(columns_to_use, remaining_qubits, row_next, Z)
+        qc_ = p_recurse(columns_to_use, qubits_to_use, row_next, Z)
+
         qc += qc_
         qc.cx(row, row_next)
 
@@ -343,7 +375,12 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.v(row_next)
         return qc
 
-    circ_out = identity_recurse(remaining_columns, list(range(pp.num_qubits)))
+    circ_out = PauliCircuit(pp.num_qubits)
+    columns_to_use = list(range(pp.num_gadgets))
+    print(columns_to_use)
+    circ_out += check_columns(columns_to_use)
+    print(columns_to_use)
+    circ_out += identity_recurse(columns_to_use, list(range(pp.num_qubits)))
 
     permutation = [permutation[i] for i in range(pp.num_qubits)]
     return circ_out, perm_gadgets, permutation

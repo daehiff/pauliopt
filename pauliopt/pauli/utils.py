@@ -98,8 +98,8 @@ def apply_permutation(qc: "qiskit.QuantumCircuit", permutation: list):
 
 def verify_equality(qc_in, qc_out):
     try:
-        from qiskit.quantum_info import Statevector
+        from qiskit.quantum_info import Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
-    return Statevector.from_instruction(qc_in) \
-        .equiv(Statevector.from_instruction(qc_out))
+    return Operator.from_circuit(qc_in) \
+        .equiv(Operator.from_circuit(qc_out))

@@ -77,7 +77,7 @@ class PauliGadget:
         return len(self.paulis)
 
     def __repr__(self):
-        return f"PPhase({self.angle}) @ [ {', '.join([pauli.value for pauli in self.paulis])} ]"
+        return f"PPhase(<phase>) @ [ {', '.join([pauli.value for pauli in self.paulis])} ]"
 
     def __getitem__(self, item):
         return self.paulis[item]

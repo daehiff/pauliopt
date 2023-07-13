@@ -162,9 +162,9 @@ def sequence_pauli_polynomial(pp: PauliPolynomial):
 
 def find_common_paulis(q, pp: PauliPolynomial):
     common_paulis = []
-    for idx, gadget in enumerate(pp.pauli_gadgets):
-        if gadget.paulis[q] != I:
-            common_paulis.append(gadget.paulis[q])
+    for col in range(pp.num_gadgets):
+        if pp[col][q] != I:
+            common_paulis.append(pp[col][q])
     common_paulis = list(set(common_paulis))
     if len(common_paulis) == 1:
         return common_paulis[0]

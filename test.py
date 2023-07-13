@@ -16,7 +16,7 @@ from sympy.core.symbol import Symbol
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
-from pauliopt.utils import pi, AngleVar
+from pauliopt.utils import pi, AngleVar, π
 
 
 def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
@@ -228,6 +228,7 @@ def test_sto3g():
     topo = Topology.complete(n_qubits)
 
     pp = operator_to_pp(qubit_pauli_operator, n_qubits)
+    print(pp)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
     synthesizer.synthesize()
     # assert synthesizer.check_connectivity_predicate()
@@ -243,28 +244,29 @@ def test_sto3g():
     uccds_circuit = route_circuit_tket(set_synth_circuit.copy(),
                                        topo, transform="other")
     uccds_circuit = tk_to_qiskit(uccds_circuit)
+    print(uccds_circuit)
+    print(circ_out)
     print("Naive with tket:  ", naive_circuit.count_ops(), naive_circuit.depth())
     print("Synth tket uccds: ", uccds_circuit.count_ops(), uccds_circuit.depth())
     print("Ours:             ", circ_out.count_ops(), circ_out.depth())
 
 
 def main():
-    pp = PauliPolynomial(4)
+    pp = PauliPolynomial(5)
+    pp >>= PPhase(π) @ [I, Y, I, I, I]
+    pp >>= PPhase(π / 2) @ [X, I, I, Y, X]
+    pp >>= PPhase(π / 2) @ [Z, Y, I, I, I]
+    pp >>= PPhase(π / 8) @ [Y, Z, I, Y, Z]
+    pp >>= PPhase(π / 16) @ [I, I, I, Y, I]
+    # pp >>= PPhase(π / 2) @ [X, Z, Z, X, I]
+    # pp >>= PPhase(π) @ [I, Z, X, Y, Z]
+    # pp >>= PPhase(π / 4) @ [X, I, X, I, Z]
+    # pp >>= PPhase(π / 16) @ [X, Y, Y, Y, I]
+    # pp >>= PPhase(π / 4) @ [X, X, Z, Y, I]
 
-    pp >>= PPhase(pi / 4) @ [Z, I, Y, Y]
-    pp >>= PPhase(pi / 4) @ [I, Z, I, I]
-    pp >>= PPhase(pi / 4) @ [Z, I, X, I]
-    pp >>= PPhase(pi / 4) @ [Y, I, X, Y]
-    pp >>= PPhase(pi / 4) @ [Y, I, I, X]
-    pp >>= PPhase(pi / 4) @ [Y, X, I, Y]
-    pp >>= PPhase(pi / 4) @ [I, I, Z, Z]
-    pp >>= PPhase(pi / 4) @ [Y, I, I, I]
-    pp >>= PPhase(pi / 4) @ [X, I, I, I]
-    pp >>= PPhase(pi / 4) @ [Y, I, Y, I]
-
-    # pp = generate_random_pauli_polynomial(4, 10)
+    # pp = generate_random_pauli_polynomial(5, 5)
     print(pp)
-    topo = Topology.line(pp.num_qubits)
+    topo = Topology.grid(2, 3)
     start = time.time()
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
     synthesizer.synthesize()
@@ -294,5 +296,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # test_sto3g()
-    main()
+    test_sto3g()
+    # main()
