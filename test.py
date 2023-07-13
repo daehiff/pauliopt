@@ -228,6 +228,7 @@ def test_sto3g():
     topo = Topology.complete(n_qubits)
 
     pp = operator_to_pp(qubit_pauli_operator, n_qubits)
+    pp = simplify_pauli_polynomial(pp, allow_acs=True)
     print(pp)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
     synthesizer.synthesize()
@@ -253,11 +254,11 @@ def test_sto3g():
 
 def main():
     pp = PauliPolynomial(5)
-    pp >>= PPhase(π) @ [I, Y, I, I, I]
+    # pp >>= PPhase(π) @ [I, Y, I, I, I]
     pp >>= PPhase(π / 2) @ [X, I, I, Y, X]
     pp >>= PPhase(π / 2) @ [Z, Y, I, I, I]
     pp >>= PPhase(π / 8) @ [Y, Z, I, Y, Z]
-    pp >>= PPhase(π / 16) @ [I, I, I, Y, I]
+    # pp >>= PPhase(π / 16) @ [I, I, I, Y, I]
     # pp >>= PPhase(π / 2) @ [X, Z, Z, X, I]
     # pp >>= PPhase(π) @ [I, Z, X, Y, Z]
     # pp >>= PPhase(π / 4) @ [X, I, X, I, Z]
@@ -266,7 +267,7 @@ def main():
 
     # pp = generate_random_pauli_polynomial(5, 5)
     print(pp)
-    topo = Topology.grid(2, 3)
+    topo = Topology.complete(pp.num_qubits)
     start = time.time()
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
     synthesizer.synthesize()
@@ -296,5 +297,5 @@ def main():
 
 
 if __name__ == '__main__':
-    test_sto3g()
-    # main()
+    # test_sto3g()
+    main()

@@ -77,7 +77,7 @@ class PauliGadget:
         return len(self.paulis)
 
     def __repr__(self):
-        return f"PPhase(<phase>) @ [ {', '.join([pauli.value for pauli in self.paulis])} ]"
+        return self.to_string()
 
     def __getitem__(self, item):
         return self.paulis[item]
@@ -85,6 +85,10 @@ class PauliGadget:
     @property
     def num_qubits(self):
         return len(self.paulis)
+
+    def to_string(self, pad_lenght=0):
+        pad = " " * (pad_lenght - len(str(self.angle)))
+        return f"PPhase({self.angle}) @ {pad} [ {', '.join([pauli.value for pauli in self.paulis])} ]"
 
     def num_legs(self):
         return sum([1 for pauli in self.paulis if pauli != Pauli.I])

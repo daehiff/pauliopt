@@ -25,16 +25,13 @@ def pick_row(pp: PauliPolynomial, columns_to_use, qubits_to_use):
     return max(qubit_scores, key=lambda x: x[1])[0]
 
 
-def pick_next_row(pp: PauliPolynomial, columns_to_use, qubits_to_use):
+def pick_next_row(pp: PauliPolynomial, columns_to_use, row, qubits_to_use):
     qubit_scores = []
     for q in qubits_to_use:
-        i_score = len([col for col in columns_to_use if pp.pauli_gadgets[col][q] == I])
-        x_score = len([col for col in columns_to_use if pp.pauli_gadgets[col][q] == X])
-        y_score = len([col for col in columns_to_use if pp.pauli_gadgets[col][q] == Y])
-        z_score = len([col for col in columns_to_use if pp.pauli_gadgets[col][q] == Z])
+        i_score = len([col for col in columns_to_use
+                       if is_compatible(pp, row, q, columns_to_use)])
 
-        score = max([i_score, x_score, y_score, z_score]) + \
-                min([i_score, x_score, y_score, z_score])
+        score = i_score
         qubit_scores.append((q, score))
     return max(qubit_scores, key=lambda x: x[1])[0]
 
@@ -77,6 +74,10 @@ def update_single_qubits(pp: PauliPolynomial, c: PauliCircuit,
     return change
 
 
+def is_compatible(pp: PauliPolynomial, q1, q2, columns_to_use):
+    return find_compatible_pair(pp, q1, q2, columns_to_use) is not None
+
+
 def find_compatible_pair(pp: PauliPolynomial, q1, q2, columns_to_use):
     for p1 in [X, Y, Z]:
         for p2 in [X, Y, Z]:
@@ -104,21 +105,28 @@ def pick_best_pair(pp, G: nx.Graph, columns_to_use, qubits):
     return None
 
 
+def filter_identity_qubits(pp: PauliPolynomial, qubits, columns_to_use):
+    non_identity_qubits = []
+    for q in qubits:
+        if pp[columns_to_use[0]][q] != I:
+            non_identity_qubits.append(q)
+    return non_identity_qubits
+
+
 def update_pair_qubits(pp: PauliPolynomial, c: PauliCircuit, topology,
                        qubits, columns_to_use):
-    qubit_pairs = pick_best_pair(pp, topology.to_nx, columns_to_use, qubits)
     non_visited_qubits = [q for q in qubits]
-    while qubit_pairs and non_visited_qubits:
-        (p1, p2), (q_1, q_2) = qubit_pairs
-        non_visited_qubits.remove(q_1)
-        non_visited_qubits.remove(q_2)
-        update_gadget_single_column(pp, c, q_1, p1, columns_to_use)
-        update_gadget_single_column(pp, c, q_2, p2, columns_to_use)
-        cx = CX(q_1, q_2)
-        pp.propagate(cx, columns_to_use)
-        c.cx(q_1, q_2)
-        qubit_pairs = pick_best_pair(pp, topology.to_nx,
-                                     columns_to_use, non_visited_qubits)
+    non_visited_qubits = filter_identity_qubits(pp, non_visited_qubits, columns_to_use)
+    qubit_pairs = pick_best_pair(pp, topology.to_nx.subgraph(non_visited_qubits),
+                                 columns_to_use, non_visited_qubits)
+    (p1, p2), (q_1, q_2) = qubit_pairs
+    non_visited_qubits.remove(q_1)
+    non_visited_qubits.remove(q_2)
+    update_gadget_single_column(pp, c, q_1, p1, columns_to_use)
+    update_gadget_single_column(pp, c, q_2, p2, columns_to_use)
+
+    pp.propagate(CX(q_1, q_2), columns_to_use)
+    c.cx(q_1, q_2)
 
 
 def partition_pauli_polynomial(pp: PauliPolynomial, row: int, columns_to_use: list):
@@ -147,8 +155,6 @@ def partition_pauli_polynomial_(pp: PauliPolynomial, row: int, columns_to_use: l
         return col_i, X, Z, col_y, Z, col_z
     if not col_y:
         return col_i, X, Y, col_x, Z, col_z
-    # if not col_z:
-    #     return col_i, X, Y, col_x, Y, col_y
 
     if len(col_x) != 0 and len(col_y) != 0:
         cols.append((X, Y, col_x + col_y, Z, col_z, len(col_x) + len(col_y)))
@@ -161,7 +167,7 @@ def partition_pauli_polynomial_(pp: PauliPolynomial, row: int, columns_to_use: l
         type_two_1, type_two_2, cols_2, type_col1, col1, _ \
             = max(cols, key=lambda x: x[-1])
     else:
-        raise Exception("")
+        raise Exception("Invalid State")
     return col_i, type_two_1, type_two_2, cols_2, type_col1, col1
 
 
@@ -173,11 +179,6 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
     def identity_recurse(columns_to_use, qubits_to_use):
         if not columns_to_use or not qubits_to_use:
             return PauliCircuit(pp.num_qubits)
-        qc_diag = PauliCircuit(pp.num_qubits)
-
-        # update_single_qubits(pp, qc_diag, qubits_to_use, columns_to_use)
-        # update_pair_qubits(pp, qc_diag, topo, qubits_to_use, columns_to_use)
-        # qc_reduced = check_columns(columns_to_use)
 
         G_ = G.subgraph(qubits_to_use)
         non_cutting = [q for q in qubits_to_use if not is_cutting(q, G_)]
@@ -193,13 +194,10 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         qc_z = p_recurse(pp_z, qubits_to_use, row, Z)
 
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_out += qc_diag.inverse()
-        # qc_out += qc_reduced
         qc_out += qc_i
         qc_out += qc_x
         qc_out += qc_y
         qc_out += qc_z
-        qc_out += qc_diag
         return qc_out
 
     def p_recurse(columns_to_use, qubits_to_use, row, rec_type):
@@ -209,10 +207,6 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         G_: nx.Graph = G.subgraph(qubits_to_use)
         neighbours = [q for q in G_.neighbors(row)]
         assert neighbours, "No neighbours found"
-
-        # if not neighbours:
-        #     return apply_rotation(columns_to_use, row, rec_type)
-        qc_diag = PauliCircuit(pp.num_qubits)
 
         row_next = pick_row(pp, columns_to_use, neighbours)
 
@@ -230,11 +224,9 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         qc_one = simplify_one_p(pp1, qubits_to_use, row, rec_type, row_next, t_p1)
 
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_out += qc_diag.inverse()
         qc_out += qc_i
         qc_out += qc_two
         qc_out += qc_one
-        qc_out += qc_diag
         return qc_out
 
     def check_columns(columns_to_use):
@@ -377,9 +369,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
 
     circ_out = PauliCircuit(pp.num_qubits)
     columns_to_use = list(range(pp.num_gadgets))
-    print(columns_to_use)
     circ_out += check_columns(columns_to_use)
-    print(columns_to_use)
     circ_out += identity_recurse(columns_to_use, list(range(pp.num_qubits)))
 
     permutation = [permutation[i] for i in range(pp.num_qubits)]

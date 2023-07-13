@@ -101,7 +101,12 @@ class PauliPolynomial:
         return self
 
     def __repr__(self):
-        return '\n'.join(map(repr, self.pauli_gadgets))
+        if len(self.pauli_gadgets) > 0:
+            pad_len = max([len(str(gadget.angle)) for gadget in self.pauli_gadgets])
+        else:
+            pad_len = 0
+        return '\n'.join([self[i].to_string(pad_lenght=pad_len)
+                          for i in range(self.num_gadgets)])
 
     def __len__(self):
         return len(self.pauli_gadgets)

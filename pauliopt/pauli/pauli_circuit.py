@@ -21,6 +21,22 @@ class Gate(ABC):
         ...
 
 
+class Barrier(Gate):
+    def __init__(self, num_qubits):
+        super().__init__([])
+        self.num_qubits = num_qubits
+
+    def to_qiskit(self):
+        from qiskit.circuit.library import Barrier as Barrier_Qiskit
+        return Barrier_Qiskit(self.num_qubits), None
+
+    def inverse(self):
+        return Barrier(self.num_qubits)
+
+    def __repr__(self):
+        return f"Barrier()"
+
+
 class SingleQubitGate(Gate, ABC):
     def __init__(self, qubit):
         super().__init__([qubit])
@@ -190,6 +206,13 @@ class PauliCircuit:
         self.gates.append(CX(control, target))
         return self
 
+    def barrier(self, num_qubits=None):
+        if num_qubits is None:
+            self.gates.append(Barrier(self.num_qubits))
+        else:
+            self.gates.append(Barrier(num_qubits))
+        return self
+
     def __repr__(self):
         rep = ""
         for gate in self.gates:
@@ -201,8 +224,12 @@ class PauliCircuit:
         qc = QuantumCircuit(self.num_qubits)
         qc.global_phase = self.global_phase
         for gate in self.gates:
-            qiskit_gate, qubits = gate.to_qiskit()
-            qc.append(qiskit_gate, qubits)
+            # TODO quick and dirty fix for barriers
+            if isinstance(gate, Barrier):
+                qc.barrier()
+            else:
+                qiskit_gate, qubits = gate.to_qiskit()
+                qc.append(qiskit_gate, qubits)
         return qc
 
     def inverse(self):
@@ -210,6 +237,11 @@ class PauliCircuit:
         for gate in reversed(self.gates):
             inverse_circuit.gates.append(gate.inverse())
         return inverse_circuit
+
+    def reverse_ops(self):
+        p_circ = PauliCircuit(self.num_qubits)
+        p_circ.gates = list(reversed(self.gates))
+        return self
 
     def apply_permutation(self, permutation: list):
         new_gates = []
