@@ -236,20 +236,20 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             if pp[col].num_legs() == 1:
 
                 row = [q for q in range(pp.num_qubits) if pp[col][q] != I][0]
-                rec_type = pp[col][row]
+                col_type = pp[col][row]
 
-                if rec_type == X:
+                if col_type == X:
                     qc.h(row)
-                elif rec_type == Y:
+                elif col_type == Y:
                     qc.v(row)
 
                 qc.rz(pp.pauli_gadgets[col].angle, row)
                 perm_gadgets.append(col)
                 to_remove.append(col)
 
-                if rec_type == X:
+                if col_type == X:
                     qc.h(row)
-                elif rec_type == Y:
+                elif col_type == Y:
                     qc.vdg(row)
         for col in to_remove:
             columns_to_use.remove(col)

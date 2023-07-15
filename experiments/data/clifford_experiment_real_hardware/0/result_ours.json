@@ -1,0 +1,129 @@
+{
+  "backend_name": "ibmq_quito",
+  "backend_version": "1.1.42",
+  "date": "2023-07-12T13:22:35+02:00",
+  "header": {
+    "backend_name": "ibmq_quito",
+    "backend_version": "1.1.42",
+    "_ibm_tracing_": {
+      "uber-trace-id": "140fcb93904e2e8fe4e93756d40c7023:4645c3dfc8509da0:cb1ba11db466103a:1"
+    }
+  },
+  "qobj_id": "a962d200-97ee-4a72-bc4f-28d73a73a556",
+  "job_id": "circuit-runner_cin8psla8b5qrb7ibktg_aa7f_0",
+  "status": "Successful completion",
+  "success": true,
+  "results": [
+    {
+      "shots": 8000,
+      "success": true,
+      "data": {
+        "counts": {
+          "0x0": 362,
+          "0x1": 483,
+          "0x10": 309,
+          "0x11": 456,
+          "0x12": 95,
+          "0x13": 126,
+          "0x14": 98,
+          "0x15": 98,
+          "0x16": 327,
+          "0x17": 423,
+          "0x18": 412,
+          "0x19": 364,
+          "0x1a": 95,
+          "0x1b": 118,
+          "0x1c": 135,
+          "0x1d": 115,
+          "0x1e": 316,
+          "0x1f": 393,
+          "0x2": 103,
+          "0x3": 112,
+          "0x4": 99,
+          "0x5": 107,
+          "0x6": 362,
+          "0x7": 343,
+          "0x8": 394,
+          "0x9": 547,
+          "0xa": 102,
+          "0xb": 144,
+          "0xc": 109,
+          "0xd": 117,
+          "0xe": 269,
+          "0xf": 467
+        }
+      },
+      "meas_level": 2,
+      "header": {
+        "clbit_labels": [
+          [
+            "meas",
+            0
+          ],
+          [
+            "meas",
+            1
+          ],
+          [
+            "meas",
+            2
+          ],
+          [
+            "meas",
+            3
+          ],
+          [
+            "meas",
+            4
+          ]
+        ],
+        "creg_sizes": [
+          [
+            "meas",
+            5
+          ]
+        ],
+        "global_phase": 0.7853981633974483,
+        "memory_slots": 5,
+        "metadata": {},
+        "n_qubits": 5,
+        "name": "clifford_synth_0",
+        "qreg_sizes": [
+          [
+            "q",
+            5
+          ]
+        ],
+        "qubit_labels": [
+          [
+            "q",
+            0
+          ],
+          [
+            "q",
+            1
+          ],
+          [
+            "q",
+            2
+          ],
+          [
+            "q",
+            3
+          ],
+          [
+            "q",
+            4
+          ]
+        ]
+      },
+      "status": "done"
+    }
+  ],
+  "execution_id": "63fcc56e-20a6-11ee-bbb0-b02628f7f59e",
+  "time_taken": 4.7300484130000005,
+  "error": null,
+  "client_version": {
+    "qiskit": "0.41.0"
+  }
+}

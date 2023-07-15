@@ -8,7 +8,6 @@ from pauliopt.pauli.clifford_gates import CliffordGate, CliffordType, SingleQubi
     ControlGate
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.topologies import Topology
-import galois
 
 
 def mult_paulis(p1, p2, sign1, sign2, n_qubits):

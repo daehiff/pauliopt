@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date
 
 import matplotlib.pyplot as plt
@@ -175,12 +176,13 @@ def json_serial(obj):
     return str(obj)
 
 
-def generate_cliffords(exp_number=0):
+def run_clifford_experiment(exp_number=0):
     if not os.path.exists(
             f"experiments/data/clifford_experiment_real_hardware/{exp_number}"):
         os.makedirs(f"experiments/data/clifford_experiment_real_hardware/{exp_number}")
 
     # read token from env IBM_TOKEN
+
     token = os.environ.get("IBM_TOKEN")
     assert token
     provider = IBMQ.enable_account(token)
@@ -209,6 +211,7 @@ def generate_cliffords(exp_number=0):
 
     circ_ours = apply_permutation(circ_ours, perm)
     circ_ours.name = f"clifford_synth_{exp_number}"
+
     circ_ours.measure_all()
     job_ours = execute(circ_ours, backend, shots=8000)
 
@@ -246,7 +249,16 @@ def generate_cliffords(exp_number=0):
 
     print("Ours: ", fidelity_ours)
     print("IBM: ", fidelity_ibm)
-    return fidelity_ours, fidelity_ibm, result_ours.time_taken, result_ibm.time_taken
+
+    col = {
+        "cx_ours": circ_ours.count_ops()["cx"],
+        "cx_ibm": circ.count_ops()["cx"],
+        "fidelity_ours": fidelity_ours,
+        "fidelity_ibm": fidelity_ibm,
+        "time_ours": result_ours.time_taken,
+        "time_ibm": result_ibm.time_taken
+    }
+    return pd.DataFrame(col, index=[0])
 
 
 def plot_vigo():
@@ -359,9 +371,22 @@ def plot_nairobi():
     plt.show()
 
 
+def run_clifford_real_hardware():
+    experiment_numbers = [i for i in range(1, 20)]
+
+    # create a threadpool and run run_clifford_experiment
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        # Submit tasks to the thread pool
+
+        results = executor.map(run_clifford_experiment, experiment_numbers)
+    df = pd.concat(results, ignore_index=True)
+    df.to_csv("data/clifford_experiment_real_hardware/results.csv")
+
+
 if __name__ == "__main__":
+    run_clifford_real_hardware()
     # generate_cliffords(0)
-    random_experiment(backend_name="nairobi", nr_input_gates=70, nr_steps=5)
+    # random_experiment(backend_name="nairobi", nr_input_gates=70, nr_steps=5)
 
     # random_experiment(backend_name="quito", nr_input_gates=70, nr_steps=5)
     # random_experiment(backend_name="guadalupe", nr_input_gates=250, nr_steps=10)
