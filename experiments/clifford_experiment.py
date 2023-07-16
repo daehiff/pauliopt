@@ -206,7 +206,7 @@ def run_clifford_experiment(exp_number=0):
     topo = Topology.from_qiskit_backend(backend)
     circ_ours, perm = ct.to_cifford_circuit_arch_aware(topo)
 
-    circ_ours = apply_permutation(circ_ours, perm)
+    circ_ours = apply_permutation(circ_ours.to_qiskit(), perm)
     circ_ours.name = f"clifford_synth_{exp_number}"
 
     circ_ours.measure_all()
