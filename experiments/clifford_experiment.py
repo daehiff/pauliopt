@@ -13,14 +13,11 @@ from qiskit.providers import JobStatus
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, FakeQuito, \
     FakeNairobi
 from qiskit.providers.ibmq import IBMQ
-from qiskit.quantum_info import Clifford, random_clifford, StabilizerState, \
-    state_fidelity, hellinger_fidelity
-from qiskit.result import Result
+from qiskit.quantum_info import Clifford, hellinger_fidelity
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
-from test import verify_equality
 
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
