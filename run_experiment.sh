@@ -1,4 +1,4 @@
 #!/bin/bash
 
-
-python experiments/clifford_experiment.py
+cd experiments/
+python clifford_experiment.py

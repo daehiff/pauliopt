@@ -1,1 +1,1 @@
-{"stabilizer": ["+IXXXZ", "+XXIXZ", "+IIIIZ", "+IZXZZ", "+IIXIZ"], "destabilizer": ["+ZZXIZ", "+ZIIII", "+ZIZIX", "+IIXXZ", "+ZXZZI"]}
+{"stabilizer": ["+IZIXZ", "+IZZXI", "+XXXIX", "+IIIXI", "+XZIIZ"], "destabilizer": ["-YIIIY", "+IIXII", "+IZIII", "-YIXZY", "+ZIIIZ"]}
