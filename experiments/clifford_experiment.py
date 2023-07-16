@@ -14,6 +14,7 @@ from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, 
     FakeNairobi
 from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, hellinger_fidelity
+from qiskit.result import Result
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
@@ -175,8 +176,8 @@ def json_serial(obj):
 
 def run_clifford_experiment(exp_number=0):
     if not os.path.exists(
-            f"experiments/data/clifford_experiment_real_hardware/{exp_number}"):
-        os.makedirs(f"experiments/data/clifford_experiment_real_hardware/{exp_number}")
+            f"data/clifford_experiment_real_hardware/{exp_number}"):
+        os.makedirs(f"data/clifford_experiment_real_hardware/{exp_number}")
 
     # read token from env IBM_TOKEN
 
@@ -186,47 +187,72 @@ def run_clifford_experiment(exp_number=0):
     backend = provider.get_backend('ibmq_quito')
 
     # Get the provider and choose the backend
-    clifford_circ = random_hscx_circuit(nr_gates=40,
+    clifford_circ = random_hscx_circuit(nr_gates=25,
                                         nr_qubits=backend.configuration().num_qubits)
     clifford = Clifford.from_circuit(clifford_circ)
     ct = CliffordTableau(tableau=clifford.symplectic_matrix, signs=clifford.phase)
     with open(
-            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/clifford.json",
+            f"data/clifford_experiment_real_hardware/{exp_number}/clifford.json",
             "w") as f:
         json.dump(clifford.to_dict(), f)
 
     backend_simulator = Aer.get_backend('statevector_simulator')
     circ_simulated = clifford.to_circuit()
-    circ_simulated.measure_all()
-    job = execute(circ_simulated, backend_simulator, shots=8000)
+    circ_simulated_ = QuantumCircuit(circ_simulated.num_qubits,
+                                     name=f"clifford_simulated_{exp_number}")
+    circ_simulated_.compose(circ_simulated, inplace=True)
+    circ_simulated_.barrier()
+    circ_simulated_.compose(circ_simulated.inverse(), inplace=True)
+    circ_simulated_.measure_all()
+    circ_simulated = circ_simulated_
+    circ_simulated.qasm(
+        filename=f"data/clifford_experiment_real_hardware/{exp_number}/clifford_simulated.qasm")
+    job = execute(circ_simulated, backend_simulator, shots=16000)
     result = job.result()
     counts_simulated = result.get_counts()
     print(counts_simulated)
 
     topo = Topology.from_qiskit_backend(backend)
     circ_ours, perm = ct.to_cifford_circuit_arch_aware(topo)
-
     circ_ours = apply_permutation(circ_ours.to_qiskit(), perm)
-    circ_ours.name = f"clifford_synth_{exp_number}"
 
-    circ_ours.measure_all()
-    job_ours = execute(circ_ours, backend, shots=8000)
+    circ_ours_ = QuantumCircuit(circ_ours.num_qubits,
+                                name=f"clifford_synth_{exp_number}")
+    circ_ours_.compose(circ_ours, inplace=True)
+    circ_ours_.barrier()
+    circ_ours_.compose(circ_ours.inverse(), inplace=True)
+    circ_ours_.measure_all()
+    circ_ours = circ_ours_
+    circ_ours.qasm(
+        filename=f"data/clifford_experiment_real_hardware/{exp_number}/ours.qasm")
+
+    job_ours = execute(circ_ours, backend, shots=16000)
 
     circ = clifford.to_circuit()
-    circ.measure_all()
-    circ_ours.name = f"ibm_{exp_number}"
     circ = transpile(circ, backend)
-    job_ibm = execute(circ, backend, shots=8000)
 
-    print("Ours: ", circ_ours.count_ops())
-    print("IBM: ", circ.count_ops())
+    circ_ = QuantumCircuit(circ_ours.num_qubits,
+                           name=f"ibm_synth_{exp_number}")
+    circ_.compose(circ, inplace=True)
+    circ_.barrier()
+    circ_.compose(circ.inverse(), inplace=True)
+    circ_.measure_all()
+    circ = circ_
+
+    circ.qasm(
+        filename=f"data/clifford_experiment_real_hardware/{exp_number}/ibm.qasm")
+
+    job_ibm = execute(circ, backend, shots=16000)
+
+    print("Ours: ", circ_ours.count_ops()["cx"])
+    print("IBM: ", circ.count_ops()["cx"])
 
     while job_ibm.status() != JobStatus.DONE:
         time.sleep(1)
 
     result_ibm = job_ibm.result()
     with open(
-            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/result_ibm.json",
+            f"data/clifford_experiment_real_hardware/{exp_number}/result_ibm.json",
             "w") as f:
         json.dump(result_ibm.to_dict(), f, default=json_serial)
 
@@ -234,7 +260,7 @@ def run_clifford_experiment(exp_number=0):
         time.sleep(1)
     result_ours = job_ours.result()
     with open(
-            f"experiments/data/clifford_experiment_real_hardware/{exp_number}/result_ours.json",
+            f"data/clifford_experiment_real_hardware/{exp_number}/result_ours.json",
             "w") as f:
         json.dump(result_ours.to_dict(), f, default=json_serial)
 
@@ -369,7 +395,7 @@ def plot_nairobi():
 
 
 def run_clifford_real_hardware():
-    experiment_numbers = [i for i in range(1, 20)]
+    experiment_numbers = [i for i in range(0, 20)]
 
     # create a threadpool and run run_clifford_experiment
     with ThreadPoolExecutor(max_workers=20) as executor:
@@ -377,7 +403,31 @@ def run_clifford_real_hardware():
 
         results = executor.map(run_clifford_experiment, experiment_numbers)
     df = pd.concat(results, ignore_index=True)
+    print(df)
     df.to_csv("data/clifford_experiment_real_hardware/results.csv")
+
+
+def analyze_real_hw():
+    for i in range(0, 20):
+        base_path = f"data/clifford_experiment_real_hardware/{i}"
+
+        with open(f"{base_path}/result_ibm.json", "r") as f:
+            result = json.load(f)
+            result_ibm = Result.from_dict(result)
+
+        with open(f"{base_path}/result_ours.json", "r") as f:
+            result = json.load(f)
+            result_ours = Result.from_dict(result)
+
+        with open(f"{base_path}/clifford.json", "r") as f:
+            clifford = Clifford.from_dict(json.load(f))
+
+            backend_simulator = Aer.get_backend('statevector_simulator')
+            circ_simulated = clifford.to_circuit()
+            circ_simulated.measure_all()
+            job = execute(circ_simulated, backend_simulator, shots=8000)
+            result = job.result()
+            counts_simulated = result.get_counts()
 
 
 if __name__ == "__main__":
