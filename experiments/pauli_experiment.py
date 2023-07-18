@@ -312,6 +312,7 @@ def get_topo_kind(topo_kind, num_qubits):
 
 
 def synth_ucc_evaluation():
+    print("Start!")
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
         orbitals_lookup_table = json.load(json_file)
     for topo_kind in ["line", "complete", "cycle"]:
