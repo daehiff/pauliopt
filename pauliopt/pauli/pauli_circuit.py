@@ -126,7 +126,7 @@ class Rz(SingleQubitGate):
         from qiskit.circuit.library import RZGate
 
         if isinstance(self.angle, Number):
-            angle = self.angle
+            angle = float(self.angle)
         elif isinstance(self.angle, AngleExpr):
             angle = self.angle.to_qiskit
         else:

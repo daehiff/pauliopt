@@ -87,6 +87,7 @@ class PauliPolynomial:
         self.num_qubits = num_qubits
         self.pauli_gadgets = []
         self._parameter_context = {}
+        self.global_phase = 0.0
 
     def __irshift__(self, gadget: PauliGadget):
         if not len(gadget) == self.num_qubits:
@@ -137,7 +138,7 @@ class PauliPolynomial:
     def append_pauli_gadget(self, pauli_gadget):
         self.pauli_gadgets.append(pauli_gadget)
 
-    def to_qiskit(self, topology=None):
+    def to_qiskit(self, time=1, topology=None):
         num_qubits = self.num_qubits
         if topology is None:
             topology = Topology.complete(num_qubits)
@@ -148,8 +149,8 @@ class PauliPolynomial:
 
         qc = QuantumCircuit(num_qubits)
         for gadget in self.pauli_gadgets:
-            qc.compose(gadget.to_qiskit(topology), inplace=True)
-
+            qc.compose(gadget.to_qiskit(time, topology), inplace=True)
+        qc.global_phase += self.global_phase
         return qc
 
     def to_circuit(self, topology=None):

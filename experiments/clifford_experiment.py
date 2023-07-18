@@ -20,6 +20,8 @@ from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
 
+from qiskit.visualization import plot_histogram
+
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     gate_choice = ["H", "CX"]
@@ -408,6 +410,8 @@ def run_clifford_real_hardware():
 
 
 def analyze_real_hw():
+    cumult_counts_ibm = {}
+    cumult_counts_ours = {}
     for i in range(0, 20):
         base_path = f"data/clifford_experiment_real_hardware/{i}"
 
@@ -422,16 +426,71 @@ def analyze_real_hw():
         with open(f"{base_path}/clifford.json", "r") as f:
             clifford = Clifford.from_dict(json.load(f))
 
-            backend_simulator = Aer.get_backend('statevector_simulator')
-            circ_simulated = clifford.to_circuit()
-            circ_simulated.measure_all()
-            job = execute(circ_simulated, backend_simulator, shots=8000)
-            result = job.result()
-            counts_simulated = result.get_counts()
+        counts_expected = {"00000": 16000}
+        counts_ibm = result_ibm.get_counts()
+        counts_ours = result_ours.get_counts()
+
+        for key, value in counts_ibm.items():
+            if key in cumult_counts_ibm:
+                cumult_counts_ibm[key] += [value]
+            else:
+                cumult_counts_ibm[key] = [value]
+
+        for key, value in counts_ours.items():
+            if key in cumult_counts_ours:
+                cumult_counts_ours[key] += [value]
+            else:
+                cumult_counts_ours[key] = [value]
+
+    lables = []
+    values = []
+    for key, value in cumult_counts_ours.items():
+        lables.append([key] * len(value))
+        values.append(value)
+    lables = np.array(lables).flatten()
+    values = np.array(values).flatten()
+    cat = ["Our"] * len(lables)
+
+    df_our = pd.DataFrame({"approach": cat,
+                           "lables": lables,
+                           "values": values})
+
+    lables = []
+    values = []
+    for key, value in cumult_counts_ibm.items():
+        lables.append([key] * len(value))
+        values.append(value)
+
+    lables = np.array(lables).flatten()
+    values = np.array(values).flatten()
+    cat = ["IBM"] * len(lables)
+    df_ibm = pd.DataFrame({"approach": cat,
+                           "lables": lables,
+                           "values": values})
+    df = pd.concat([df_our, df_ibm], ignore_index=True)
+
+    # seaborn barplot rotate the x ticks labels by 90 degrees
+    sns.barplot(data=df, x="lables", y="values", hue="approach")
+    plt.title("Clifford Circuit (Real Hardware)")
+    plt.xticks(rotation=90)
+    plt.xlabel("Measured State")
+    plt.ylabel("Counts")
+    plt.tight_layout()
+
+    plt.show()
+
+    counts_expected = {"00000": 16000}
+    averga_counts_ours = {key: np.mean(value) for key, value in
+                          cumult_counts_ours.items()}
+    averga_counts_ibm = {key: np.mean(value) for key, value in cumult_counts_ibm.items()}
+
+    print("IBM: ", hellinger_fidelity(counts_expected, averga_counts_ibm))
+    print("Ours: ", hellinger_fidelity(counts_expected, averga_counts_ours))
 
 
 if __name__ == "__main__":
-    run_clifford_real_hardware()
+    analyze_real_hw()
+    # run_clifford_real_hardware()
     # generate_cliffords(0)
     # random_experiment(backend_name="nairobi", nr_input_gates=70, nr_steps=5)
 

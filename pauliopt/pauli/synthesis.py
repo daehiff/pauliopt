@@ -76,6 +76,18 @@ class PauliSynthesizer:
 
         return verify_equality(circ, pp_circ)
 
+    def get_operator(self):
+        import qiskit
+        from pytket.extensions.qiskit.backends import aer
+
+        unitarysimulator = aer.Aer.get_backend("unitary_simulator")
+        circ = self.circ_out_qiskit.copy()
+        circ = apply_permutation(circ, self.qubit_placement)
+
+        result = qiskit.execute(circ, unitarysimulator).result()
+        U = result.get_unitary()
+        return U
+
 
 def synthesize(pp: PauliPolynomial, topo: Topology, method: SynthMethod):
     synthesizer = PauliSynthesizer(pp, method, topo)

@@ -162,7 +162,7 @@ class PauliGadget:
                 mismatchcount += 1
         return mismatchcount % 2 == 0
 
-    def to_circuit(self, topology=None):
+    def to_circuit(self, topology=None, time=1):
         num_qubits = self.num_qubits
         if topology is None:
             topology = Topology.complete(num_qubits)
@@ -191,13 +191,13 @@ class PauliGadget:
             for (pauli_idx, target) in reversed(cnot_ladder):
                 circ.cx(pauli_idx, target)
 
-            circ.rz(self.angle, q0)
+            circ.rz(self.angle * time, q0)
 
             for (pauli_idx, target) in cnot_ladder:
                 circ.cx(pauli_idx, target)
         else:
             target = np.argmax(column_binary)
-            circ.rz(self.angle, target)
+            circ.rz(self.angle * time, target)
 
         for pauli_idx in range(len(column)):
             if column[pauli_idx] == Pauli.I:
@@ -212,8 +212,8 @@ class PauliGadget:
                 raise Exception(f"unknown column type: {column[pauli_idx]}")
         return circ
 
-    def to_qiskit(self, topology=None):
-        return self.to_circuit(topology).to_qiskit()
+    def to_qiskit(self, time=1, topology=None):
+        return self.to_circuit(time, topology).to_qiskit()
 
     def permute(self, permutation: dict):
         for k, v in permutation.items():

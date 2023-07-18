@@ -1,1 +1,129 @@
-{"backend_name": "ibmq_quito", "backend_version": "1.1.42", "date": "2023-07-16T14:43:45+02:00", "header": {"backend_name": "ibmq_quito", "backend_version": "1.1.42", "_ibm_tracing_": {"uber-trace-id": "10d5d3117f1f8a1e456a05c8eb4f3eb0:ed6652bf96c0e965:ae03832497b4650:1"}}, "qobj_id": "849b587a-8e87-4343-b0b6-19d160791baf", "job_id": "circuit-runner_cipubqo1t66nhnq9rggg_2884_0", "status": "Successful completion", "success": true, "results": [{"shots": 16000, "success": true, "data": {"counts": {"0x0": 4118, "0x1": 1371, "0x10": 74, "0x11": 25, "0x12": 14, "0x13": 18, "0x14": 35, "0x15": 79, "0x16": 19, "0x17": 12, "0x18": 9, "0x19": 8, "0x1a": 5, "0x1b": 4, "0x1c": 9, "0x1d": 17, "0x1e": 7, "0x1f": 10, "0x2": 230, "0x3": 158, "0x4": 1807, "0x5": 5192, "0x6": 264, "0x7": 257, "0x8": 396, "0x9": 241, "0xa": 173, "0xb": 182, "0xc": 305, "0xd": 529, "0xe": 213, "0xf": 219}}, "meas_level": 2, "header": {"clbit_labels": [["meas", 0], ["meas", 1], ["meas", 2], ["meas", 3], ["meas", 4]], "creg_sizes": [["meas", 5]], "global_phase": 3.1415926535897896, "memory_slots": 5, "metadata": {}, "n_qubits": 5, "name": "clifford_synth_1", "qreg_sizes": [["q", 5]], "qubit_labels": [["q", 0], ["q", 1], ["q", 2], ["q", 3], ["q", 4]]}, "status": "done"}], "execution_id": "62d368fe-23d6-11ee-b444-b02628f7f59e", "time_taken": 7.057849044, "error": null, "client_version": {"qiskit": "0.39.0"}}
+{
+  "backend_name": "ibmq_quito",
+  "backend_version": "1.1.42",
+  "date": "2023-07-16T14:43:45+02:00",
+  "header": {
+    "backend_name": "ibmq_quito",
+    "backend_version": "1.1.42",
+    "_ibm_tracing_": {
+      "uber-trace-id": "10d5d3117f1f8a1e456a05c8eb4f3eb0:ed6652bf96c0e965:ae03832497b4650:1"
+    }
+  },
+  "qobj_id": "849b587a-8e87-4343-b0b6-19d160791baf",
+  "job_id": "circuit-runner_cipubqo1t66nhnq9rggg_2884_0",
+  "status": "Successful completion",
+  "success": true,
+  "results": [
+    {
+      "shots": 16000,
+      "success": true,
+      "data": {
+        "counts": {
+          "0x0": 4118,
+          "0x1": 1371,
+          "0x10": 74,
+          "0x11": 25,
+          "0x12": 14,
+          "0x13": 18,
+          "0x14": 35,
+          "0x15": 79,
+          "0x16": 19,
+          "0x17": 12,
+          "0x18": 9,
+          "0x19": 8,
+          "0x1a": 5,
+          "0x1b": 4,
+          "0x1c": 9,
+          "0x1d": 17,
+          "0x1e": 7,
+          "0x1f": 10,
+          "0x2": 230,
+          "0x3": 158,
+          "0x4": 1807,
+          "0x5": 5192,
+          "0x6": 264,
+          "0x7": 257,
+          "0x8": 396,
+          "0x9": 241,
+          "0xa": 173,
+          "0xb": 182,
+          "0xc": 305,
+          "0xd": 529,
+          "0xe": 213,
+          "0xf": 219
+        }
+      },
+      "meas_level": 2,
+      "header": {
+        "clbit_labels": [
+          [
+            "meas",
+            0
+          ],
+          [
+            "meas",
+            1
+          ],
+          [
+            "meas",
+            2
+          ],
+          [
+            "meas",
+            3
+          ],
+          [
+            "meas",
+            4
+          ]
+        ],
+        "creg_sizes": [
+          [
+            "meas",
+            5
+          ]
+        ],
+        "global_phase": 3.1415926535897896,
+        "memory_slots": 5,
+        "metadata": {},
+        "n_qubits": 5,
+        "name": "clifford_synth_1",
+        "qreg_sizes": [
+          [
+            "q",
+            5
+          ]
+        ],
+        "qubit_labels": [
+          [
+            "q",
+            0
+          ],
+          [
+            "q",
+            1
+          ],
+          [
+            "q",
+            2
+          ],
+          [
+            "q",
+            3
+          ],
+          [
+            "q",
+            4
+          ]
+        ]
+      },
+      "status": "done"
+    }
+  ],
+  "execution_id": "62d368fe-23d6-11ee-b444-b02628f7f59e",
+  "time_taken": 7.057849044,
+  "error": null,
+  "client_version": {
+    "qiskit": "0.39.0"
+  }
+}
