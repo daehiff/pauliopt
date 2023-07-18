@@ -24,6 +24,26 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
+import logging
+
+
+def get_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(f'{name}.log')
+    file_handler.setLevel(logging.INFO)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(name)s: %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    return logger
 
 
 def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
@@ -200,10 +220,8 @@ def operator_to_pp(operator, n_qubits, t=1):
     return pp
 
 
-def synth_tket(pp: PauliPolynomial, topo: Topology, method: PauliSynthStrat):
-    operator = pp_to_operator(pp.copy())
-
-    initial_circ = pytket.Circuit(pp.num_qubits)
+def synth_tket(operator, topo: Topology, method: PauliSynthStrat):
+    initial_circ = pytket.Circuit(topo.num_qubits)
     circuit = gen_term_sequence_circuit(operator, initial_circ)
 
     Transform.UCCSynthesis(method, CXConfigType.Tree).apply(circuit)
@@ -214,7 +232,18 @@ def synth_tket(pp: PauliPolynomial, topo: Topology, method: PauliSynthStrat):
         RoutingPass(tket_arch),
     ])
     passes.apply(unit)
-    circ_out = unit.circuit
+    circ_out = circuit
+    Transform.DecomposeBoxes().apply(circ_out)
+    Transform.RebaseToCliffordSingles().apply(circ_out)
+    Transform.RebaseToRzRx().apply(circ_out)
+    return tk_to_qiskit(circ_out)
+
+
+def term_sequence_tket(operator, n_qubits):
+    initial_circ = pytket.Circuit(n_qubits)
+    circuit = gen_term_sequence_circuit(operator, initial_circ)
+    circ_out = circuit
+    Transform.DecomposeBoxes().apply(circ_out)
     Transform.RebaseToCliffordSingles().apply(circ_out)
     Transform.RebaseToRzRx().apply(circ_out)
     return tk_to_qiskit(circ_out)
@@ -406,58 +435,65 @@ def fidelity_experiment_trotterisation():
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
         orbitals_lookup_table = json.load(json_file)
 
-    name = "H4_P_sto3g"
-    encoding = "P"
+    logger = get_logger("fidelity_experiment_trotterisation")
+    for name, encoding in [("H2_P_631g", "P"),
+                           ("H4_P_sto3g", "P"),
+                           ("LiH_P_sto3g", "P"),
+                           ("LiH_JW_sto3g", "JW")]:
 
-    for t in np.linspace(0.0, 1.0, 40):
-        t = float(t * 2 * np.pi)
-        # t = 1.0
-        orbigtals = orbitals_lookup_table[name]
-        if encoding == "P":
-            n_qubits = orbigtals - 2
-        else:
-            n_qubits = orbigtals
-        print(n_qubits)
-        with open(
-                f"tket_benchmarking/compilation_strategy/operators/{encoding}_operators/{name}.pickle",
-                "rb") as pickle_in:
-            operator = pickle.load(pickle_in)
+        logger.info(f"Name: {name}")
+        for t in np.linspace(0.0, 1.0, 40):
+            t = float(t * 2 * np.pi)
+            logger.info(f"Time: {t}")
+            # t = 1.0
+            orbigtals = orbitals_lookup_table[name]
+            if encoding == "P":
+                n_qubits = orbigtals - 2
+            else:
+                n_qubits = orbigtals
 
-        topo = Topology.complete(n_qubits)
-        summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
+            with open(
+                    f"tket_benchmarking/compilation_strategy/operators/{encoding}_operators/{name}.pickle",
+                    "rb") as pickle_in:
+                operator = pickle.load(pickle_in)
 
-        pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
-        evolution_op = (t / 2.0 * summed_pauli_operator).exp_i().to_matrix()
-        U_expected = evolution_op  # qiskit.quantum_info.Operator(evolution_op)
-        synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
-        synthesizer.synthesize()
-        U_ours = synthesizer.get_operator()
-        print("Steiner-NC fidelity", process_fidelity(U_ours, target=U_expected))
-        fid_ours.append(process_fidelity(U_ours, target=U_expected))
+            topo = Topology.complete(n_qubits)
+            summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
 
-        circ_tket = synth_tket(pp, topo, PauliSynthStrat.Sets)
-        unitarysimulator = aer.Aer.get_backend("unitary_simulator")
-        result = qiskit.execute(circ_tket, unitarysimulator).result()
-        U_tket = result.get_unitary(circ_tket)
-        print("tket fidelity", process_fidelity(U_tket, target=U_expected))
-        fid_tket.append(process_fidelity(U_tket, target=U_expected))
+            pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
 
-        unitarysimulator = aer.Aer.get_backend("unitary_simulator")
-        circ = pp.to_qiskit()
-        result = qiskit.execute(circ, unitarysimulator).result()
-        U_default = result.get_unitary(circ)
-        print("default fidelity", process_fidelity(U_default, target=U_expected))
-        fid_default.append(process_fidelity(U_default, target=U_expected))
-    print(fid_ours)
-    print(fid_default)
-    # plot fid_default by plotting multiples of pi in the x axis
-    plt.plot(np.linspace(0.0, 10, 40), fid_default, label="default")
-    plt.plot(np.linspace(0.0, 10, 40), fid_ours, label="Steiner-NC")
-    plt.plot(np.linspace(0.0, 10, 40), fid_tket, label="tket")
-    plt.xlabel("pi")
-    plt.ylabel("fidelity")
-    plt.legend()
-    plt.show()
+            evolution_op = (t / 2.0 * summed_pauli_operator).exp_i().to_matrix()
+
+            U_expected = evolution_op  # qiskit.quantum_info.Operator(evolution_op)
+            synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+            synthesizer.synthesize()
+            U_ours = synthesizer.get_operator()
+            steiner_fid = process_fidelity(U_ours, target=U_expected)
+            logger.info(f"Steiner-NC fidelity: {steiner_fid}")
+            fid_ours.append(steiner_fid)
+
+            circ_tket = term_sequence_tket(operator * (t / np.pi), n_qubits)
+            unitarysimulator = aer.Aer.get_backend("unitary_simulator")
+            result = qiskit.execute(circ_tket, unitarysimulator).result()
+            U_tket = result.get_unitary(circ_tket)
+            tket_fid = process_fidelity(U_tket, target=U_expected)
+            logger.info(f"tket fidelity: {tket_fid}")
+            fid_tket.append(tket_fid)
+
+            pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
+            unitarysimulator = aer.Aer.get_backend("unitary_simulator")
+            circ = pp.to_qiskit()
+            result = qiskit.execute(circ, unitarysimulator).result()
+            U_default = result.get_unitary(circ)
+            default_fid = process_fidelity(U_default, target=U_expected)
+            logger.info(f"Default fidelity: {default_fid}")
+            fid_default.append(default_fid)
+        # store data
+        df = pd.DataFrame({"t": np.linspace(0.0, 1.0, 40),
+                           "fid_default": fid_default,
+                           "fid_ours": fid_ours,
+                           "fid_tket": fid_tket})
+        df.to_csv(f"data/pauli/fidelity/{name}.csv")
 
 
 def plot_random_pauli_polynomial_experiment():
@@ -471,7 +507,7 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    # fidelity_experiment_trotterisation()
-    synth_ucc_evaluation()
+    fidelity_experiment_trotterisation()
+    # synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()

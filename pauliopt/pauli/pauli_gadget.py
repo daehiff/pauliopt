@@ -213,7 +213,7 @@ class PauliGadget:
         return circ
 
     def to_qiskit(self, time=1, topology=None):
-        return self.to_circuit(time, topology).to_qiskit()
+        return self.to_circuit(topology, time).to_qiskit()
 
     def permute(self, permutation: dict):
         for k, v in permutation.items():
