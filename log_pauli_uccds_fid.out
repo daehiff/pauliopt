@@ -202,3 +202,309 @@ fidelity_experiment_trotterisation: Default fidelity: 0.9998461039093263
 fidelity_experiment_trotterisation: Time: 0.9666438934122441
 fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.997384390309433
 fidelity_experiment_trotterisation: tket fidelity: 0.8376448107018835
+fidelity_experiment_trotterisation: Default fidelity: 0.999682692466975
+fidelity_experiment_trotterisation: Time: 1.1277512089809514
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9962162968893701
+fidelity_experiment_trotterisation: tket fidelity: 0.7860914910201428
+fidelity_experiment_trotterisation: Default fidelity: 0.9994161108454204
+fidelity_experiment_trotterisation: Time: 1.2888585245496587
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9947275541405046
+fidelity_experiment_trotterisation: tket fidelity: 0.7307711152507324
+fidelity_experiment_trotterisation: Default fidelity: 0.9990116996118042
+fidelity_experiment_trotterisation: Time: 1.449965840118366
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9928635414821506
+fidelity_experiment_trotterisation: tket fidelity: 0.6730588431663018
+fidelity_experiment_trotterisation: Default fidelity: 0.9984310471329274
+fidelity_experiment_trotterisation: Time: 1.6110731556870732
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9905660893760655
+fidelity_experiment_trotterisation: tket fidelity: 0.6142872354835245
+fidelity_experiment_trotterisation: Default fidelity: 0.997632650193267
+fidelity_experiment_trotterisation: Time: 1.7721804712557807
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9877747674789262
+fidelity_experiment_trotterisation: tket fidelity: 0.5556965751006588
+fidelity_experiment_trotterisation: Default fidelity: 0.9965726471067967
+fidelity_experiment_trotterisation: Time: 1.9332877868244882
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.984428253755473
+fidelity_experiment_trotterisation: tket fidelity: 0.4983943647148263
+fidelity_experiment_trotterisation: Default fidelity: 0.9952056140888259
+fidelity_experiment_trotterisation: Time: 2.0943951023931953
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9804657585501281
+fidelity_experiment_trotterisation: tket fidelity: 0.4433255891023128
+fidelity_experiment_trotterisation: Default fidelity: 0.9934854131718209
+fidelity_experiment_trotterisation: Time: 2.2555024179619028
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9758284745584269
+fidelity_experiment_trotterisation: tket fidelity: 0.3912544216070347
+fidelity_experiment_trotterisation: Default fidelity: 0.991366077411454
+fidelity_experiment_trotterisation: Time: 2.41660973353061
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9704610210391126
+fidelity_experiment_trotterisation: tket fidelity: 0.34275717901742603
+fidelity_experiment_trotterisation: Default fidelity: 0.9888027166930975
+fidelity_experiment_trotterisation: Time: 2.5777170490993173
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9643128486677852
+fidelity_experiment_trotterisation: tket fidelity: 0.29822556213496537
+fidelity_experiment_trotterisation: Default fidelity: 0.9857524252886161
+fidelity_experiment_trotterisation: Time: 2.738824364668025
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9573395703494119
+fidelity_experiment_trotterisation: tket fidelity: 0.25787861820333274
+fidelity_experiment_trotterisation: Default fidelity: 0.9821751706051212
+fidelity_experiment_trotterisation: Time: 2.899931680236732
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9495041832518178
+fidelity_experiment_trotterisation: tket fidelity: 0.22178146088247302
+fidelity_experiment_trotterisation: Default fidelity: 0.9780346414779898
+fidelity_experiment_trotterisation: Time: 3.0610389958054394
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9407781484301946
+fidelity_experiment_trotterisation: tket fidelity: 0.18986859467944414
+fidelity_experiment_trotterisation: Default fidelity: 0.9732990340324557
+fidelity_experiment_trotterisation: Time: 3.2221463113741464
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.93114229676768
+fidelity_experiment_trotterisation: tket fidelity: 0.16196970233282978
+fidelity_experiment_trotterisation: Default fidelity: 0.9679417536775928
+fidelity_experiment_trotterisation: Time: 3.383253626942854
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9205875335817508
+fidelity_experiment_trotterisation: tket fidelity: 0.13783593571761024
+fidelity_experiment_trotterisation: Default fidelity: 0.961942013260634
+fidelity_experiment_trotterisation: Time: 3.5443609425115614
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.909115319095676
+fidelity_experiment_trotterisation: tket fidelity: 0.11716506064135845
+fidelity_experiment_trotterisation: Default fidelity: 0.9552853098002692
+fidelity_experiment_trotterisation: Time: 3.705468258080269
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8967379079322743
+fidelity_experiment_trotterisation: tket fidelity: 0.09962419428259525
+fidelity_experiment_trotterisation: Default fidelity: 0.9479637654758764
+fidelity_experiment_trotterisation: Time: 3.8665755736489764
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.883478337668469
+fidelity_experiment_trotterisation: tket fidelity: 0.08486929180061918
+fidelity_experiment_trotterisation: Default fidelity: 0.9399763225579941
+fidelity_experiment_trotterisation: Time: 4.027682889217683
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8693701640457666
+fidelity_experiment_trotterisation: tket fidelity: 0.07256094211036467
+fidelity_experiment_trotterisation: Default fidelity: 0.9313287865524615
+fidelity_experiment_trotterisation: Time: 4.1887902047863905
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8544569483632644
+fidelity_experiment_trotterisation: tket fidelity: 0.06237638770701392
+fidelity_experiment_trotterisation: Default fidelity: 0.9220337167809373
+fidelity_experiment_trotterisation: Time: 4.349897520355098
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8387915105506487
+fidelity_experiment_trotterisation: tket fidelity: 0.054017967115072
+fidelity_experiment_trotterisation: Default fidelity: 0.9121101686912249
+fidelity_experiment_trotterisation: Time: 4.5110048359238055
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8224349690735788
+fidelity_experiment_trotterisation: tket fidelity: 0.04721838037727528
+fidelity_experiment_trotterisation: Default fidelity: 0.9015832971243573
+fidelity_experiment_trotterisation: Time: 4.672112151492513
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8054555958117056
+fidelity_experiment_trotterisation: tket fidelity: 0.041743298091617226
+fidelity_experiment_trotterisation: Default fidelity: 0.8904838343120698
+fidelity_experiment_trotterisation: Time: 4.83321946706122
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7879275200424434
+fidelity_experiment_trotterisation: tket fidelity: 0.03739188133713168
+fidelity_experiment_trotterisation: Default fidelity: 0.8788474603105935
+fidelity_experiment_trotterisation: Time: 4.994326782629927
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7699293203782875
+fidelity_experiment_trotterisation: tket fidelity: 0.033995767321220116
+fidelity_experiment_trotterisation: Default fidelity: 0.8667140867062303
+fidelity_experiment_trotterisation: Time: 5.155434098198635
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7515425467225734
+fidelity_experiment_trotterisation: tket fidelity: 0.03141702009448627
+fidelity_experiment_trotterisation: Default fidelity: 0.8541270766194089
+fidelity_experiment_trotterisation: Time: 5.316541413767342
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7328502158847591
+fidelity_experiment_trotterisation: tket fidelity: 0.02954546344028094
+fidelity_experiment_trotterisation: Default fidelity: 0.8411324252086649
+fidelity_experiment_trotterisation: Time: 5.47764872933605
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7139353243761988
+fidelity_experiment_trotterisation: tket fidelity: 0.02829571829838559
+fidelity_experiment_trotterisation: Default fidelity: 0.8277779250210237
+fidelity_experiment_trotterisation: Time: 5.638756044904756
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6948794201246671
+fidelity_experiment_trotterisation: tket fidelity: 0.027604171080344363
+fidelity_experiment_trotterisation: Default fidelity: 0.8141123396961019
+fidelity_experiment_trotterisation: Time: 5.799863360473464
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6757612715213066
+fidelity_experiment_trotterisation: tket fidelity: 0.027426010035636304
+fidelity_experiment_trotterisation: Default fidelity: 0.8001846078084739
+fidelity_experiment_trotterisation: Time: 5.960970676042171
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6566556675460057
+fidelity_experiment_trotterisation: tket fidelity: 0.027732389684992084
+fidelity_experiment_trotterisation: Default fidelity: 0.7860430961710096
+fidelity_experiment_trotterisation: Time: 6.122077991610879
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6376323769669652
+fidelity_experiment_trotterisation: tket fidelity: 0.028507721416889682
+fidelity_experiment_trotterisation: Default fidelity: 0.7717349188951328
+fidelity_experiment_trotterisation: Time: 6.283185307179586
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6187552880827529
+fidelity_experiment_trotterisation: tket fidelity: 0.02974704349387866
+fidelity_experiment_trotterisation: Default fidelity: 0.7573053351048499
+fidelity_experiment_trotterisation: Name: LiH_P_sto3g
+fidelity_experiment_trotterisation: Time: 0.0
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 1.0
+fidelity_experiment_trotterisation: tket fidelity: 1.0
+fidelity_experiment_trotterisation: Default fidelity: 1.0
+fidelity_experiment_trotterisation: Time: 0.16110731556870733
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9999295473554145
+fidelity_experiment_trotterisation: tket fidelity: 0.9465540692820339
+fidelity_experiment_trotterisation: Default fidelity: 0.9999988413599245
+fidelity_experiment_trotterisation: Time: 0.32221463113741466
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9997111192927415
+fidelity_experiment_trotterisation: tket fidelity: 0.8016993611439784
+fidelity_experiment_trotterisation: Default fidelity: 0.9999816560696809
+fidelity_experiment_trotterisation: Time: 0.48332194670612205
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9993242556755073
+fidelity_experiment_trotterisation: tket fidelity: 0.6051671765928686
+fidelity_experiment_trotterisation: Default fidelity: 0.9999087493973092
+fidelity_experiment_trotterisation: Time: 0.6444292622748293
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9987372765997239
+fidelity_experiment_trotterisation: tket fidelity: 0.4044464757343893
+fidelity_experiment_trotterisation: Default fidelity: 0.9997185944248632
+fidelity_experiment_trotterisation: Time: 0.8055365778435366
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9979106394095033
+fidelity_experiment_trotterisation: tket fidelity: 0.2372032408809835
+fidelity_experiment_trotterisation: Default fidelity: 0.9993342759058292
+fidelity_experiment_trotterisation: Time: 0.9666438934122441
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9968011201300123
+fidelity_experiment_trotterisation: tket fidelity: 0.1209900934987802
+fidelity_experiment_trotterisation: Default fidelity: 0.9986715490811418
+fidelity_experiment_trotterisation: Time: 1.1277512089809514
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9953663666833457
+fidelity_experiment_trotterisation: tket fidelity: 0.053603318426430374
+fidelity_experiment_trotterisation: Default fidelity: 0.9976476510248647
+fidelity_experiment_trotterisation: Time: 1.2888585245496587
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9935693274757336
+fidelity_experiment_trotterisation: tket fidelity: 0.02128969608681596
+fidelity_experiment_trotterisation: Default fidelity: 0.9961898979574607
+fidelity_experiment_trotterisation: Time: 1.449965840118366
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9913820705723946
+fidelity_experiment_trotterisation: tket fidelity: 0.008613601765741814
+fidelity_experiment_trotterisation: Default fidelity: 0.9942430988016817
+fidelity_experiment_trotterisation: Time: 1.6110731556870732
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9887885724743635
+fidelity_experiment_trotterisation: tket fidelity: 0.0047083488809287035
+fidelity_experiment_trotterisation: Default fidelity: 0.9917749214542723
+fidelity_experiment_trotterisation: Time: 1.7721804712557807
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9857861663697977
+fidelity_experiment_trotterisation: tket fidelity: 0.004343189463221446
+fidelity_experiment_trotterisation: Default fidelity: 0.9887785589863742
+fidelity_experiment_trotterisation: Time: 1.9332877868244882
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9823854844275237
+fidelity_experiment_trotterisation: tket fidelity: 0.0057166694196446165
+fidelity_experiment_trotterisation: Default fidelity: 0.9852723376796506
+fidelity_experiment_trotterisation: Time: 2.0943951023931953
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9786088904853799
+fidelity_experiment_trotterisation: tket fidelity: 0.007979789360667778
+fidelity_experiment_trotterisation: Default fidelity: 0.9812962528505904
+fidelity_experiment_trotterisation: Time: 2.2555024179619028
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9744875595572956
+fidelity_experiment_trotterisation: tket fidelity: 0.01023377189917979
+fidelity_experiment_trotterisation: Default fidelity: 0.9769057681858049
+fidelity_experiment_trotterisation: Time: 2.41660973353061
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9700575010024086
+fidelity_experiment_trotterisation: tket fidelity: 0.011824509349187157
+fidelity_experiment_trotterisation: Default fidelity: 0.9721635247744047
+fidelity_experiment_trotterisation: Time: 2.5777170490993173
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9653549284076728
+fidelity_experiment_trotterisation: tket fidelity: 0.01283394972012839
+fidelity_experiment_trotterisation: Default fidelity: 0.9671298388711662
+fidelity_experiment_trotterisation: Time: 2.738824364668025
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.960411441823517
+fidelity_experiment_trotterisation: tket fidelity: 0.014097674888001793
+fidelity_experiment_trotterisation: Default fidelity: 0.9618529975029522
+fidelity_experiment_trotterisation: Time: 2.899931680236732
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.955249503389186
+fidelity_experiment_trotterisation: tket fidelity: 0.016949871313297907
+fidelity_experiment_trotterisation: Default fidelity: 0.956360379404254
+fidelity_experiment_trotterisation: Time: 3.0610389958054394
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9498786574459643
+fidelity_experiment_trotterisation: tket fidelity: 0.02315813131927704
+fidelity_experiment_trotterisation: Default fidelity: 0.9506513418887205
+fidelity_experiment_trotterisation: Time: 3.2221463113741464
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.944292876992652
+fidelity_experiment_trotterisation: tket fidelity: 0.034987872718828104
+fidelity_experiment_trotterisation: Default fidelity: 0.9446926400041633
+fidelity_experiment_trotterisation: Time: 3.383253626942854
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.938469318368694
+fidelity_experiment_trotterisation: tket fidelity: 0.05477369324061708
+fidelity_experiment_trotterisation: Default fidelity: 0.938416906546678
+fidelity_experiment_trotterisation: Time: 3.5443609425115614
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9323686449512811
+fidelity_experiment_trotterisation: tket fidelity: 0.08357070586744234
+fidelity_experiment_trotterisation: Default fidelity: 0.9317244450957917
+fidelity_experiment_trotterisation: Time: 3.705468258080269
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9259369479789477
+fidelity_experiment_trotterisation: tket fidelity: 0.119399609853707
+fidelity_experiment_trotterisation: Default fidelity: 0.9244882959375568
+fidelity_experiment_trotterisation: Time: 3.8665755736489764
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9191091574220307
+fidelity_experiment_trotterisation: tket fidelity: 0.1564227015581308
+fidelity_experiment_trotterisation: Default fidelity: 0.9165622464139407
+fidelity_experiment_trotterisation: Time: 4.027682889217683
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9118137067456111
+fidelity_experiment_trotterisation: tket fidelity: 0.1861889324938524
+fidelity_experiment_trotterisation: Default fidelity: 0.9077911908418337
+fidelity_experiment_trotterisation: Time: 4.1887902047863905
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.9039781009811338
+fidelity_experiment_trotterisation: tket fidelity: 0.20080101064697603
+fidelity_experiment_trotterisation: Default fidelity: 0.8980230184220759
+fidelity_experiment_trotterisation: Time: 4.349897520355098
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8955349463716518
+fidelity_experiment_trotterisation: tket fidelity: 0.19640758343710413
+fidelity_experiment_trotterisation: Default fidelity: 0.8871210390155043
+fidelity_experiment_trotterisation: Time: 4.5110048359238055
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8864279405257023
+fidelity_experiment_trotterisation: tket fidelity: 0.17497487051832336
+fidelity_experiment_trotterisation: Default fidelity: 0.874975864991094
+fidelity_experiment_trotterisation: Time: 4.672112151492513
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8766173022020475
+fidelity_experiment_trotterisation: tket fidelity: 0.14327644347854024
+fidelity_experiment_trotterisation: Default fidelity: 0.86151566901107
+fidelity_experiment_trotterisation: Time: 4.83321946706122
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8660841451395396
+fidelity_experiment_trotterisation: tket fidelity: 0.10977677385056753
+fidelity_experiment_trotterisation: Default fidelity: 0.8467138430553283
+fidelity_experiment_trotterisation: Time: 4.994326782629927
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.85483337272993
+fidelity_experiment_trotterisation: tket fidelity: 0.08131639364636038
+fidelity_experiment_trotterisation: Default fidelity: 0.830593293516621
+fidelity_experiment_trotterisation: Time: 5.155434098198635
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8428947868668634
+fidelity_experiment_trotterisation: tket fidelity: 0.06138726642210929
+fidelity_experiment_trotterisation: Default fidelity: 0.8132269078095479
+fidelity_experiment_trotterisation: Time: 5.316541413767342
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8303222564312176
+fidelity_experiment_trotterisation: tket fidelity: 0.05050716652777179
+fidelity_experiment_trotterisation: Default fidelity: 0.7947340922836384
+fidelity_experiment_trotterisation: Time: 5.47764872933605
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.8171909646880847
+fidelity_experiment_trotterisation: tket fidelity: 0.04777927300479374
+fidelity_experiment_trotterisation: Default fidelity: 0.7752736695915599
+fidelity_experiment_trotterisation: Time: 5.638756044904756
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.803592932521799
+fidelity_experiment_trotterisation: tket fidelity: 0.05217519267403634
+fidelity_experiment_trotterisation: Default fidelity: 0.7550337890305993
+fidelity_experiment_trotterisation: Time: 5.799863360473464
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.789631176481414
+fidelity_experiment_trotterisation: tket fidelity: 0.06266940407774856
+fidelity_experiment_trotterisation: Default fidelity: 0.7342197989399415
+fidelity_experiment_trotterisation: Time: 5.960970676042171
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7754129889117188
+fidelity_experiment_trotterisation: tket fidelity: 0.0774798501523156
+fidelity_experiment_trotterisation: Default fidelity: 0.713041217722709
+fidelity_experiment_trotterisation: Time: 6.122077991610879
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7610429079724389
+fidelity_experiment_trotterisation: tket fidelity: 0.09341805670972167
+fidelity_experiment_trotterisation: Default fidelity: 0.6916989968959604
+fidelity_experiment_trotterisation: Time: 6.283185307179586
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.7466159702523102
+fidelity_experiment_trotterisation: tket fidelity: 0.10621055793419618
+fidelity_experiment_trotterisation: Default fidelity: 0.6703741929634827
+fidelity_experiment_trotterisation: Name: LiH_JW_sto3g
+fidelity_experiment_trotterisation: Time: 0.0
+Traceback (most recent call last):
+  File "/home/w/winderl/pauliopt/experiments/pauli_experiment.py", line 501, in <module>
+    # fidelity_experiment_trotterisation()
+  File "/home/w/winderl/pauliopt/experiments/pauli_experiment.py", line 452, in fidelity_experiment_trotterisation
+    summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
+  File "/home/w/winderl/pauliopt/experiments/pauli_experiment.py", line 146, in operator_to_summed_pauli_op
+    sum_pauli_op += float(coeff) * pauli_op
+  File "/home/w/winderl/miniconda3/envs/pauliopt/lib/python3.9/site-packages/sympy/core/expr.py", line 351, in __float__
+    raise TypeError("Cannot convert expression to float")
+TypeError: Cannot convert expression to float
