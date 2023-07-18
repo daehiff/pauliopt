@@ -1,0 +1,568 @@
+slurmstepd-luhe: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
+slurmstepd-luhe: error: Setting TMPDIR to /tmp
+clifford_experiment.py
+data
+experiments
+output_p.log
+pauli_experiment.py
+test.pickle
+tket_benchmarking
+Start!
+P
+HNO_P_sto3g
+20
+H8_P_sto3g
+14
+HCl_P_sto3g
+18
+BeH2_P_631g
+24
+NH_P_sto3g
+10
+H2_P_631g
+6
+        name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 498      1356         1707
+
+[1 rows x 13 columns]
+C2_P_sto3g
+18
+CH2_P_sto3g
+12
+HCl_P_631g
+28
+LiH_P_sto3g
+10
+NH3_P_sto3g
+14
+NH_P_631g
+20
+LiH_P_631g
+20
+H2CO_P_sto3g
+22
+C2H4_P_sto3g
+26
+H4_P_sto3g
+6
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 535      1388         1757
+
+[1 rows x 13 columns]
+H2O_P_sto3g
+12
+CO2_P_sto3g
+28
+CH2_P_631g
+24
+H4_P_631g
+14
+N2_P_sto3g
+18
+H2_P_sto3g
+2
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+H2O_P_631g
+24
+BeH2_P_sto3g
+12
+====
+BK
+H2O_BK_sto3g
+14
+HNO_BK_sto3g
+22
+C2_BK_sto3g
+20
+H2CO_BK_sto3g
+24
+HCl_BK_sto3g
+20
+LiH_BK_sto3g
+12
+HCl_BK_631g
+30
+CH2_BK_sto3g
+14
+H8_BK_sto3g
+16
+NH3_BK_sto3g
+16
+CO2_BK_sto3g
+30
+N2_BK_sto3g
+20
+H2_BK_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 643      1186         1377
+
+[1 rows x 13 columns]
+CH2_BK_631g
+26
+H2O_BK_631g
+26
+LiH_BK_631g
+22
+H4_BK_631g
+16
+C2H4_BK_sto3g
+28
+NH_BK_sto3g
+12
+BeH2_BK_sto3g
+14
+H2_BK_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  77        66           99
+
+[1 rows x 13 columns]
+H4_BK_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                1131      2252         2656
+
+[1 rows x 13 columns]
+NH_BK_631g
+22
+BeH2_BK_631g
+26
+====
+JW
+H2CO_JW_sto3g
+24
+C2H4_JW_sto3g
+28
+NH_JW_sto3g
+12
+BeH2_JW_sto3g
+14
+H2_JW_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 542      1104         1328
+
+[1 rows x 13 columns]
+BeH2_JW_631g
+26
+CH2_JW_sto3g
+14
+H4_JW_631g
+16
+HNO_JW_sto3g
+22
+HCl_JW_631g
+30
+H2_JW_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  80        64           99
+
+[1 rows x 13 columns]
+H8_JW_sto3g
+16
+NH3_JW_sto3g
+16
+HCl_JW_sto3g
+20
+C2_JW_sto3g
+20
+CH2_JW_631g
+26
+H4_JW_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                1059      2144         2592
+
+[1 rows x 13 columns]
+H2O_JW_sto3g
+14
+LiH_JW_631g
+22
+CO2_JW_sto3g
+30
+NH_JW_631g
+22
+N2_JW_sto3g
+20
+H2O_JW_631g
+26
+LiH_JW_sto3g
+12
+====
+P
+HNO_P_sto3g
+20
+H8_P_sto3g
+14
+HCl_P_sto3g
+18
+BeH2_P_631g
+24
+NH_P_sto3g
+10
+H2_P_631g
+6
+        name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 283       836         1160
+
+[1 rows x 13 columns]
+C2_P_sto3g
+18
+CH2_P_sto3g
+12
+HCl_P_631g
+28
+LiH_P_sto3g
+10
+NH3_P_sto3g
+14
+NH_P_631g
+20
+LiH_P_631g
+20
+H2CO_P_sto3g
+22
+C2H4_P_sto3g
+26
+H4_P_sto3g
+6
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 296       852         1194
+
+[1 rows x 13 columns]
+H2O_P_sto3g
+12
+CO2_P_sto3g
+28
+CH2_P_631g
+24
+H4_P_631g
+14
+N2_P_sto3g
+18
+H2_P_sto3g
+2
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+H2O_P_631g
+24
+BeH2_P_sto3g
+12
+====
+BK
+H2O_BK_sto3g
+14
+HNO_BK_sto3g
+22
+C2_BK_sto3g
+20
+H2CO_BK_sto3g
+24
+HCl_BK_sto3g
+20
+LiH_BK_sto3g
+12
+HCl_BK_631g
+30
+CH2_BK_sto3g
+14
+H8_BK_sto3g
+16
+NH3_BK_sto3g
+16
+CO2_BK_sto3g
+30
+N2_BK_sto3g
+20
+H2_BK_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 311       530          767
+
+[1 rows x 13 columns]
+CH2_BK_631g
+26
+H2O_BK_631g
+26
+LiH_BK_631g
+22
+H4_BK_631g
+16
+C2H4_BK_sto3g
+28
+NH_BK_sto3g
+12
+BeH2_BK_sto3g
+14
+H2_BK_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  50        46           75
+
+[1 rows x 13 columns]
+H4_BK_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                 516      1172         1553
+
+[1 rows x 13 columns]
+NH_BK_631g
+22
+BeH2_BK_631g
+26
+====
+JW
+H2CO_JW_sto3g
+24
+C2H4_JW_sto3g
+28
+NH_JW_sto3g
+12
+BeH2_JW_sto3g
+14
+H2_JW_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 289       688          935
+
+[1 rows x 13 columns]
+BeH2_JW_631g
+26
+CH2_JW_sto3g
+14
+H4_JW_631g
+16
+HNO_JW_sto3g
+22
+HCl_JW_631g
+30
+H2_JW_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  52        64           98
+
+[1 rows x 13 columns]
+H8_JW_sto3g
+16
+NH3_JW_sto3g
+16
+HCl_JW_sto3g
+20
+C2_JW_sto3g
+20
+CH2_JW_631g
+26
+H4_JW_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                 479      1312         1775
+
+[1 rows x 13 columns]
+H2O_JW_sto3g
+14
+LiH_JW_631g
+22
+CO2_JW_sto3g
+30
+NH_JW_631g
+22
+N2_JW_sto3g
+20
+H2O_JW_631g
+26
+LiH_JW_sto3g
+12
+====
+P
+HNO_P_sto3g
+20
+H8_P_sto3g
+14
+HCl_P_sto3g
+18
+BeH2_P_631g
+24
+NH_P_sto3g
+10
+H2_P_631g
+6
+        name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 564      1028         1294
+
+[1 rows x 13 columns]
+C2_P_sto3g
+18
+CH2_P_sto3g
+12
+HCl_P_631g
+28
+LiH_P_sto3g
+10
+NH3_P_sto3g
+14
+NH_P_631g
+20
+LiH_P_631g
+20
+H2CO_P_sto3g
+22
+C2H4_P_sto3g
+26
+H4_P_sto3g
+6
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 598      1060         1344
+
+[1 rows x 13 columns]
+H2O_P_sto3g
+12
+CO2_P_sto3g
+28
+CH2_P_631g
+24
+H4_P_631g
+14
+N2_P_sto3g
+18
+H2_P_sto3g
+2
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+H2O_P_631g
+24
+BeH2_P_sto3g
+12
+====
+BK
+H2O_BK_sto3g
+14
+HNO_BK_sto3g
+22
+C2_BK_sto3g
+20
+H2CO_BK_sto3g
+24
+HCl_BK_sto3g
+20
+LiH_BK_sto3g
+12
+HCl_BK_631g
+30
+CH2_BK_sto3g
+14
+H8_BK_sto3g
+16
+NH3_BK_sto3g
+16
+CO2_BK_sto3g
+30
+N2_BK_sto3g
+20
+H2_BK_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 679       922         1040
+
+[1 rows x 13 columns]
+CH2_BK_631g
+26
+H2O_BK_631g
+26
+LiH_BK_631g
+22
+H4_BK_631g
+16
+C2H4_BK_sto3g
+28
+NH_BK_sto3g
+12
+BeH2_BK_sto3g
+14
+H2_BK_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  65        58           85
+
+[1 rows x 13 columns]
+H4_BK_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                1104      1876         2125
+
+[1 rows x 13 columns]
+NH_BK_631g
+22
+BeH2_BK_631g
+26
+====
+JW
+H2CO_JW_sto3g
+24
+C2H4_JW_sto3g
+28
+NH_JW_sto3g
+12
+BeH2_JW_sto3g
+14
+H2_JW_631g
+8
+         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 589       848         1017
+
+[1 rows x 13 columns]
+BeH2_JW_631g
+26
+CH2_JW_sto3g
+14
+H4_JW_631g
+16
+HNO_JW_sto3g
+22
+HCl_JW_631g
+30
+H2_JW_sto3g
+4
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  73        64           83
+
+[1 rows x 13 columns]
+H8_JW_sto3g
+16
+NH3_JW_sto3g
+16
+HCl_JW_sto3g
+20
+C2_JW_sto3g
+20
+CH2_JW_631g
+26
+H4_JW_sto3g
+8
+          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                1015      1760         2014
+
+[1 rows x 13 columns]
+H2O_JW_sto3g
+14
+LiH_JW_631g
+22
+CO2_JW_sto3g
+30
+NH_JW_631g
+22
+N2_JW_sto3g
+20
+H2O_JW_631g
+26
+LiH_JW_sto3g
+12
+====

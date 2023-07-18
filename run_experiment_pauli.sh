@@ -1,4 +1,5 @@
 #!/bin/bash
 
 cd experiments/
-python pauli_experiment.py
+ls
+python -u pauli_experiment.py

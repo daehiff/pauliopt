@@ -1,9 +1,4 @@
-,name,n_qubits,gadgets,tket_uccs_set_cx,tket_uccs_set_depth,tket_uccs_pair_cx,tket_uccs_pair_depth,pauliopt_steiner_nc_cx,pauliopt_steiner_nc_depth,naive_cx,naive_depth
-0,H2O_JW_sto3g,14,1000,13204,7625,18277,13715,4708,6794,19184,19213
-1,CH2_JW_sto3g,14,1488,20684,9477,28547,20178,6436,9236,29536,30180
-2,BeH2_JW_sto3g,14,1488,21787,10093,28999,20708,6924,9709,29536,31255
-3,NH_JW_sto3g,12,640,6415,3630,9818,8415,2960,4356,10560,10944
-4,H4_JW_sto3g,8,160,1171,742,1884,1851,768,1180,1760,2014
-5,LiH_JW_sto3g,12,640,6369,3751,9286,8203,2952,4339,10560,11731
-6,H2_JW_631g,8,84,575,650,614,943,444,689,848,1017
-7,H2_JW_sto3g,4,12,54,74,38,107,44,86,64,83
+,name,n_qubits,gadgets,tket_uccs_set_cx,tket_uccs_set_depth,tket_uccs_pair_cx,tket_uccs_pair_depth,pauliopt_steiner_nc_cx,pauliopt_steiner_nc_depth,pauliopt_ucc_cx,pauliopt_ucc_depth,naive_cx,naive_depth
+0,H2_JW_631g,8,84,575,650,614,943,444,689,654,589,848,1017
+1,H2_JW_sto3g,4,12,54,74,38,107,44,86,45,73,64,83
+2,H4_JW_sto3g,8,160,1171,742,1884,1851,768,1180,1321,1015,1760,2014
