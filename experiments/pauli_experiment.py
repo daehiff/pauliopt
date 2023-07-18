@@ -232,8 +232,7 @@ def synth_tket(operator, topo: Topology, method: PauliSynthStrat):
         RoutingPass(tket_arch),
     ])
     passes.apply(unit)
-    circ_out = circuit
-    Transform.DecomposeBoxes().apply(circ_out)
+    circ_out = unit.circuit
     Transform.RebaseToCliffordSingles().apply(circ_out)
     Transform.RebaseToRzRx().apply(circ_out)
     return tk_to_qiskit(circ_out)
@@ -366,15 +365,6 @@ def synth_ucc_evaluation():
                 path = op_directory + "/" + filename
                 with open(path, "rb") as pickle_in:
                     qubit_pauli_operator = pickle.load(pickle_in)
-
-                active_spin_orbitals = orbitals_lookup_table[name]
-                if encoding_name == "P":
-                    n_qubits = active_spin_orbitals - 2
-                else:
-                    n_qubits = active_spin_orbitals
-
-                if n_qubits >= 10:
-                    continue
 
                 topo = get_topo_kind(topo_kind, n_qubits)
                 pp = operator_to_pp(qubit_pauli_operator, n_qubits)
