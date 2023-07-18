@@ -430,9 +430,6 @@ def random_pauli_polynomial_experiment():
 
 
 def fidelity_experiment_trotterisation():
-    fid_default = []
-    fid_ours = []
-    fid_tket = []
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
         orbitals_lookup_table = json.load(json_file)
 
@@ -442,6 +439,9 @@ def fidelity_experiment_trotterisation():
                            ("LiH_P_sto3g", "P"),
                            ("LiH_JW_sto3g", "JW")]:
 
+        fid_default = []
+        fid_ours = []
+        fid_tket = []
         logger.info(f"Name: {name}")
         for t in np.linspace(0.0, 1.0, 40):
             t = float(t * 2 * np.pi)
@@ -508,7 +508,7 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    # fidelity_experiment_trotterisation()
-    synth_ucc_evaluation()
+    fidelity_experiment_trotterisation()
+    #synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
