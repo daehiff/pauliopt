@@ -1,4 +1,10 @@
 ,name,n_qubits,gadgets,tket_uccs_set_cx,tket_uccs_set_depth,tket_uccs_pair_cx,tket_uccs_pair_depth,pauliopt_steiner_nc_cx,pauliopt_steiner_nc_depth,pauliopt_ucc_cx,pauliopt_ucc_depth,naive_cx,naive_depth
+<<<<<<< HEAD
 0,H2_P_631g,6,158,264,434,532,1027,350,636,280,283,836,1160
 1,H4_P_sto3g,6,164,268,445,544,1045,364,666,258,296,852,1194
 2,H2_P_sto3g,2,4,4,20,4,20,4,9,4,9,4,9
+=======
+0,H4_P_sto3g,6,164,268,445,544,1045,364,666,258,296,852,1194
+1,H2_P_sto3g,2,4,4,20,4,20,4,9,4,9,4,9
+2,H2_P_631g,6,158,264,434,532,1027,350,636,280,283,836,1160
+>>>>>>> b91f42050083dd3577e83b942be261a66d311be6
