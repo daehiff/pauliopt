@@ -498,7 +498,7 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    fidelity_experiment_trotterisation()
-    # synth_ucc_evaluation()
+    # fidelity_experiment_trotterisation()
+    synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
