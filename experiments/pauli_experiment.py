@@ -331,7 +331,7 @@ def synth_ucc_evaluation():
                 else:
                     n_qubits = active_spin_orbitals
                 print(n_qubits)
-                if n_qubits >= 15:
+                if n_qubits >= 10:
                     continue
                 path = op_directory + "/" + filename
                 with open(path, "rb") as pickle_in:

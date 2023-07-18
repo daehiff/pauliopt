@@ -20,8 +20,6 @@ from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
 
-from qiskit.visualization import plot_histogram
-
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     gate_choice = ["H", "CX"]
