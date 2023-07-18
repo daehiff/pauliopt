@@ -361,7 +361,7 @@ def synth_ucc_evaluation():
                 else:
                     n_qubits = active_spin_orbitals
                 logger.info(n_qubits)
-                if n_qubits >= 10:
+                if n_qubits >= 15:
                     continue
                 path = op_directory + "/" + filename
                 with open(path, "rb") as pickle_in:
@@ -508,7 +508,7 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    fidelity_experiment_trotterisation()
-    #synth_ucc_evaluation()
+    # fidelity_experiment_trotterisation()
+    synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
