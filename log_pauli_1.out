@@ -331,3 +331,20 @@ fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6376323769669652
 fidelity_experiment_trotterisation: tket fidelity: 0.028507721416889682
 fidelity_experiment_trotterisation: Default fidelity: 0.7717349188951328
 fidelity_experiment_trotterisation: Time: 6.283185307179586
+fidelity_experiment_trotterisation: Steiner-NC fidelity: 0.6187552880827529
+fidelity_experiment_trotterisation: tket fidelity: 0.02974704349387866
+fidelity_experiment_trotterisation: Default fidelity: 0.7573053351048499
+Traceback (most recent call last):
+  File "/home/w/winderl/pauliopt/experiments/pauli_experiment.py", line 510, in <module>
+    if __name__ == '__main__':
+  File "/home/w/winderl/pauliopt/experiments/pauli_experiment.py", line 492, in fidelity_experiment_trotterisation
+    # store data
+  File "/home/w/winderl/miniconda3/envs/pauliopt/lib/python3.9/site-packages/pandas/core/frame.py", line 709, in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy, typ=manager)
+  File "/home/w/winderl/miniconda3/envs/pauliopt/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 481, in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, typ=typ, consolidate=copy)
+  File "/home/w/winderl/miniconda3/envs/pauliopt/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 115, in arrays_to_mgr
+    index = _extract_index(arrays)
+  File "/home/w/winderl/miniconda3/envs/pauliopt/lib/python3.9/site-packages/pandas/core/internals/construction.py", line 655, in _extract_index
+    raise ValueError("All arrays must be of the same length")
+ValueError: All arrays must be of the same length
