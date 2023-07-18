@@ -1,14 +1,12 @@
-import math
 import os
 import pickle
 from numbers import Number
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pytket
 import qiskit.quantum_info
-import scipy
+import seaborn as sns
 import sympy
 from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
@@ -26,7 +24,6 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
-import seaborn as sns
 
 
 def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
@@ -402,7 +399,6 @@ def random_pauli_polynomial_experiment():
 
 
 def fidelity_experiment_trotterisation():
-    from qiskit.opflow import I, X, Y, Z
     fid_default = []
     fid_ours = []
     fid_tket = []

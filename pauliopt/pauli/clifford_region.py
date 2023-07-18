@@ -1,9 +1,7 @@
 from qiskit.quantum_info import Clifford
-from qiskit.synthesis import synth_clifford_full
 
 from pauliopt.pauli.clifford_gates import *
 from pauliopt.pauli.clifford_tableau import CliffordTableau
-from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.topologies import Topology
 
 
@@ -79,6 +77,7 @@ class CliffordRegion:
                     qc.s(gate.qubit)
             return qc, None
         elif method == "qiskit":
+            from qiskit.synthesis import synth_clifford_full
             qc, _ = self.to_qiskit(method="naive_apply")
             ct = Clifford.from_circuit(qc)
             return synth_clifford_full(ct, method="greedy"), None
