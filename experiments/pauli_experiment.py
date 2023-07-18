@@ -320,7 +320,7 @@ def synth_ucc_evaluation():
 
             op_directory = f"{BASE_PATH}/operators/{encoding_name}_operators"
             results_file = f"data/pauli/uccsd/{topo_kind}/{encoding_name}_results.csv"
-            print(encoding_name)
+            print(encoding_name, flush=True)
             df = pd.DataFrame()
             for filename in os.listdir(op_directory):
                 name = filename.replace(".pickle", "")
