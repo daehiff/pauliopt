@@ -260,6 +260,7 @@ def synth_pp_tket_uccs_pair(pp: PauliPolynomial, topo: Topology, prefix="tket_uc
 
 
 def synth_pp_pauliopt_ucc(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_ucc"):
+    pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.UCCDS, topo)
     synthesizer.synthesize()
     return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
@@ -344,22 +345,22 @@ def synth_ucc_evaluation():
     print("Start!")
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
         orbitals_lookup_table = json.load(json_file)
+    logger = get_logger("synth_ucc_evaluation")
     for topo_kind in ["line", "complete", "cycle"]:
         for encoding_name in ["P", "BK", "JW"]:
 
             op_directory = f"{BASE_PATH}/operators/{encoding_name}_operators"
             results_file = f"data/pauli/uccsd/{topo_kind}/{encoding_name}_results.csv"
-            print(encoding_name, flush=True)
             df = pd.DataFrame()
             for filename in os.listdir(op_directory):
                 name = filename.replace(".pickle", "")
-                print(name)
+                logger.info(name)
                 active_spin_orbitals = orbitals_lookup_table[name]
                 if encoding_name == "P":
                     n_qubits = active_spin_orbitals - 2
                 else:
                     n_qubits = active_spin_orbitals
-                print(n_qubits)
+                logger.info(n_qubits)
                 if n_qubits >= 10:
                     continue
                 path = op_directory + "/" + filename
@@ -372,20 +373,20 @@ def synth_ucc_evaluation():
                 else:
                     n_qubits = active_spin_orbitals
 
-                # if n_qubits >= 15:
-                #     continue
+                if n_qubits >= 10:
+                    continue
 
                 topo = get_topo_kind(topo_kind, n_qubits)
                 pp = operator_to_pp(qubit_pauli_operator, n_qubits)
                 col = {"name": name, "n_qubits": n_qubits, "gadgets": pp.num_gadgets}
-                col = col | synth_pp_tket_uccs_set(pp, topo)
-                col = col | synth_pp_tket_uccs_pair(pp, topo)
+                col = col | synth_pp_tket_uccs_set(qubit_pauli_operator, topo)
+                col = col | synth_pp_tket_uccs_pair(qubit_pauli_operator, topo)
                 col = col | synth_pp_pauliopt_steiner_nc(pp, topo)
                 # col = col | synth_pp_pauliopt_divide_concquer(pp, topo)
                 col = col | synth_pp_pauliopt_ucc(pp, topo)
                 col = col | synth_pp_naive(pp, topo)
                 df_col = pd.DataFrame(col, index=[0])
-                print(df_col)
+                logger.info(df_col)
                 df = pd.concat([df, df_col], ignore_index=True)
                 df.to_csv(results_file)
             print("====")
@@ -507,7 +508,7 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    fidelity_experiment_trotterisation()
-    # synth_ucc_evaluation()
+    # fidelity_experiment_trotterisation()
+    synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
