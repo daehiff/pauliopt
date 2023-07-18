@@ -1,0 +1,561 @@
+slurmstepd-aleurit: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
+slurmstepd-aleurit: error: Setting TMPDIR to /tmp
+clifford_experiment.py
+data
+experiments
+fidelity_experiment_trotterisation.log
+output_p.log
+pauli_experiment.py
+synth_ucc_evaluation.log
+test.pickle
+tket_benchmarking
+Start!
+synth_ucc_evaluation: HNO_P_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H8_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HCl_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: BeH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: NH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: H2_P_631g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 498      1356         1707
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: C2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: CH2_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_P_631g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: LiH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: NH3_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: NH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_P_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2H4_P_sto3g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_P_sto3g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 535      1388         1757
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: CO2_P_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: CH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: H4_P_631g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: N2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: H2_P_sto3g
+synth_ucc_evaluation: 2
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: BeH2_P_sto3g
+synth_ucc_evaluation: 12
+====
+synth_ucc_evaluation: H2O_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HNO_BK_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_BK_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: HCl_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_BK_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: CH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H8_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: CO2_BK_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: N2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2_BK_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 643      1186         1377
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: CH2_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H2O_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: H4_BK_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: C2H4_BK_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_BK_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  77        66           99
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H4_BK_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                1131      2252         2656
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: NH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: BeH2_BK_631g
+synth_ucc_evaluation: 26
+====
+synth_ucc_evaluation: H2CO_JW_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: C2H4_JW_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_JW_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_JW_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 542      1104         1328
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: BeH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: CH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H4_JW_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HNO_JW_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: HCl_JW_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: H2_JW_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  80        64           99
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H8_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HCl_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: C2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: CH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_JW_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                1059      2144         2592
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: LiH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: CO2_JW_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: NH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: N2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2O_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_JW_sto3g
+synth_ucc_evaluation: 12
+====
+synth_ucc_evaluation: HNO_P_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H8_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HCl_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: BeH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: NH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: H2_P_631g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 283       836         1160
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: C2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: CH2_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_P_631g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: LiH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: NH3_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: NH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_P_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2H4_P_sto3g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_P_sto3g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 296       852         1194
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: CO2_P_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: CH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: H4_P_631g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: N2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: H2_P_sto3g
+synth_ucc_evaluation: 2
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: BeH2_P_sto3g
+synth_ucc_evaluation: 12
+====
+synth_ucc_evaluation: H2O_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HNO_BK_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_BK_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: HCl_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_BK_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: CH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H8_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: CO2_BK_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: N2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2_BK_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 311       530          767
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: CH2_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H2O_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: H4_BK_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: C2H4_BK_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_BK_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  50        46           75
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H4_BK_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                 516      1172         1553
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: NH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: BeH2_BK_631g
+synth_ucc_evaluation: 26
+====
+synth_ucc_evaluation: H2CO_JW_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: C2H4_JW_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_JW_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_JW_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 289       688          935
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: BeH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: CH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H4_JW_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HNO_JW_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: HCl_JW_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: H2_JW_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  52        64           98
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H8_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HCl_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: C2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: CH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_JW_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                 479      1312         1775
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: LiH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: CO2_JW_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: NH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: N2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2O_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_JW_sto3g
+synth_ucc_evaluation: 12
+====
+synth_ucc_evaluation: HNO_P_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H8_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HCl_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: BeH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: NH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: H2_P_631g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:         name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_631g         6      158  ...                 564      1028         1294
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: C2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: CH2_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_P_631g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: LiH_P_sto3g
+synth_ucc_evaluation: 10
+synth_ucc_evaluation: NH3_P_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: NH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_P_631g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_P_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2H4_P_sto3g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_P_sto3g
+synth_ucc_evaluation: 6
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_P_sto3g         6      164  ...                 598      1060         1344
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: CO2_P_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: CH2_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: H4_P_631g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: N2_P_sto3g
+synth_ucc_evaluation: 18
+synth_ucc_evaluation: H2_P_sto3g
+synth_ucc_evaluation: 2
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_P_sto3g         2        4  ...                   9         4            9
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_P_631g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: BeH2_P_sto3g
+synth_ucc_evaluation: 12
+====
+synth_ucc_evaluation: H2O_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: HNO_BK_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: C2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2CO_BK_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: HCl_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: LiH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: HCl_BK_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: CH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H8_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_BK_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: CO2_BK_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: N2_BK_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2_BK_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_631g         8       84  ...                 679       922         1040
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: CH2_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H2O_BK_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: H4_BK_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: C2H4_BK_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_BK_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_BK_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_BK_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_BK_sto3g         4       12  ...                  65        58           85
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H4_BK_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_BK_sto3g         8      160  ...                1104      1876         2125
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: NH_BK_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: BeH2_BK_631g
+synth_ucc_evaluation: 26
+====
+synth_ucc_evaluation: H2CO_JW_sto3g
+synth_ucc_evaluation: 24
+synth_ucc_evaluation: C2H4_JW_sto3g
+synth_ucc_evaluation: 28
+synth_ucc_evaluation: NH_JW_sto3g
+synth_ucc_evaluation: 12
+synth_ucc_evaluation: BeH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H2_JW_631g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:          name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_631g         8       84  ...                 589       848         1017
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: BeH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: CH2_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: H4_JW_631g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HNO_JW_sto3g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: HCl_JW_631g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: H2_JW_sto3g
+synth_ucc_evaluation: 4
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H2_JW_sto3g         4       12  ...                  73        64           83
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H8_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: NH3_JW_sto3g
+synth_ucc_evaluation: 16
+synth_ucc_evaluation: HCl_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: C2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: CH2_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: H4_JW_sto3g
+synth_ucc_evaluation: 8
+synth_ucc_evaluation:           name  n_qubits  gadgets  ...  pauliopt_ucc_depth  naive_cx  naive_depth
+0  H4_JW_sto3g         8      160  ...                1015      1760         2014
+
+[1 rows x 13 columns]
+synth_ucc_evaluation: H2O_JW_sto3g
+synth_ucc_evaluation: 14
+synth_ucc_evaluation: LiH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: CO2_JW_sto3g
+synth_ucc_evaluation: 30
+synth_ucc_evaluation: NH_JW_631g
+synth_ucc_evaluation: 22
+synth_ucc_evaluation: N2_JW_sto3g
+synth_ucc_evaluation: 20
+synth_ucc_evaluation: H2O_JW_631g
+synth_ucc_evaluation: 26
+synth_ucc_evaluation: LiH_JW_sto3g
+synth_ucc_evaluation: 12
+====
