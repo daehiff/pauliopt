@@ -395,7 +395,7 @@ def synth_ucc_evaluation():
 def random_pauli_polynomial_experiment():
     logger = get_logger("random_pauli_polynomial_experiment")
     df = pd.DataFrame()
-    for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 100, 200]:
+    for num_gadgets in [100, 200, 300, 500, 1000]:
         logger.info(f"Num gadgets: {num_gadgets}")
         for num_qubits in [6, 8]:
             logger.info(f"Num qubits: {num_qubits}")
@@ -407,7 +407,7 @@ def random_pauli_polynomial_experiment():
                     pp = simplify_pauli_polynomial(pp, allow_acs=True)
                     for synth in ["tket_uccs_set", "tket_uccs_pair",
                                   "pauliopt_steiner_nc", "pauliopt_ucc",
-                                  "pauliopt_divide_conquer" ]:
+                                  "pauliopt_divide_conquer"]:
                         col = {"method": synth, "n_qubits": num_qubits,
                                "gadgets": num_gadgets, "topo": topo_name} | naive_data
 
