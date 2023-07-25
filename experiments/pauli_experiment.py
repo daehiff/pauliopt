@@ -3,6 +3,7 @@ import pickle
 from numbers import Number
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pytket
 import qiskit.quantum_info
@@ -385,9 +386,12 @@ def synth_ucc_evaluation():
 
 
 def random_pauli_polynomial_experiment():
+    logger = get_logger("random_pauli_polynomial_experiment")
     df = pd.DataFrame()
     for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 110, 130, 150, 200, 300, 500, 1000]:
-        for num_qubits in [8]:
+        logger.info(f"Num gadgets: {num_gadgets}")
+        for num_qubits in [6, 8]:
+            logger.info(f"Num qubits: {num_qubits}")
             for topo_name in ["complete"]:
                 topo = get_topo_kind(topo_name, num_qubits)
                 for _ in range(20):
@@ -414,7 +418,6 @@ def random_pauli_polynomial_experiment():
                             raise Exception("Unknown synthesis method")
 
                         df_col = pd.DataFrame(col, index=[0])
-                        print(df_col)
                         df = pd.concat([df, df_col], ignore_index=True)
                         df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
 
@@ -499,20 +502,72 @@ def plot_random_pauli_polynomial_experiment():
     plt.show()
 
 
-def operators_experiment():
+def get_min_max_interaction(summed_pauli):
+    coeff_list = []
+    for el in summed_pauli:
+        coeff = el.primitive.coeffs[0]
+        coeff_list.append(coeff.real)
+    return np.max(np.abs(coeff_list))
+
+
+def plot_fidelity():
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
         orbitals_lookup_table = json.load(json_file)
-
-    logger = get_logger("fidelity_experiment_trotterisation")
+    eps = 0.1
     for name, encoding in [("H2_P_631g", "P"),
                            ("H4_P_sto3g", "P"),
                            ("LiH_P_sto3g", "P")]:
-        pass
+
+        # t = 1.0
+        orbigtals = orbitals_lookup_table[name]
+        if encoding == "P":
+            n_qubits = orbigtals - 2
+        else:
+            n_qubits = orbigtals
+
+        with open(
+                f"tket_benchmarking/compilation_strategy/operators/{encoding}_operators/{name}.pickle",
+                "rb") as pickle_in:
+            operator = pickle.load(pickle_in)
+
+        summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
+        print("Name: ", name)
+        max = get_min_max_interaction(summed_pauli_operator)
+        print("Max: ", max)
+
+        df = pd.read_csv(f"data/pauli/fidelity/{name}.csv")
+        df["t"] = df["t"] * 2 * np.pi
+
+        x_max = [t for t in df["t"] if max * t > eps][0]
+
+        plt.rcParams.update({
+            "text.usetex": True,
+            "font.family": "sans-serif",
+            "font.size": 11
+        })
+        sns.set_palette(sns.color_palette("colorblind"))
+
+        sns.lineplot(df, x="t", y="fid_default", label="Default")
+        sns.lineplot(df, x="t", y="fid_ours", label="Pauli-Steiner-Gray")
+        sns.lineplot(df, x="t", y="fid_tket", label="UCCDS-pair")
+        # set ticks to be between 0 and 2pi and label them
+        plt.xticks(np.linspace(0.0, 2 * np.pi, 5),
+                   [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"])
+        plt.xlabel(r"Time $t$")
+        plt.ylabel(r"Fidelity")
+        # add  vertical line at t = 1
+        plt.axvline(x=x_max, color=sns.color_palette("colorblind")[4], linestyle="--")
+        # add a label to the vertical line
+        plt.text(x=x_max + 0.1, y=0.01, s=r"$\vec{t}_{max} > 0.1$")
+
+        plt.tight_layout()
+        plt.savefig(f"data/pauli/fidelity/{name}.pdf")
+        plt.show()
 
 
 if __name__ == '__main__':
-    operators_experiment()
-    fidelity_experiment_trotterisation()
+    # fidelity_experiment_trotterisation()
+    # plot_fidelity()
     # synth_ucc_evaluation()
-    # random_pauli_polynomial_experiment()
+    random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
