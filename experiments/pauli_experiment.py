@@ -362,8 +362,8 @@ def synth_ucc_evaluation():
                 else:
                     n_qubits = active_spin_orbitals
                 logger.info(n_qubits)
-                if n_qubits >= 15:
-                    continue
+                # if n_qubits >= 15:
+                #     continue
                 path = op_directory + "/" + filename
                 with open(path, "rb") as pickle_in:
                     qubit_pauli_operator = pickle.load(pickle_in)
@@ -375,7 +375,7 @@ def synth_ucc_evaluation():
                 col = col | synth_pp_tket_uccs_pair(qubit_pauli_operator, topo)
                 col = col | synth_pp_pauliopt_steiner_nc(pp, topo)
                 # col = col | synth_pp_pauliopt_divide_concquer(pp, topo)
-                col = col | synth_pp_pauliopt_ucc(pp, topo)
+                # col = col | synth_pp_pauliopt_ucc(pp, topo)
                 col = col | synth_pp_naive(pp, topo)
                 df_col = pd.DataFrame(col, index=[0])
                 logger.info(df_col)
