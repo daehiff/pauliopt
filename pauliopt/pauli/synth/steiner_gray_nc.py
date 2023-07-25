@@ -25,17 +25,6 @@ def pick_row(pp: PauliPolynomial, columns_to_use, qubits_to_use):
     return max(qubit_scores, key=lambda x: x[1])[0]
 
 
-def pick_next_row(pp: PauliPolynomial, columns_to_use, row, qubits_to_use):
-    qubit_scores = []
-    for q in qubits_to_use:
-        i_score = len([col for col in columns_to_use
-                       if is_compatible(pp, row, q, columns_to_use)])
-
-        score = i_score
-        qubit_scores.append((q, score))
-    return max(qubit_scores, key=lambda x: x[1])[0]
-
-
 def update_gadget_single_column(pp: PauliPolynomial, qc: PauliCircuit, q: int,
                                 p: Pauli, columns_to_use):
     if p == X:

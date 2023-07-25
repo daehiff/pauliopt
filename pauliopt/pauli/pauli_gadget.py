@@ -144,8 +144,12 @@ class PauliGadget:
 
         match_count = 0
         for p_1, p_2 in zip(self.paulis, other.paulis):
-            if p_1 != Pauli.I and p_2 != Pauli.I:
+            leg_present_1 = p_1 != Pauli.I
+            leg_present_2 = p_2 != Pauli.I
+            if leg_present_2 and leg_present_1:
                 match_count += 1
+            elif leg_present_1 != leg_present_2:
+                match_count -= 1
             else:
                 match_count -= 1
         return match_count

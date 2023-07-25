@@ -1,0 +1,8 @@
+\documentclass[tikz]{standalone}
+\usetikzlibrary{quantikz}
+\begin{document}
+\begin{quantikz}
+\lstick{q[0]} & \gate[1]{\text{$R_Z$(1.0*$\alpha_1$/pi)}} & \targ{} & \gate[1]{\text{$R_Z$(1.0*$\alpha_2$/pi)}} & \targ{} & \gate[1]{\text{$H$}} & \targ{} & \gate[1]{\text{$R_Z$(1.0*$\alpha_3$/pi)}} & \targ{} & \gate[1]{\text{$H$}} & \qw \\
+\lstick{q[1]} & \gate[1]{\text{$R_Z$(1.0*$\alpha_0$/pi)}} & \ctrl{-1} & \qw & \ctrl{-1} & \gate[1]{\text{$H$}} & \ctrl{-1} & \qw & \ctrl{-1} & \gate[1]{\text{$H$}} & \qw \\
+\end{quantikz}
+\end{document}

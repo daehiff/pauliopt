@@ -2,6 +2,7 @@ import pickle
 import time
 from numbers import Number
 
+import numpy as np
 import pytket
 from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
@@ -10,9 +11,11 @@ from pytket._tket.predicates import CompilationUnit
 from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
+from pyzx import Mat2
 from qiskit import QuantumCircuit
 from sympy.core.symbol import Symbol
 
+from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
@@ -296,6 +299,59 @@ def main():
     # print("PP:     ", pp.to_qiskit(topology=topo).depth())
 
 
+class CNOT_tracker:
+    def __init__(self):
+        self.cnots = []
+
+    def row_add(self, target, control):
+        self.cnots.append((target, control))
+
+    def col_add(self, target, control):
+        self.cnots.append((control, target))
+
+
+def random_parity_map():
+    mat = Mat2.id(4)
+    for _ in range(10):
+        control = np.random.choice(list(range(4)))
+        target = np.random.choice([x for x in range(4) if x != control])
+        mat.row_add(target, control)
+    print(mat)
+    tracker = CNOT_tracker()
+
+    mat.copy().gauss(full_reduce=True, x=tracker)
+
+    print(tracker.cnots)
+
+
+def clifford_tableau_fun():
+    matrix = np.array([
+        [0, 0, 1, 0, 0, 1],
+        [1, 1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 1, 1, 0]
+    ])
+    signs = np.array([0, 0, 0, 0, 0, 0])
+
+    ct = CliffordTableau(tableau=matrix, signs=signs)
+    ct.append_s(2)
+    ct.append_cnot(2, 0)
+    ct.append_cnot(0, 2)
+    ct.append_cnot(2, 0)
+    ct.append_cnot(1, 2)
+    ct.print_zx()
+
+
+def pp_decomposition():
+    pp = PauliPolynomial(2)
+
+    pp >>= PPhase(AngleVar("\\alpha_0")) @ [Y, Z]
+    pp >>= PPhase(AngleVar("\\alpha_1")) @ [Z, Z]
+
+    print(pp.to_latex())
+
+
 if __name__ == '__main__':
-    # test_sto3g()
-    main()
+    pp_decomposition()

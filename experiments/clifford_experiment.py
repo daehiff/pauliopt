@@ -21,6 +21,7 @@ from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
 
 
+
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     gate_choice = ["H", "CX"]
     qc = QuantumCircuit(nr_qubits)
@@ -285,6 +286,13 @@ def run_clifford_experiment(exp_number=0):
 
 
 def plot_vigo():
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.size": 11
+    })
+    sns.set_palette(sns.color_palette("colorblind"))
+
     df = pd.read_csv(f"data/random_vigo.csv")
     #
     sns.lineplot(df, x="n_gadgets", y="h", hue="method")
@@ -306,25 +314,35 @@ def plot_vigo():
     plt.show()
 
 
-def plot_guadalupe():
-    df = pd.read_csv(f"data/random_guadalupe.csv")
+def plot_experiment(name="random_guadalupe"):
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.size": 11
+    })
+    sns.set_palette(sns.color_palette("colorblind"))
+
+    df = pd.read_csv(f"data/{name}.csv")
     #
     sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates (Guadalupe)")
+    plt.title("H-Gates")
     plt.xlabel("Number of input Gates")
     plt.ylabel("Number of H-Gates")
+    plt.savefig(f"data/{name}_h.pdf")
     plt.show()
 
     sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates (Guadalupe)")
+    plt.title("S-Gates")
     plt.xlabel("Number of input gates")
     plt.ylabel("Number of S-Gates")
+    plt.savefig(f"data/{name}_s.pdf")
     plt.show()
 
     sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CNOT-Gates (Guadalupe)")
+    plt.title("CNOT-Gates")
     plt.xlabel("Number of input Gates")
     plt.ylabel("Number of CNOT-Gates")
+    plt.savefig(f"data/{name}_cx.pdf")
     plt.show()
 
 
@@ -410,12 +428,17 @@ def run_clifford_real_hardware():
 def analyze_real_hw():
     cumult_counts_ibm = {}
     cumult_counts_ours = {}
+    df = pd.DataFrame(
+        columns=["method", "h", "s", "cx", "fid", ])
+    execution_times_ours = []
+    execution_times_ibm = []
     for i in range(0, 20):
         base_path = f"data/clifford_experiment_real_hardware/{i}"
 
         with open(f"{base_path}/result_ibm.json", "r") as f:
             result = json.load(f)
             result_ibm = Result.from_dict(result)
+        circ_ibm = QuantumCircuit.from_qasm_file(f"{base_path}/ibm.qasm")
 
         with open(f"{base_path}/result_ours.json", "r") as f:
             result = json.load(f)
@@ -423,11 +446,33 @@ def analyze_real_hw():
 
         with open(f"{base_path}/clifford.json", "r") as f:
             clifford = Clifford.from_dict(json.load(f))
+        circ_ours = QuantumCircuit.from_qasm_file(f"{base_path}/ours.qasm")
 
         counts_expected = {"00000": 16000}
         counts_ibm = result_ibm.get_counts()
         counts_ours = result_ours.get_counts()
+        fid_ibm = hellinger_fidelity(counts_expected, counts_ibm)
+        fid_ours = hellinger_fidelity(counts_expected, counts_ours)
 
+        column = {
+            "method": "ibm",
+            "h": circ_ibm.count_ops()["h"] if "h" in circ_ibm.count_ops() else 0,
+            "s": circ_ibm.count_ops()["s"] if "s" in circ_ibm.count_ops() else 0,
+            "cx": circ_ibm.count_ops()["cx"] if "cx" in circ_ibm.count_ops() else 0,
+            "fid": fid_ibm
+        }
+        df.loc[len(df)] = column
+        column = {
+            "method": "ours",
+            "h": circ_ours.count_ops()["h"] / 2.0
+            if "h" in circ_ours.count_ops() else 0,
+            "s": circ_ours.count_ops()["s"] / 2.0
+            if "s" in circ_ours.count_ops() else 0,
+            "cx": circ_ours.count_ops()["cx"] / 2.0
+            if "cx" in circ_ours.count_ops() else 0,
+            "fid": fid_ours
+        }
+        df.loc[len(df)] = column
         for key, value in counts_ibm.items():
             if key in cumult_counts_ibm:
                 cumult_counts_ibm[key] += [value]
@@ -439,6 +484,19 @@ def analyze_real_hw():
                 cumult_counts_ours[key] += [value]
             else:
                 cumult_counts_ours[key] = [value]
+        execution_times_ours.append(result_ours.time_taken)
+        execution_times_ibm.append(result_ibm.time_taken)
+    print("Execution time IBM: ", np.mean(execution_times_ibm),
+          np.std(execution_times_ibm))
+    print("Execution time Ours: ", np.mean(execution_times_ours),
+          np.std(execution_times_ours))
+
+    df.to_csv("data/clifford_experiment_real_hardware/analysis.csv")
+    df = df[df["method"] == "ours"]
+    correlation_matrix = df[["h", "s", "cx", "fid"]].corr()
+    print("Correlation Matrix CNOTs:")
+    print(correlation_matrix)
+    print(df.groupby("method").mean())
 
     lables = []
     values = []
@@ -447,7 +505,7 @@ def analyze_real_hw():
         values.append(value)
     lables = np.array(lables).flatten()
     values = np.array(values).flatten()
-    cat = ["Our"] * len(lables)
+    cat = ["tableau"] * len(lables)
 
     df_our = pd.DataFrame({"approach": cat,
                            "lables": lables,
@@ -461,42 +519,65 @@ def analyze_real_hw():
 
     lables = np.array(lables).flatten()
     values = np.array(values).flatten()
-    cat = ["IBM"] * len(lables)
+    cat = ["qiskit_tableau"] * len(lables)
     df_ibm = pd.DataFrame({"approach": cat,
                            "lables": lables,
                            "values": values})
     df = pd.concat([df_our, df_ibm], ignore_index=True)
 
     # seaborn barplot rotate the x ticks labels by 90 degrees
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.size": 11
+    })
+    sns.set_palette(sns.color_palette("colorblind"))
     sns.barplot(data=df, x="lables", y="values", hue="approach")
-    plt.title("Clifford Circuit (Real Hardware)")
+    plt.title("Average counts for 20 random Clifford circuits")
     plt.xticks(rotation=90)
     plt.xlabel("Measured State")
     plt.ylabel("Counts")
     plt.tight_layout()
-
+    plt.savefig("data/clifford_experiment_real_hardware/counts_clifford.pdf")
     plt.show()
 
     counts_expected = {"00000": 16000}
     averga_counts_ours = {key: np.mean(value) for key, value in
                           cumult_counts_ours.items()}
     averga_counts_ibm = {key: np.mean(value) for key, value in cumult_counts_ibm.items()}
-
+    print("Final fidelity:")
     print("IBM: ", hellinger_fidelity(counts_expected, averga_counts_ibm))
     print("Ours: ", hellinger_fidelity(counts_expected, averga_counts_ours))
 
 
+def arch_data_output(backend_name):
+    if backend_name == "vigo":
+        backend = FakeVigo()
+    elif backend_name == "mumbai":
+        backend = FakeMumbai()
+    elif backend_name == "guadalupe":
+        backend = FakeGuadalupe()
+    elif backend_name == "quito":
+        backend = FakeQuito()
+    elif backend_name == "nairobi":
+        backend = FakeNairobi()
+    else:
+        raise ValueError(f"Unknown backend: {backend_name}")
+
+    topo = Topology.from_qiskit_backend(backend)
+
+    print("Number of qubits: ", topo.num_qubits)
+    print(topo.to_nx.edges)
+
+
 if __name__ == "__main__":
-    analyze_real_hw()
     # run_clifford_real_hardware()
-    # generate_cliffords(0)
-    # random_experiment(backend_name="nairobi", nr_input_gates=70, nr_steps=5)
+    analyze_real_hw()
 
     # random_experiment(backend_name="quito", nr_input_gates=70, nr_steps=5)
-    # random_experiment(backend_name="guadalupe", nr_input_gates=250, nr_steps=10)
+    # random_experiment(backend_name="guadalupe", nr_input_gates=250, nr_steps=15)
     # random_experiment(backend_name="mumbai", nr_input_gates=600, nr_steps=20)
-    # plot_mumbai()
-    # plot_vigo()
-    # plot_guadalupe()
-    # plot_nairobi()
-    # plot_quito()
+
+    plot_experiment(name="random_quito")
+    plot_experiment(name="random_mumbai")
+    plot_experiment(name="random_mumbai")

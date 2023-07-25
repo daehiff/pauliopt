@@ -26,6 +26,8 @@ from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
 import logging
 
+import pennylane as qml
+
 
 def get_logger(name):
     logger = logging.getLogger(name)
@@ -497,8 +499,20 @@ def plot_random_pauli_polynomial_experiment():
     plt.show()
 
 
+def operators_experiment():
+    with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
+        orbitals_lookup_table = json.load(json_file)
+
+    logger = get_logger("fidelity_experiment_trotterisation")
+    for name, encoding in [("H2_P_631g", "P"),
+                           ("H4_P_sto3g", "P"),
+                           ("LiH_P_sto3g", "P")]:
+        pass
+
+
 if __name__ == '__main__':
-    # fidelity_experiment_trotterisation()
-    synth_ucc_evaluation()
+    operators_experiment()
+    fidelity_experiment_trotterisation()
+    # synth_ucc_evaluation()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()

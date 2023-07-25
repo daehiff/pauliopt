@@ -1,7 +1,9 @@
 from pauliopt.pauli.clifford_gates import CliffordType, \
     generate_two_qubit_clifford
 from pauliopt.pauli.clifford_tableau import CliffordTableau
-from pauliopt.pauli.pauli_circuit import PauliCircuit
+from pauliopt.pauli.pauli_circuit import PauliCircuit, TwoQubitGate, CX
+from pauliopt.pauli.clifford_gates import CX as CX_Clifford
+
 from pauliopt.pauli.pauli_gadget import PauliGadget
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import X, Y, Z, I
@@ -56,19 +58,18 @@ def optimize_pauli_polynomial(c_l: CliffordTableau, pp: PauliPolynomial,
     if gate_set is None:
         gate_set = [CliffordType.CX,
                     CliffordType.CY,
-                    CliffordType.CZ, CliffordType.CXH]
+                    CliffordType.CZ]
 
     for c in range(pp.num_qubits):
         for t in range(pp.num_qubits):
             if c != t:
-                for _ in range(len(gate_set)):
-                    gate, effect = get_best_gate(pp, c, t, gate_set, topology,
-                                                 leg_cache=leg_cache)
-                    dist = topology.dist(c, t)
-                    if effect + 2 * dist <= 0:
-                        pp = pp.propagate(gate)
-                        c_l.append_gate(gate)
-                        c_r.prepend_gate(gate)
+                gate, effect = get_best_gate(pp, c, t, gate_set, topology,
+                                             leg_cache=leg_cache)
+                dist = topology.dist(c, t)
+                if effect + 2 * dist <= 0:
+                    pp = pp.propagate(gate)
+                    c_l.append_gate(gate)
+                    c_r.prepend_gate(gate)
 
     return c_l, pp, c_r
 
