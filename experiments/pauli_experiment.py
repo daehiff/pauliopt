@@ -395,12 +395,12 @@ def synth_ucc_evaluation():
 def random_pauli_polynomial_experiment():
     logger = get_logger("random_pauli_polynomial_experiment")
     df = pd.DataFrame()
-    for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 100, 200, 300, 500, 1000]:
+    for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 100, 200]:
         logger.info(f"Num gadgets: {num_gadgets}")
         for num_qubits in [6, 8]:
             logger.info(f"Num qubits: {num_qubits}")
             for topo_name in ["complete", "line", "cycle", "grid"]:
-                topo = get_topo_kind(topo_name, num_qubits)
+                topo =  get_topo_kind(topo_name, num_qubits)
                 for _ in range(20):
                     pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
                     naive_data = synth_pp_naive(pp, topo, prefix="naive")
