@@ -339,8 +339,13 @@ def get_topo_kind(topo_kind, num_qubits):
     elif topo_kind == "cycle":
         return Topology.cycle(num_qubits)
     elif topo_kind == "grid":
-        n_rows, n_cols = find_square_dimensions(num_qubits)
-        return Topology.grid(n_rows, n_cols)
+        if num_qubits == 6:
+            return Topology.grid(2, 3)
+        elif num_qubits == 8:
+            return Topology.grid(2, 4)
+        else:
+            n_rows, n_cols = find_square_dimensions(num_qubits)
+            return Topology.grid(n_rows, n_cols)
     else:
         raise Exception("Unknown topology kind")
 
@@ -394,7 +399,7 @@ def random_pauli_polynomial_experiment():
         logger.info(f"Num gadgets: {num_gadgets}")
         for num_qubits in [6, 8]:
             logger.info(f"Num qubits: {num_qubits}")
-            for topo_name in ["complete"]:
+            for topo_name in ["complete", "line", "cycle", "grid"]:
                 topo = get_topo_kind(topo_name, num_qubits)
                 for _ in range(20):
                     pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
