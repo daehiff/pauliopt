@@ -400,13 +400,14 @@ def random_pauli_polynomial_experiment():
         for num_qubits in [6, 8]:
             logger.info(f"Num qubits: {num_qubits}")
             for topo_name in ["complete", "line", "cycle", "grid"]:
-                topo =  get_topo_kind(topo_name, num_qubits)
+                topo = get_topo_kind(topo_name, num_qubits)
                 for _ in range(20):
                     pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
                     naive_data = synth_pp_naive(pp, topo, prefix="naive")
                     pp = simplify_pauli_polynomial(pp, allow_acs=True)
                     for synth in ["tket_uccs_set", "tket_uccs_pair",
-                                  "pauliopt_steiner_nc", "pauliopt_ucc"]:
+                                  "pauliopt_steiner_nc", "pauliopt_ucc",
+                                  "pauliopt_divide_conquer" ]:
                         col = {"method": synth, "n_qubits": num_qubits,
                                "gadgets": num_gadgets, "topo": topo_name} | naive_data
 
@@ -517,7 +518,7 @@ def plot_random_pauli_polynomial_experiment():
     df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
 
     df_ = df[df["gadgets"].isin([110, 200, 300, 500, 1000])]
-    df_ = df_[df_["method"] != "UCCSD-pair"]
+    # df_ = df_[df_["method"] != "UCCSD-pair"]
     sns.barplot(x="gadgets", y="cx", hue="method", data=df_)
     plt.xlabel("Number of gadgets")
     plt.ylabel(r"Reduction of CX count [\%]")
@@ -601,6 +602,5 @@ def plot_fidelity():
 if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
     # plot_fidelity()
-    # synth_ucc_evaluation()
     random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
