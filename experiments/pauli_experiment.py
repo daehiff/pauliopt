@@ -252,12 +252,14 @@ def term_sequence_tket(operator, n_qubits):
 
 
 def synth_pp_tket_uccs_set(pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_set"):
-    circ_out = synth_tket(pp, topo, PauliSynthStrat.Sets)
+    operator = pp_to_operator(pp)
+    circ_out = synth_tket(operator, topo, PauliSynthStrat.Sets)
     return get_ops_count(circ_out, prefix=prefix)
 
 
 def synth_pp_tket_uccs_pair(pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_pair"):
-    circ_out = synth_tket(pp, topo, PauliSynthStrat.Pairwise)
+    operator = pp_to_operator(pp)
+    circ_out = synth_tket(operator, topo, PauliSynthStrat.Pairwise)
     return get_ops_count(circ_out, prefix=prefix)
 
 
@@ -388,7 +390,7 @@ def synth_ucc_evaluation():
 def random_pauli_polynomial_experiment():
     logger = get_logger("random_pauli_polynomial_experiment")
     df = pd.DataFrame()
-    for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 110, 130, 150, 200, 300, 500, 1000]:
+    for num_gadgets in [10, 20, 30, 40, 50, 70, 90, 100, 200, 300, 500, 1000]:
         logger.info(f"Num gadgets: {num_gadgets}")
         for num_qubits in [6, 8]:
             logger.info(f"Num qubits: {num_qubits}")
@@ -493,12 +495,38 @@ def fidelity_experiment_trotterisation():
 
 
 def plot_random_pauli_polynomial_experiment():
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.size": 11
+    })
+    sns.set_palette(sns.color_palette("colorblind"))
+
     df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
     df = df[df["topo"] == "complete"]
+    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
 
-    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"]
-    # plot by number of gadgets per method
-    sns.barplot(x="gadgets", y="cx", hue="method", data=df)
+    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware UCCSD")
+    df["method"] = df["method"].replace("pauliopt_steiner_nc", "pauli-steiner-gray-synth")
+    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
+    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
+
+    df_ = df[df["gadgets"].isin([110, 200, 300, 500, 1000])]
+    df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method", data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_n_to_n_large.pdf", bbox_inches='tight')
+    plt.show()
+
+    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 110])]
+    df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method", data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_n_to_n_small.pdf", bbox_inches='tight')
     plt.show()
 
 
