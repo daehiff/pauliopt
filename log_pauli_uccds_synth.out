@@ -1,38 +1,30 @@
-slurmstepd-isar: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
-slurmstepd-isar: error: Setting TMPDIR to /tmp
+slurmstepd-inn: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
+slurmstepd-inn: error: Setting TMPDIR to /tmp
 ExpressivePPs.ipynb
 clifford_experiment.py
 data
 datasets
 experiments
+fidelity_experiment_trotterisation.log
+output_p.log
 pauli_experiment.py
+random_pauli_polynomial_experiment.log
+synth_ucc_evaluation.log
 test.pickle
 test.tex
 tket_benchmarking
-random_pauli_polynomial_experiment: Num gadgets: 10
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 20
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 30
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 40
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 50
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 70
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
-random_pauli_polynomial_experiment: Num gadgets: 90
-random_pauli_polynomial_experiment: Num qubits: 6
-random_pauli_polynomial_experiment: Num qubits: 8
 random_pauli_polynomial_experiment: Num gadgets: 100
 random_pauli_polynomial_experiment: Num qubits: 6
 random_pauli_polynomial_experiment: Num qubits: 8
 random_pauli_polynomial_experiment: Num gadgets: 200
+random_pauli_polynomial_experiment: Num qubits: 6
+random_pauli_polynomial_experiment: Num qubits: 8
+random_pauli_polynomial_experiment: Num gadgets: 300
+random_pauli_polynomial_experiment: Num qubits: 6
+random_pauli_polynomial_experiment: Num qubits: 8
+random_pauli_polynomial_experiment: Num gadgets: 500
+random_pauli_polynomial_experiment: Num qubits: 6
+random_pauli_polynomial_experiment: Num qubits: 8
+random_pauli_polynomial_experiment: Num gadgets: 1000
 random_pauli_polynomial_experiment: Num qubits: 6
 random_pauli_polynomial_experiment: Num qubits: 8
