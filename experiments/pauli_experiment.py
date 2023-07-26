@@ -383,7 +383,7 @@ def synth_ucc_evaluation():
                 col = col | synth_pp_tket_uccs_pair(qubit_pauli_operator, topo)
                 col = col | synth_pp_pauliopt_steiner_nc(pp, topo)
                 # col = col | synth_pp_pauliopt_divide_concquer(pp, topo)
-                # col = col | synth_pp_pauliopt_ucc(pp, topo)
+                col = col | synth_pp_pauliopt_ucc(pp, topo)
                 col = col | synth_pp_naive(pp, topo)
                 df_col = pd.DataFrame(col, index=[0])
                 logger.info(df_col)
@@ -512,27 +512,89 @@ def plot_random_pauli_polynomial_experiment():
     df = df[df["topo"] == "complete"]
     df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
 
-    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware UCCSD")
+    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware-UCCSD-set")
     df["method"] = df["method"].replace("pauliopt_steiner_nc", "pauli-steiner-gray-synth")
     df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
     df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_divide_conquer",
+                                        "synth-divide-and-conquer")
 
-    df_ = df[df["gadgets"].isin([110, 200, 300, 500, 1000])]
+    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
     # df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method", data=df_)
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "synth-divide-and-conquer",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "architecture-aware-UCCSD-set",
+                    "pauli-steiner-gray-synth",
+                ],
+                data=df_)
     plt.xlabel("Number of gadgets")
     plt.ylabel(r"Reduction of CX count [\%]")
     plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_n_to_n_large.pdf", bbox_inches='tight')
+    plt.savefig("data/pauli/random/random_large_complete.pdf", bbox_inches='tight')
     plt.show()
 
-    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 110])]
+    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
     df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method", data=df_)
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "synth-divide-and-conquer",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "architecture-aware-UCCSD-set",
+                    "pauli-steiner-gray-synth",
+                ],
+                data=df_)
     plt.xlabel("Number of gadgets")
     plt.ylabel(r"Reduction of CX count [\%]")
     plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_n_to_n_small.pdf", bbox_inches='tight')
+    plt.savefig("data/pauli/random/random_small_complete.pdf", bbox_inches='tight')
+    plt.show()
+    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
+    df = df[df["topo"] != "complete"]
+    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
+
+    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware-UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_steiner_nc", "pauli-steiner-gray-synth")
+    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
+    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_divide_conquer",
+                                        "synth-divide-and-conquer")
+
+    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
+    # df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "synth-divide-and-conquer",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "architecture-aware-UCCSD-set",
+                    "pauli-steiner-gray-synth",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_large_arch.pdf", bbox_inches='tight')
+    plt.show()
+
+    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
+    df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "synth-divide-and-conquer",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "architecture-aware-UCCSD-set",
+                    "pauli-steiner-gray-synth",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_small_arch.pdf", bbox_inches='tight')
     plt.show()
 
 
@@ -603,4 +665,5 @@ if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
     # plot_fidelity()
     # random_pauli_polynomial_experiment()
-    plot_random_pauli_polynomial_experiment()
+    # plot_random_pauli_polynomial_experiment()
+    synth_ucc_evaluation()
