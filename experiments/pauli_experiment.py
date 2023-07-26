@@ -379,8 +379,8 @@ def synth_ucc_evaluation():
                 topo = get_topo_kind(topo_kind, n_qubits)
                 pp = operator_to_pp(qubit_pauli_operator, n_qubits)
                 col = {"name": name, "n_qubits": n_qubits, "gadgets": pp.num_gadgets}
-                col = col | synth_pp_tket_uccs_set(qubit_pauli_operator, topo)
-                col = col | synth_pp_tket_uccs_pair(qubit_pauli_operator, topo)
+                col = col | synth_pp_tket_uccs_set(pp, topo)
+                col = col | synth_pp_tket_uccs_pair(pp, topo)
                 col = col | synth_pp_pauliopt_steiner_nc(pp, topo)
                 # col = col | synth_pp_pauliopt_divide_concquer(pp, topo)
                 col = col | synth_pp_pauliopt_ucc(pp, topo)
