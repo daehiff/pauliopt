@@ -9,7 +9,10 @@ fidelity_experiment_trotterisation.log
 output_p.log
 pauli_experiment.py
 random_pauli_polynomial_experiment.log
+<<<<<<< HEAD
 synth_ucc_evaluation.log
+=======
+>>>>>>> 53c8e82551e445bac858aa525c012ca29a8caef3
 test.pickle
 test.tex
 tket_benchmarking
