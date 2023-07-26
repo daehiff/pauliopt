@@ -1,5 +1,4 @@
 ,method,n_qubits,gadgets,topo,naive_cx,naive_depth,circ_cx,circ_depth
-<<<<<<< HEAD
 0,tket_uccs_set,6,100,complete,420,595,314,521
 1,tket_uccs_pair,6,100,complete,420,595,314,606
 2,pauliopt_steiner_nc,6,100,complete,420,595,282,461
@@ -4000,7 +3999,6 @@
 3997,pauliopt_steiner_nc,8,1000,grid,8292,8311,5166,6195
 3998,pauliopt_ucc,8,1000,grid,8292,8311,7617,6663
 3999,pauliopt_divide_conquer,8,1000,grid,8292,8311,9092,11250
-=======
 0,tket_uccs_set,6,10,complete,22,36,20,47
 1,tket_uccs_pair,6,10,complete,22,36,20,48
 2,pauliopt_steiner_nc,6,10,complete,22,36,22,37
@@ -11201,4 +11199,3 @@
 7197,pauliopt_steiner_nc,8,200,grid,1664,1618,1782,2058
 7198,pauliopt_ucc,8,200,grid,1664,1618,1816,1702
 7199,pauliopt_divide_conquer,8,200,grid,1664,1618,1840,2371
->>>>>>> 53c8e82551e445bac858aa525c012ca29a8caef3

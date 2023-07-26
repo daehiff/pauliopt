@@ -602,5 +602,5 @@ def plot_fidelity():
 if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
     # plot_fidelity()
-    random_pauli_polynomial_experiment()
-    # plot_random_pauli_polynomial_experiment()
+    # random_pauli_polynomial_experiment()
+    plot_random_pauli_polynomial_experiment()
