@@ -1,5 +1,6 @@
 import os
 import pickle
+import shutil
 from numbers import Number
 
 import matplotlib.pyplot as plt
@@ -17,8 +18,13 @@ from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
 from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import process_fidelity
+from qiskit import QuantumCircuit, execute
+from qiskit.providers import Options
+from qiskit.providers.fake_provider import FakeGuadalupe
+from qiskit.quantum_info import process_fidelity, hellinger_fidelity
+from qiskit.visualization import plot_histogram
+from qiskit_aer import QasmSimulator, StatevectorSimulator, Aer
+from qiskit_aer.noise import NoiseModel
 from sympy.core.symbol import Symbol
 
 from pauliopt.pauli.pauli_gadget import PPhase
@@ -223,8 +229,10 @@ def operator_to_pp(operator, n_qubits, t=1):
     return pp
 
 
-def synth_tket(operator, topo: Topology, method: PauliSynthStrat):
-    initial_circ = pytket.Circuit(topo.num_qubits)
+def synth_tket(operator, topo: Topology, method: PauliSynthStrat, n_qubits: int = None):
+    if n_qubits is None:
+        n_qubits = topo.num_qubits
+    initial_circ = pytket.Circuit(n_qubits)
     circuit = gen_term_sequence_circuit(operator, initial_circ)
 
     Transform.UCCSynthesis(method, CXConfigType.Tree).apply(circuit)
@@ -370,8 +378,8 @@ def synth_ucc_evaluation():
                 else:
                     n_qubits = active_spin_orbitals
                 logger.info(n_qubits)
-                # if n_qubits >= 15:
-                #     continue
+                if n_qubits >= 15:
+                    continue
                 path = op_directory + "/" + filename
                 with open(path, "rb") as pickle_in:
                     qubit_pauli_operator = pickle.load(pickle_in)
@@ -430,6 +438,102 @@ def random_pauli_polynomial_experiment():
                         df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
 
     df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
+
+
+def plot_random_pauli_polynomial_experiment():
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.size": 11
+    })
+    sns.set_palette(sns.color_palette("colorblind"))
+
+    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
+    df = df[df["topo"] == "complete"]
+    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
+
+    df["method"] = df["method"].replace("pauliopt_ucc", "A-UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_steiner_nc", "PSGS")
+    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
+    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_divide_conquer", "SD\&C")
+
+    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
+    # df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "SD\&C",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "A-UCCSD-set",
+                    "PSGS",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_large_complete.pdf", bbox_inches='tight')
+    plt.show()
+
+    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
+    df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "SD\&C",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "A-UCCSD-set",
+                    "PSGS",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_small_complete.pdf", bbox_inches='tight')
+    plt.show()
+    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
+    df = df[df["topo"] != "complete"]
+    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
+
+    df["method"] = df["method"].replace("pauliopt_ucc", "A-UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_steiner_nc", "PSGS")
+    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
+    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
+    df["method"] = df["method"].replace("pauliopt_divide_conquer", "SD\&C")
+
+    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
+    # df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "SD\&C",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "A-UCCSD-set",
+                    "PSGS",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_large_arch.pdf", bbox_inches='tight')
+    plt.show()
+
+    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
+    df_ = df_[df_["method"] != "UCCSD-pair"]
+    sns.barplot(x="gadgets", y="cx", hue="method",
+                hue_order=[
+                    "SD\&C",
+                    "UCCSD-pair",
+                    "UCCSD-set",
+                    "A-UCCSD-set",
+                    "PSGS",
+                ],
+                data=df_)
+    plt.xlabel("Number of gadgets")
+    plt.ylabel(r"Reduction of CX count [\%]")
+    plt.legend(title="Algorithm")
+    plt.savefig("data/pauli/random/random_small_arch.pdf", bbox_inches='tight')
+    plt.show()
 
 
 def fidelity_experiment_trotterisation():
@@ -500,104 +604,6 @@ def fidelity_experiment_trotterisation():
         df.to_csv(f"data/pauli/fidelity/{name}.csv")
 
 
-def plot_random_pauli_polynomial_experiment():
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "sans-serif",
-        "font.size": 11
-    })
-    sns.set_palette(sns.color_palette("colorblind"))
-
-    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
-    df = df[df["topo"] == "complete"]
-    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
-
-    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware-UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_steiner_nc", "pauli-steiner-gray-synth")
-    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
-    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_divide_conquer",
-                                        "synth-divide-and-conquer")
-
-    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
-    # df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "synth-divide-and-conquer",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "architecture-aware-UCCSD-set",
-                    "pauli-steiner-gray-synth",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_large_complete.pdf", bbox_inches='tight')
-    plt.show()
-
-    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
-    df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "synth-divide-and-conquer",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "architecture-aware-UCCSD-set",
-                    "pauli-steiner-gray-synth",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_small_complete.pdf", bbox_inches='tight')
-    plt.show()
-    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
-    df = df[df["topo"] != "complete"]
-    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
-
-    df["method"] = df["method"].replace("pauliopt_ucc", "architecture-aware-UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_steiner_nc", "pauli-steiner-gray-synth")
-    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
-    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_divide_conquer",
-                                        "synth-divide-and-conquer")
-
-    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
-    # df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "synth-divide-and-conquer",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "architecture-aware-UCCSD-set",
-                    "pauli-steiner-gray-synth",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_large_arch.pdf", bbox_inches='tight')
-    plt.show()
-
-    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
-    df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "synth-divide-and-conquer",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "architecture-aware-UCCSD-set",
-                    "pauli-steiner-gray-synth",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_small_arch.pdf", bbox_inches='tight')
-    plt.show()
-
-
 def get_min_max_interaction(summed_pauli):
     coeff_list = []
     for el in summed_pauli:
@@ -644,7 +650,7 @@ def plot_fidelity():
         sns.set_palette(sns.color_palette("colorblind"))
 
         sns.lineplot(df, x="t", y="fid_default", label="Default")
-        sns.lineplot(df, x="t", y="fid_ours", label="Pauli-Steiner-Gray")
+        sns.lineplot(df, x="t", y="fid_ours", label="PSGS")
         sns.lineplot(df, x="t", y="fid_tket", label="UCCDS-pair")
         # set ticks to be between 0 and 2pi and label them
         plt.xticks(np.linspace(0.0, 2 * np.pi, 5),
@@ -661,9 +667,50 @@ def plot_fidelity():
         plt.show()
 
 
+def sanatize_uccsd_molecules():
+    for arch_name in ["complete", "line", "cycle"]:
+        if not os.path.exists(f"data/pauli/uccsd_san/{arch_name}"):
+            os.makedirs(f"data/pauli/uccsd_san/{arch_name}")
+        else:
+            shutil.rmtree(f"data/pauli/uccsd_san/{arch_name}")
+            os.makedirs(f"data/pauli/uccsd_san/{arch_name}")
+
+        for encoding in ["BK", "JW", "P"]:
+            df = pd.read_csv(f"data/pauli/uccsd/{arch_name}/{encoding}_results.csv")
+            del df["Unnamed: 0"]
+            del df["tket_uccs_pair_cx"]
+            del df["tket_uccs_pair_depth"]
+            df.sort_values(by=["n_qubits", "gadgets"], inplace=True)
+            df.reset_index(drop=True, inplace=True)
+            for alg, rename in [("tket_uccs_set_", "UCCSD-set"),
+                                ("pauliopt_steiner_nc_", "pauli-steiner-gray-synth"),
+                                ("pauliopt_ucc_", "architecture-aware-UCCSD-set")]:
+                for type in ["cx", "depth"]:
+                    df[f"{alg}{type}_reduction"] \
+                        = (df[f"{alg}{type}"] - df[f"naive_{type}"]) / df[
+                        f"naive_{type}"] * 100
+
+                    # create a new column {rename} ({type}) which is formatted as a string: "{{alg}{type}}, ({alg}{type}_reduction)"
+                    df[f"{rename} ({type})"] = df.apply(lambda
+                                                            row: f"{row[f'{alg}{type}']} ({row[f'{alg}{type}_reduction']:.2f})",
+                                                        axis=1)
+                    # drop the old columns
+                    del df[f"{alg}{type}"]
+                    del df[f"{alg}{type}_reduction"]
+
+            del df["naive_cx"]
+            del df["naive_depth"]
+
+            df.to_csv(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.csv")
+            with open(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.tex",
+                      "w") as f:
+                df.to_latex(f, index=False, escape=True, float_format="%.2f")
+
+
 if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
-    # plot_fidelity()
+    plot_fidelity()
     # random_pauli_polynomial_experiment()
-    # plot_random_pauli_polynomial_experiment()
-    synth_ucc_evaluation()
+    plot_random_pauli_polynomial_experiment()
+    # synth_ucc_evaluation()
+    # sanatize_uccsd_molecules()
