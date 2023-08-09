@@ -51,11 +51,11 @@ def verify_equality(qc_in, qc_out):
     :return:
     """
     try:
-        from qiskit.quantum_info import Statevector
+        from qiskit.quantum_info import Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
-    return Statevector.from_instruction(qc_in) \
-        .equiv(Statevector.from_instruction(qc_out))
+    return Operator.from_circuit(qc_in) \
+        .equiv(Operator.from_circuit(qc_out))
 
 
 def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):

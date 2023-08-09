@@ -21,11 +21,11 @@ def verify_equality(qc_in, qc_out):
     :return:
     """
     try:
-        from qiskit.quantum_info import Statevector
+        from qiskit.quantum_info import Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
-    return Statevector.from_instruction(qc_in) \
-        .equiv(Statevector.from_instruction(qc_out))
+    return Operator.from_circuit(qc_in) \
+        .equiv(Operator.from_circuit(qc_out))
 
 
 def reconstruct_tableau(tableau: stim.Tableau):
@@ -172,8 +172,7 @@ class TestCliffordTableau(unittest.TestCase):
     def test_tableau_synthesis_structured_architectures(self):
         for topo in [Topology.line(5), Topology.line(8), Topology.line(12),
                      Topology.cycle(5), Topology.cycle(8), Topology.cycle(12),
-                     Topology.periodic_grid(2, 3), Topology.periodic_grid(4, 4),
-                     Topology.periodic_grid(3, 4)]:
+                     Topology.periodic_grid(2, 3), Topology.periodic_grid(3, 4)]:
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
 
@@ -188,7 +187,7 @@ class TestCliffordTableau(unittest.TestCase):
                                 "The resulting circuit did no match the architecture")
 
     def test_gate_appending(self):
-        for nr_qubits in [4, 8, 16]:
+        for nr_qubits in [4, 8]:
             qc = random_clifford_circuit(nr_gates=2000, nr_qubits=nr_qubits)
             ct = CliffordTableau(n_qubits=qc.num_qubits)
             operations = set()
@@ -220,7 +219,8 @@ class TestCliffordTableau(unittest.TestCase):
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out, _ = ct.to_clifford_circuit_arch_aware_qiskit(topo, include_swaps=False)
+                circ_out, _ = ct.to_clifford_circuit_arch_aware_qiskit(topo,
+                                                                       include_swaps=False)
 
                 self.assertTrue(verify_equality(circ, circ_out),
                                 "The resulting circuit from the clifford tableau did not match")
