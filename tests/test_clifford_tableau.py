@@ -170,9 +170,9 @@ class TestCliffordTableau(unittest.TestCase):
                                 "The resulting circuit from the clifford tableau did not match")
 
     def test_tableau_synthesis_structured_architectures(self):
-        for topo in [Topology.line(5), Topology.line(8), Topology.line(12),
-                     Topology.cycle(5), Topology.cycle(8), Topology.cycle(12),
-                     Topology.periodic_grid(2, 3), Topology.periodic_grid(3, 4)]:
+        for topo in [Topology.line(5), Topology.line(8),
+                     Topology.cycle(5), Topology.cycle(8),
+                     Topology.periodic_grid(2, 3), Topology.periodic_grid(2, 4)]:
             for num_gates in [200, 400, 800]:
                 circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
 

@@ -13,7 +13,7 @@ from pauliopt.topologies import Topology
 def pick_row(pp: PauliPolynomial, columns_to_use, qubits_to_use):
     row_scores = []
     for q in qubits_to_use:
-        zeros = len([1 for g_idx in columns_to_use if pp[g_i    dx][q] == I])
+        zeros = len([1 for g_idx in columns_to_use if pp[g_idx][q] == I])
         ones = len([1 for g_idx in columns_to_use if pp[g_idx][q] != I])
         row_scores.append((q, max(zeros, ones)))
     return max(row_scores, key=lambda x: x[1])[0]
