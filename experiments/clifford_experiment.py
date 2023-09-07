@@ -257,7 +257,7 @@ def json_serial(obj):
     return str(obj)
 
 
-def run_clifford_experiment(backend_name="ibm_perth", exp_number=0):
+def run_clifford_experiment(exp_number=0, backend_name="ibm_perth"):
     base_path = f"data/clifford_experiment_real_hardware/{backend_name}/{exp_number}"
     if not os.path.exists(base_path):
         os.makedirs(base_path)
