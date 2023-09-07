@@ -685,7 +685,7 @@ def arch_data_output(backend_name):
 
 
 if __name__ == "__main__":
-    run_clifford_real_hardware(backend_name="ibm_quito")
+    run_clifford_real_hardware(backend_name="ibmq_quito")
     run_clifford_real_hardware(backend_name="ibm_nairobi")
     # analyze_real_hw()
 
