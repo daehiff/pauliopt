@@ -353,5 +353,24 @@ def pp_decomposition():
     print(pp.to_latex())
 
 
+def test_clifford_1000():
+    ct = CliffordTableau(2)
+
+
+    ct.append_h(0)
+    ct.append_cnot(0, 1)
+
+
+    #ct.append_h(0)
+    #ct.append_h(1)
+    #ct.append_cnot(1, 0)
+
+    ct.print_zx()
+
+
+
+
+
 if __name__ == '__main__':
-    pp_decomposition()
+    test_clifford_1000()
+    #pp_decomposition()

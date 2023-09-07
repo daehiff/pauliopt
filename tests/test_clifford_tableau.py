@@ -213,6 +213,21 @@ class TestCliffordTableau(unittest.TestCase):
             self.assertTrue(verify_equality(qc, ct.to_clifford_circuit()),
                             "Expected the circuit to match the gates")
 
+
+    def test_tableau_synthesis_fine_grain(self):
+        topo = Topology.complete(6)
+        for _ in range(10000):
+            for num_gates in range(1, 30):
+                print(num_gates)
+                circ = random_hscx_circuit(nr_gates=num_gates, nr_qubits=topo.num_qubits)
+
+                ct = CliffordTableau.from_circuit(circ)
+                circ_out, perm = ct.to_clifford_circuit_arch_aware_qiskit(topo)
+
+                self.assertTrue(verify_equality(circ, circ_out),
+                                "The resulting circuit from the clifford tableau did not match")
+
+
     def test_tableau_synthesis_ibm_backends(self):
         for backend in [FakeLima(), FakeLagos()]:
             topo = Topology.from_qiskit_backend(backend)
