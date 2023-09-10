@@ -14,7 +14,7 @@ import stim
 from qiskit import QuantumCircuit, transpile, execute, Aer
 from qiskit.providers import JobStatus
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, FakeQuito, \
-    FakeNairobi, FakePerth
+    FakeNairobi, FakePerth, ConfigurableFakeBackend
 from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
@@ -103,40 +103,49 @@ def parse_stim_to_qiskit(circ: stim.Circuit):
 
 
 def stim_compilation(circ: QuantumCircuit, backend):
+    start = time.time()
     tableau = circuit_to_stim_tableau(circ)
     circ_out = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
     if backend == "complete":
         circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
     else:
-        circ_out = transpile(circ_out, backend=backend, basis_gates=["cx", "h", "s"])
-    print("Qiskit Tableau: ", circ_out.count_ops())
+        circ_out = transpile(circ_out,
+                             coupling_map=backend.coupling_map,
+                             basis_gates=["cx", "h", "s"])
+    print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
     column = get_ops_count(circ_out)
     return column
 
 
 def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
+    start = time.time()
     tableau = Clifford.from_circuit(circ)
     circ_out = tableau.to_circuit()
     if backend == "complete":
         circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
     else:
-        circ_out = transpile(circ_out, backend=backend, basis_gates=["cx", "h", "s"])
-    print("Qiskit Tableau: ", circ_out.count_ops())
+        circ_out = transpile(circ_out,
+                             coupling_map=backend.coupling_map,
+                             basis_gates=["cx", "h", "s"])
+    print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
     column = get_ops_count(circ_out)
     return column
 
 
 def qiskit_compilation(circ: QuantumCircuit, backend):
+    start = time.time()
     if backend == "complete":
         circ_out = transpile(circ, basis_gates=['s', 'h', 'cx'])
     else:
-        circ_out = transpile(circ, backend=backend, basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(circ, coupling_map=backend.coupling_map,
+                             basis_gates=['s', 'h', 'cx'])
     column = get_ops_count(circ_out)
-    print("Qiskit: ", circ_out.count_ops())
+    print("Qiskit: ", circ_out.count_ops(), "Time: ", time.time() - start)
     return column
 
 
 def our_compilation(circ: QuantumCircuit, backend):
+    start = time.time()
     if backend == "complete":
         topo = Topology.complete(circ.num_qubits)
     else:
@@ -146,7 +155,7 @@ def our_compilation(circ: QuantumCircuit, backend):
     circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out)
     # assert verify_equality(circ, circ_out)
-    print("Our: ", circ_out.count_ops())
+    print("Our: ", circ_out.count_ops(), "Time: ", time.time() - start)
     return column
 
 
@@ -180,9 +189,16 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     elif backend_name == "perth":
         backend = FakeNairobi()
         df_name = f"{df_name}_perth.csv"
+    elif backend_name == "ithaca":
+        backend = FakeJSONBackend("ibm_ithaca")
+        df_name = f"{df_name}_ithaca.csv"
+    elif backend_name == "seattle":
+        backend = FakeJSONBackend("ibm_seattle")
+        df_name = f"{df_name}_seattle.csv"
     elif backend_name == "complete":
         backend = "complete"
         df_name = f"{df_name}_complete.csv"
+
     else:
         raise ValueError(f"Unknown backend: {backend_name}")
 
@@ -398,35 +414,6 @@ def run_clifford_experiment(exp_number=0, backend_name="ibm_perth"):
     return pd.DataFrame(col, index=[0])
 
 
-def plot_vigo():
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "sans-serif",
-        "font.size": 11
-    })
-    sns.set_palette(sns.color_palette("colorblind"))
-
-    df = pd.read_csv(f"data/random_vigo.csv")
-    #
-    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates (Vigo)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of H-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates (Vigo)")
-    plt.xlabel("Number of input gates")
-    plt.ylabel("Number of S-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CNOT-Gates (Vigo9")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of CNOT-Gates")
-    plt.show()
-
-
 def plot_experiment(name="random_guadalupe"):
     plt.rcParams.update({
         "text.usetex": True,
@@ -459,72 +446,6 @@ def plot_experiment(name="random_guadalupe"):
     plt.show()
 
 
-def plot_mumbai():
-    df = pd.read_csv(f"data/random_mumbai.csv")
-    #
-    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates (Mumbai)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of H-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates (Mumbai)")
-    plt.xlabel("Number of input gates")
-    plt.ylabel("Number of S-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CNOT-Gates (Mumbai)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of CNOT-Gates")
-    plt.show()
-
-
-def plot_quito():
-    df = pd.read_csv(f"data/random_quito.csv")
-
-    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates (Quito)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of H-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates (Quito)")
-    plt.xlabel("Number of input gates")
-    plt.ylabel("Number of S-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CNOT-Gates (Quito)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of CNOT-Gates")
-    plt.show()
-
-
-def plot_nairobi():
-    df = pd.read_csv(f"data/random_nairobi.csv")
-
-    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates (Nairobi)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of H-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates (Nairobi)")
-    plt.xlabel("Number of input gates")
-    plt.ylabel("Number of S-Gates")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CNOT-Gates (Nairobi)")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of CNOT-Gates")
-    plt.show()
-
-
 def run_clifford_real_hardware(backend_name="ibm_perth"):
     experiment_numbers = [i for i in range(0, 20)]
     run_clifford_experiment_ = functools.partial(run_clifford_experiment,
@@ -539,41 +460,46 @@ def run_clifford_real_hardware(backend_name="ibm_perth"):
     df.to_csv("data/clifford_experiment_real_hardware/results.csv")
 
 
-def analyze_real_hw():
+def analyze_real_hw(backend_name="ibm_nairobi"):
     cumult_counts_ibm = {}
     cumult_counts_ours = {}
+    cumult_counts_stim = {}
+    num_qubits = 1
     df = pd.DataFrame(
-        columns=["method", "h", "s", "cx", "fid", ])
-    execution_times_ours = []
-    execution_times_ibm = []
+        columns=["method", "h", "s", "cx", "fid", "execution_time"])
     for i in range(0, 20):
-        base_path = f"data/clifford_experiment_real_hardware/{i}"
+        base_path = f"data/clifford_experiment_real_hardware/{backend_name}/{i}"
 
         with open(f"{base_path}/result_ibm.json", "r") as f:
             result = json.load(f)
             result_ibm = Result.from_dict(result)
         circ_ibm = QuantumCircuit.from_qasm_file(f"{base_path}/ibm.qasm")
-
+        num_qubits = circ_ibm.num_qubits
         with open(f"{base_path}/result_ours.json", "r") as f:
             result = json.load(f)
             result_ours = Result.from_dict(result)
-
-        with open(f"{base_path}/clifford.json", "r") as f:
-            clifford = Clifford.from_dict(json.load(f))
         circ_ours = QuantumCircuit.from_qasm_file(f"{base_path}/ours.qasm")
 
-        counts_expected = {"00000": 16000}
+        with open(f"{base_path}/result_stim.json", "r") as f:
+            result = json.load(f)
+            result_stim = Result.from_dict(result)
+        circ_stim = QuantumCircuit.from_qasm_file(f"{base_path}/stim.qasm")
+
+        counts_expected = {"0" * num_qubits: 16000}
         counts_ibm = result_ibm.get_counts()
         counts_ours = result_ours.get_counts()
+        counts_stim = result_stim.get_counts()
         fid_ibm = hellinger_fidelity(counts_expected, counts_ibm)
         fid_ours = hellinger_fidelity(counts_expected, counts_ours)
+        fid_stim = hellinger_fidelity(counts_expected, counts_stim)
 
         column = {
             "method": "ibm",
             "h": circ_ibm.count_ops()["h"] if "h" in circ_ibm.count_ops() else 0,
             "s": circ_ibm.count_ops()["s"] if "s" in circ_ibm.count_ops() else 0,
             "cx": circ_ibm.count_ops()["cx"] if "cx" in circ_ibm.count_ops() else 0,
-            "fid": fid_ibm
+            "fid": fid_ibm,
+            "execution_time": result_ibm.time_taken,
         }
         df.loc[len(df)] = column
         column = {
@@ -584,7 +510,21 @@ def analyze_real_hw():
             if "s" in circ_ours.count_ops() else 0,
             "cx": circ_ours.count_ops()["cx"] / 2.0
             if "cx" in circ_ours.count_ops() else 0,
-            "fid": fid_ours
+            "fid": fid_ours,
+            "execution_time": result_ours.time_taken,
+        }
+        df.loc[len(df)] = column
+
+        column = {
+            "method": "stim",
+            "h": circ_stim.count_ops()["h"] / 2.0
+            if "h" in circ_stim.count_ops() else 0,
+            "s": circ_stim.count_ops()["s"] / 2.0
+            if "s" in circ_stim.count_ops() else 0,
+            "cx": circ_stim.count_ops()["cx"] / 2.0
+            if "cx" in circ_stim.count_ops() else 0,
+            "fid": fid_stim,
+            "execution_time": result_stim.time_taken,
         }
         df.loc[len(df)] = column
         for key, value in counts_ibm.items():
@@ -598,16 +538,21 @@ def analyze_real_hw():
                 cumult_counts_ours[key] += [value]
             else:
                 cumult_counts_ours[key] = [value]
-        execution_times_ours.append(result_ours.time_taken)
-        execution_times_ibm.append(result_ibm.time_taken)
-    print("Execution time IBM: ", np.mean(execution_times_ibm),
-          np.std(execution_times_ibm))
-    print("Execution time Ours: ", np.mean(execution_times_ours),
-          np.std(execution_times_ours))
 
-    df.to_csv("data/clifford_experiment_real_hardware/analysis.csv")
-    df = df[df["method"] == "ours"]
-    correlation_matrix = df[["h", "s", "cx", "fid"]].corr()
+        for key, value in counts_stim.items():
+            if key in cumult_counts_stim:
+                cumult_counts_stim[key] += [value]
+            else:
+                cumult_counts_stim[key] = [value]
+
+    df.to_csv(f"data/clifford_experiment_real_hardware/{backend_name}/analysis.csv")
+
+    for name in ["ours", "stim", "ibm"]:
+        print(
+            f"Mean execution time {name}: {df[df['method'] == name]['execution_time'].mean()}")
+
+    df_ = df[df["method"] == "ours"]
+    correlation_matrix = df_[["h", "s", "cx", "fid"]].corr()
     print("Correlation Matrix CNOTs:")
     print(correlation_matrix)
     print(df.groupby("method").mean())
@@ -617,10 +562,9 @@ def analyze_real_hw():
     for key, value in cumult_counts_ours.items():
         lables.append([key] * len(value))
         values.append(value)
-    lables = np.array(lables).flatten()
-    values = np.array(values).flatten()
-    cat = ["tableau"] * len(lables)
-
+    lables = list(np.hstack(lables))
+    values = list(np.hstack(values))
+    cat = ["ours"] * len(lables)
     df_our = pd.DataFrame({"approach": cat,
                            "lables": lables,
                            "values": values})
@@ -630,14 +574,26 @@ def analyze_real_hw():
     for key, value in cumult_counts_ibm.items():
         lables.append([key] * len(value))
         values.append(value)
-
-    lables = np.array(lables).flatten()
-    values = np.array(values).flatten()
-    cat = ["qiskit_tableau"] * len(lables)
+    lables = list(np.hstack(lables))
+    values = list(np.hstack(values))
+    cat = ["Bravyi et al. (qiskit)"] * len(lables)
     df_ibm = pd.DataFrame({"approach": cat,
                            "lables": lables,
                            "values": values})
-    df = pd.concat([df_our, df_ibm], ignore_index=True)
+
+    lables = []
+    values = []
+    for key, value in cumult_counts_stim.items():
+        lables.append([key] * len(value))
+        values.append(value)
+
+    lables = list(np.hstack(lables))
+    values = list(np.hstack(values))
+    cat = ["Ewout van den Berg (stim)"] * len(lables)
+    df_stim = pd.DataFrame({"approach": cat,
+                            "lables": lables,
+                            "values": values})
+    df = pd.concat([df_our, df_ibm, df_stim], ignore_index=True)
 
     # seaborn barplot rotate the x ticks labels by 90 degrees
     plt.rcParams.update({
@@ -646,7 +602,7 @@ def analyze_real_hw():
         "font.size": 11
     })
     sns.set_palette(sns.color_palette("colorblind"))
-    sns.barplot(data=df, x="lables", y="values", hue="approach")
+    sns.barplot(data=df, x="lables", y="values", hue="approach", errwidth=0.1)
     plt.title("Average counts for 20 random Clifford circuits")
     plt.xticks(rotation=90)
     plt.xlabel("Measured State")
@@ -655,12 +611,15 @@ def analyze_real_hw():
     plt.savefig("data/clifford_experiment_real_hardware/counts_clifford.pdf")
     plt.show()
 
-    counts_expected = {"00000": 16000}
+    counts_expected = {'0' * num_qubits: 16000}
     averga_counts_ours = {key: np.mean(value) for key, value in
                           cumult_counts_ours.items()}
     averga_counts_ibm = {key: np.mean(value) for key, value in cumult_counts_ibm.items()}
+    averga_counts_stim = {key: np.mean(value) for key, value in
+                          cumult_counts_stim.items()}
     print("Final fidelity:")
-    print("IBM: ", hellinger_fidelity(counts_expected, averga_counts_ibm))
+    print("IBM:  ", hellinger_fidelity(counts_expected, averga_counts_ibm))
+    print("Stim: ", hellinger_fidelity(counts_expected, averga_counts_stim))
     print("Ours: ", hellinger_fidelity(counts_expected, averga_counts_ours))
 
 
@@ -684,18 +643,44 @@ def arch_data_output(backend_name):
     print(topo.to_nx.edges)
 
 
-if __name__ == "__main__":
-    run_clifford_real_hardware(backend_name="ibmq_quito")
-    run_clifford_real_hardware(backend_name="ibm_nairobi")
-    # analyze_real_hw()
+class FakeJSONBackend(ConfigurableFakeBackend):
+    def __init__(self, backend_name):
+        with open("./backends_2023.json", "r") as f:
+            backends = json.load(f)
+        my_backend = None
+        for backend in backends:
+            if backend["name"] == backend_name:
+                my_backend = backend
+        if my_backend is None:
+            raise ValueError(f"Unknown backend: {backend_name}")
 
-    # random_experiment(backend_name="nairobi", nr_input_gates=150, nr_steps=20)
+        super().__init__(name=backend_name,
+                         n_qubits=my_backend["qubits"],
+                         coupling_map=my_backend["couplingMap"],
+                         basis_gates=my_backend["basisGates"],
+                         version=1.2,
+                         single_qubit_gates=[g for g in my_backend["basisGates"] if
+                                             g != "cx"],
+                         )
+
+
+if __name__ == "__main__":
+    # open backends_2023.json
+
+    # run_clifford_real_hardware(backend_name="ibmq_quito")
+    # run_clifford_real_hardware(backend_name="ibm_nairobi")
+
+    # analyze_real_hw(backend_name="ibmq_quito")
+    # analyze_real_hw(backend_name="ibm_nairobi")
+
     # random_experiment(backend_name="complete", nr_input_gates=350, nr_steps=20)
     # random_experiment(backend_name="guadalupe", nr_input_gates=350, nr_steps=20)
     # random_experiment(backend_name="mumbai", nr_input_gates=700, nr_steps=40)
+    random_experiment(backend_name="ithaca", nr_input_gates=1800, nr_steps=100)
+    #random_experiment(backend_name="seattle", nr_input_gates=7200, nr_steps=400)
 
     # plot_experiment(name="random_quito")
-    # plot_experiment(name="random_nairobi")
+    #plot_experiment(name="random_ithaca")
     # plot_experiment(name="random_complete")
     # plot_experiment(name="random_guadalupe")
     # plot_experiment(name="random_mumbai")

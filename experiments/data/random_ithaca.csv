@@ -1,0 +1,3 @@
+,n_rep,num_qubits,n_gadgets,method,h,s,cx
+0,0,65,1,ours,0,1,0
+1,0,65,1,qiskit transpile,0,1,0

@@ -1,0 +1,7 @@
+,n_rep,num_qubits,n_gadgets,method,h,s,cx
+0,0,433,1,ours,0,0,1
+1,0,433,1,qiskit transpile,0,0,1
+2,0,433,1,Bravyi et al. (qiskit),0,0,1
+3,0,433,1,Ewout van den Berg (stim),2,0,1
+4,0,433,401,ours,2240,1693,10685
+5,0,433,401,qiskit transpile,959,134,411
