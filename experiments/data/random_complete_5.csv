@@ -1,0 +1,801 @@
+,n_rep,num_qubits,n_gadgets,method,h,s,cx
+0,0,5,1,ours,0,0,1
+1,0,5,1,qiskit transpile,0,0,1
+2,0,5,1,Bravyi et al. (qiskit),0,0,1
+3,0,5,1,Ewout van den Berg (stim),0,0,1
+4,1,5,1,ours,0,0,1
+5,1,5,1,qiskit transpile,0,0,1
+6,1,5,1,Bravyi et al. (qiskit),0,0,1
+7,1,5,1,Ewout van den Berg (stim),2,0,1
+8,2,5,1,ours,0,0,1
+9,2,5,1,qiskit transpile,0,0,1
+10,2,5,1,Bravyi et al. (qiskit),0,0,1
+11,2,5,1,Ewout van den Berg (stim),2,0,1
+12,3,5,1,ours,0,0,1
+13,3,5,1,qiskit transpile,0,0,1
+14,3,5,1,Bravyi et al. (qiskit),0,0,1
+15,3,5,1,Ewout van den Berg (stim),2,0,1
+16,4,5,1,ours,0,0,1
+17,4,5,1,qiskit transpile,0,0,1
+18,4,5,1,Bravyi et al. (qiskit),0,0,1
+19,4,5,1,Ewout van den Berg (stim),0,0,1
+20,5,5,1,ours,1,0,0
+21,5,5,1,qiskit transpile,1,0,0
+22,5,5,1,Bravyi et al. (qiskit),1,0,0
+23,5,5,1,Ewout van den Berg (stim),1,0,0
+24,6,5,1,ours,0,0,1
+25,6,5,1,qiskit transpile,0,0,1
+26,6,5,1,Bravyi et al. (qiskit),0,0,1
+27,6,5,1,Ewout van den Berg (stim),0,0,1
+28,7,5,1,ours,0,1,0
+29,7,5,1,qiskit transpile,0,1,0
+30,7,5,1,Bravyi et al. (qiskit),0,1,0
+31,7,5,1,Ewout van den Berg (stim),2,1,0
+32,8,5,1,ours,0,0,1
+33,8,5,1,qiskit transpile,0,0,1
+34,8,5,1,Bravyi et al. (qiskit),0,0,1
+35,8,5,1,Ewout van den Berg (stim),2,0,1
+36,9,5,1,ours,1,0,0
+37,9,5,1,qiskit transpile,1,0,0
+38,9,5,1,Bravyi et al. (qiskit),1,0,0
+39,9,5,1,Ewout van den Berg (stim),3,0,0
+40,10,5,1,ours,1,0,0
+41,10,5,1,qiskit transpile,1,0,0
+42,10,5,1,Bravyi et al. (qiskit),1,0,0
+43,10,5,1,Ewout van den Berg (stim),3,0,0
+44,11,5,1,ours,0,1,0
+45,11,5,1,qiskit transpile,0,1,0
+46,11,5,1,Bravyi et al. (qiskit),0,1,0
+47,11,5,1,Ewout van den Berg (stim),2,1,0
+48,12,5,1,ours,0,1,0
+49,12,5,1,qiskit transpile,0,1,0
+50,12,5,1,Bravyi et al. (qiskit),0,1,0
+51,12,5,1,Ewout van den Berg (stim),2,1,0
+52,13,5,1,ours,0,0,1
+53,13,5,1,qiskit transpile,0,0,1
+54,13,5,1,Bravyi et al. (qiskit),0,0,1
+55,13,5,1,Ewout van den Berg (stim),0,0,1
+56,14,5,1,ours,0,0,1
+57,14,5,1,qiskit transpile,0,0,1
+58,14,5,1,Bravyi et al. (qiskit),0,0,1
+59,14,5,1,Ewout van den Berg (stim),0,0,1
+60,15,5,1,ours,0,0,1
+61,15,5,1,qiskit transpile,0,0,1
+62,15,5,1,Bravyi et al. (qiskit),0,0,1
+63,15,5,1,Ewout van den Berg (stim),2,0,1
+64,16,5,1,ours,0,0,1
+65,16,5,1,qiskit transpile,0,0,1
+66,16,5,1,Bravyi et al. (qiskit),0,0,1
+67,16,5,1,Ewout van den Berg (stim),2,0,1
+68,17,5,1,ours,0,0,1
+69,17,5,1,qiskit transpile,0,0,1
+70,17,5,1,Bravyi et al. (qiskit),0,0,1
+71,17,5,1,Ewout van den Berg (stim),0,0,1
+72,18,5,1,ours,1,0,0
+73,18,5,1,qiskit transpile,1,0,0
+74,18,5,1,Bravyi et al. (qiskit),1,0,0
+75,18,5,1,Ewout van den Berg (stim),1,0,0
+76,19,5,1,ours,1,0,0
+77,19,5,1,qiskit transpile,1,0,0
+78,19,5,1,Bravyi et al. (qiskit),1,0,0
+79,19,5,1,Ewout van den Berg (stim),1,0,0
+80,0,5,21,ours,18,21,10
+81,0,5,21,qiskit transpile,4,9,8
+82,0,5,21,Bravyi et al. (qiskit),9,13,11
+83,0,5,21,Ewout van den Berg (stim),13,14,17
+84,1,5,21,ours,23,25,17
+85,1,5,21,qiskit transpile,8,6,5
+86,1,5,21,Bravyi et al. (qiskit),5,5,6
+87,1,5,21,Ewout van den Berg (stim),11,16,7
+88,2,5,21,ours,2,4,5
+89,2,5,21,qiskit transpile,8,6,5
+90,2,5,21,Bravyi et al. (qiskit),2,4,5
+91,2,5,21,Ewout van den Berg (stim),2,4,5
+92,3,5,21,ours,10,15,6
+93,3,5,21,qiskit transpile,5,10,6
+94,3,5,21,Bravyi et al. (qiskit),11,13,9
+95,3,5,21,Ewout van den Berg (stim),9,16,10
+96,4,5,21,ours,15,19,14
+97,4,5,21,qiskit transpile,6,7,8
+98,4,5,21,Bravyi et al. (qiskit),8,7,12
+99,4,5,21,Ewout van den Berg (stim),6,7,12
+100,5,5,21,ours,16,23,14
+101,5,5,21,qiskit transpile,6,10,5
+102,5,5,21,Bravyi et al. (qiskit),17,14,11
+103,5,5,21,Ewout van den Berg (stim),17,16,12
+104,6,5,21,ours,16,22,14
+105,6,5,21,qiskit transpile,5,7,9
+106,6,5,21,Bravyi et al. (qiskit),10,11,11
+107,6,5,21,Ewout van den Berg (stim),15,19,13
+108,7,5,21,ours,12,13,7
+109,7,5,21,qiskit transpile,7,7,7
+110,7,5,21,Bravyi et al. (qiskit),7,4,8
+111,7,5,21,Ewout van den Berg (stim),7,4,8
+112,8,5,21,ours,9,10,7
+113,8,5,21,qiskit transpile,6,4,11
+114,8,5,21,Bravyi et al. (qiskit),9,13,6
+115,8,5,21,Ewout van den Berg (stim),9,13,12
+116,9,5,21,ours,8,9,7
+117,9,5,21,qiskit transpile,8,4,9
+118,9,5,21,Bravyi et al. (qiskit),6,13,9
+119,9,5,21,Ewout van den Berg (stim),6,13,9
+120,10,5,21,ours,11,8,7
+121,10,5,21,qiskit transpile,6,8,7
+122,10,5,21,Bravyi et al. (qiskit),11,14,7
+123,10,5,21,Ewout van den Berg (stim),12,11,12
+124,11,5,21,ours,12,15,9
+125,11,5,21,qiskit transpile,8,8,5
+126,11,5,21,Bravyi et al. (qiskit),13,12,7
+127,11,5,21,Ewout van den Berg (stim),15,12,11
+128,12,5,21,ours,10,11,11
+129,12,5,21,qiskit transpile,7,6,8
+130,12,5,21,Bravyi et al. (qiskit),10,8,10
+131,12,5,21,Ewout van den Berg (stim),10,9,11
+132,13,5,21,ours,15,21,14
+133,13,5,21,qiskit transpile,6,10,5
+134,13,5,21,Bravyi et al. (qiskit),9,14,6
+135,13,5,21,Ewout van den Berg (stim),9,14,6
+136,14,5,21,ours,12,21,11
+137,14,5,21,qiskit transpile,3,10,8
+138,14,5,21,Bravyi et al. (qiskit),13,17,13
+139,14,5,21,Ewout van den Berg (stim),8,14,12
+140,15,5,21,ours,14,18,10
+141,15,5,21,qiskit transpile,11,3,7
+142,15,5,21,Bravyi et al. (qiskit),7,4,7
+143,15,5,21,Ewout van den Berg (stim),7,4,8
+144,16,5,21,ours,6,19,10
+145,16,5,21,qiskit transpile,9,3,9
+146,16,5,21,Bravyi et al. (qiskit),7,8,10
+147,16,5,21,Ewout van den Berg (stim),7,8,12
+148,17,5,21,ours,11,15,7
+149,17,5,21,qiskit transpile,7,6,8
+150,17,5,21,Bravyi et al. (qiskit),13,13,11
+151,17,5,21,Ewout van den Berg (stim),10,8,10
+152,18,5,21,ours,13,15,9
+153,18,5,21,qiskit transpile,6,5,8
+154,18,5,21,Bravyi et al. (qiskit),15,17,10
+155,18,5,21,Ewout van den Berg (stim),12,11,17
+156,19,5,21,ours,16,20,18
+157,19,5,21,qiskit transpile,7,6,8
+158,19,5,21,Bravyi et al. (qiskit),15,14,13
+159,19,5,21,Ewout van den Berg (stim),14,17,15
+160,0,5,41,ours,18,19,13
+161,0,5,41,qiskit transpile,7,16,18
+162,0,5,41,Bravyi et al. (qiskit),13,15,19
+163,0,5,41,Ewout van den Berg (stim),15,19,22
+164,1,5,41,ours,18,27,17
+165,1,5,41,qiskit transpile,14,14,13
+166,1,5,41,Bravyi et al. (qiskit),16,19,12
+167,1,5,41,Ewout van den Berg (stim),12,15,12
+168,2,5,41,ours,21,17,14
+169,2,5,41,qiskit transpile,17,7,13
+170,2,5,41,Bravyi et al. (qiskit),14,11,20
+171,2,5,41,Ewout van den Berg (stim),14,12,18
+172,3,5,41,ours,9,9,15
+173,3,5,41,qiskit transpile,7,21,11
+174,3,5,41,Bravyi et al. (qiskit),11,7,11
+175,3,5,41,Ewout van den Berg (stim),13,7,15
+176,4,5,41,ours,13,22,11
+177,4,5,41,qiskit transpile,15,16,10
+178,4,5,41,Bravyi et al. (qiskit),11,11,15
+179,4,5,41,Ewout van den Berg (stim),18,17,16
+180,5,5,41,ours,13,23,15
+181,5,5,41,qiskit transpile,9,14,16
+182,5,5,41,Bravyi et al. (qiskit),17,16,18
+183,5,5,41,Ewout van den Berg (stim),15,19,16
+184,6,5,41,ours,17,21,12
+185,6,5,41,qiskit transpile,12,17,12
+186,6,5,41,Bravyi et al. (qiskit),10,15,16
+187,6,5,41,Ewout van den Berg (stim),7,7,13
+188,7,5,41,ours,23,27,18
+189,7,5,41,qiskit transpile,15,8,16
+190,7,5,41,Bravyi et al. (qiskit),21,18,13
+191,7,5,41,Ewout van den Berg (stim),18,19,20
+192,8,5,41,ours,14,19,13
+193,8,5,41,qiskit transpile,7,18,14
+194,8,5,41,Bravyi et al. (qiskit),13,15,13
+195,8,5,41,Ewout van den Berg (stim),15,13,18
+196,9,5,41,ours,23,29,16
+197,9,5,41,qiskit transpile,11,18,12
+198,9,5,41,Bravyi et al. (qiskit),14,23,15
+199,9,5,41,Ewout van den Berg (stim),14,23,15
+200,10,5,41,ours,10,15,14
+201,10,5,41,qiskit transpile,17,14,6
+202,10,5,41,Bravyi et al. (qiskit),7,12,11
+203,10,5,41,Ewout van den Berg (stim),7,13,11
+204,11,5,41,ours,15,26,18
+205,11,5,41,qiskit transpile,15,16,10
+206,11,5,41,Bravyi et al. (qiskit),12,15,8
+207,11,5,41,Ewout van den Berg (stim),12,16,8
+208,12,5,41,ours,11,18,16
+209,12,5,41,qiskit transpile,14,13,12
+210,12,5,41,Bravyi et al. (qiskit),14,24,15
+211,12,5,41,Ewout van den Berg (stim),12,24,21
+212,13,5,41,ours,12,14,8
+213,13,5,41,qiskit transpile,12,18,9
+214,13,5,41,Bravyi et al. (qiskit),14,16,8
+215,13,5,41,Ewout van den Berg (stim),18,15,13
+216,14,5,41,ours,18,17,17
+217,14,5,41,qiskit transpile,16,16,9
+218,14,5,41,Bravyi et al. (qiskit),22,22,12
+219,14,5,41,Ewout van den Berg (stim),18,15,13
+220,15,5,41,ours,14,22,10
+221,15,5,41,qiskit transpile,15,16,8
+222,15,5,41,Bravyi et al. (qiskit),11,20,13
+223,15,5,41,Ewout van den Berg (stim),7,14,11
+224,16,5,41,ours,14,20,12
+225,16,5,41,qiskit transpile,17,14,10
+226,16,5,41,Bravyi et al. (qiskit),16,19,11
+227,16,5,41,Ewout van den Berg (stim),16,20,14
+228,17,5,41,ours,19,28,13
+229,17,5,41,qiskit transpile,12,13,16
+230,17,5,41,Bravyi et al. (qiskit),16,14,17
+231,17,5,41,Ewout van den Berg (stim),9,12,23
+232,18,5,41,ours,18,28,15
+233,18,5,41,qiskit transpile,14,11,14
+234,18,5,41,Bravyi et al. (qiskit),13,12,15
+235,18,5,41,Ewout van den Berg (stim),20,15,22
+236,19,5,41,ours,10,16,14
+237,19,5,41,qiskit transpile,17,12,10
+238,19,5,41,Bravyi et al. (qiskit),16,18,17
+239,19,5,41,Ewout van den Berg (stim),13,14,13
+240,0,5,61,ours,13,18,14
+241,0,5,61,qiskit transpile,14,27,18
+242,0,5,61,Bravyi et al. (qiskit),20,23,15
+243,0,5,61,Ewout van den Berg (stim),15,22,13
+244,1,5,61,ours,21,23,14
+245,1,5,61,qiskit transpile,21,20,20
+246,1,5,61,Bravyi et al. (qiskit),19,19,19
+247,1,5,61,Ewout van den Berg (stim),17,17,20
+248,2,5,61,ours,12,18,16
+249,2,5,61,qiskit transpile,20,19,22
+250,2,5,61,Bravyi et al. (qiskit),14,20,18
+251,2,5,61,Ewout van den Berg (stim),17,17,18
+252,3,5,61,ours,10,15,13
+253,3,5,61,qiskit transpile,24,20,15
+254,3,5,61,Bravyi et al. (qiskit),9,16,14
+255,3,5,61,Ewout van den Berg (stim),15,22,21
+256,4,5,61,ours,10,15,13
+257,4,5,61,qiskit transpile,15,20,22
+258,4,5,61,Bravyi et al. (qiskit),12,19,14
+259,4,5,61,Ewout van den Berg (stim),14,17,12
+260,5,5,61,ours,17,20,18
+261,5,5,61,qiskit transpile,21,21,19
+262,5,5,61,Bravyi et al. (qiskit),13,24,19
+263,5,5,61,Ewout van den Berg (stim),13,16,20
+264,6,5,61,ours,7,16,9
+265,6,5,61,qiskit transpile,19,27,15
+266,6,5,61,Bravyi et al. (qiskit),15,14,18
+267,6,5,61,Ewout van den Berg (stim),17,21,22
+268,7,5,61,ours,11,16,12
+269,7,5,61,qiskit transpile,22,24,15
+270,7,5,61,Bravyi et al. (qiskit),11,14,17
+271,7,5,61,Ewout van den Berg (stim),13,12,20
+272,8,5,61,ours,4,8,12
+273,8,5,61,qiskit transpile,18,25,18
+274,8,5,61,Bravyi et al. (qiskit),11,12,15
+275,8,5,61,Ewout van den Berg (stim),9,9,19
+276,9,5,61,ours,18,23,16
+277,9,5,61,qiskit transpile,28,13,20
+278,9,5,61,Bravyi et al. (qiskit),14,17,21
+279,9,5,61,Ewout van den Berg (stim),16,13,18
+280,10,5,61,ours,11,17,12
+281,10,5,61,qiskit transpile,24,15,18
+282,10,5,61,Bravyi et al. (qiskit),10,15,11
+283,10,5,61,Ewout van den Berg (stim),15,16,17
+284,11,5,61,ours,20,23,14
+285,11,5,61,qiskit transpile,23,23,15
+286,11,5,61,Bravyi et al. (qiskit),14,23,17
+287,11,5,61,Ewout van den Berg (stim),14,19,15
+288,12,5,61,ours,14,15,16
+289,12,5,61,qiskit transpile,21,21,19
+290,12,5,61,Bravyi et al. (qiskit),20,19,19
+291,12,5,61,Ewout van den Berg (stim),12,17,24
+292,13,5,61,ours,14,20,13
+293,13,5,61,qiskit transpile,24,17,18
+294,13,5,61,Bravyi et al. (qiskit),14,18,14
+295,13,5,61,Ewout van den Berg (stim),15,19,22
+296,14,5,61,ours,12,16,13
+297,14,5,61,qiskit transpile,16,27,18
+298,14,5,61,Bravyi et al. (qiskit),15,17,12
+299,14,5,61,Ewout van den Berg (stim),20,16,26
+300,15,5,61,ours,12,16,11
+301,15,5,61,qiskit transpile,20,26,15
+302,15,5,61,Bravyi et al. (qiskit),13,16,16
+303,15,5,61,Ewout van den Berg (stim),13,16,17
+304,16,5,61,ours,12,14,18
+305,16,5,61,qiskit transpile,22,20,19
+306,16,5,61,Bravyi et al. (qiskit),18,23,19
+307,16,5,61,Ewout van den Berg (stim),15,16,22
+308,17,5,61,ours,16,27,13
+309,17,5,61,qiskit transpile,21,19,17
+310,17,5,61,Bravyi et al. (qiskit),15,23,19
+311,17,5,61,Ewout van den Berg (stim),17,16,23
+312,18,5,61,ours,15,17,17
+313,18,5,61,qiskit transpile,27,15,19
+314,18,5,61,Bravyi et al. (qiskit),18,22,17
+315,18,5,61,Ewout van den Berg (stim),15,13,23
+316,19,5,61,ours,14,19,16
+317,19,5,61,qiskit transpile,19,22,20
+318,19,5,61,Bravyi et al. (qiskit),10,12,19
+319,19,5,61,Ewout van den Berg (stim),8,14,21
+320,0,5,81,ours,13,16,15
+321,0,5,81,qiskit transpile,30,24,27
+322,0,5,81,Bravyi et al. (qiskit),12,15,17
+323,0,5,81,Ewout van den Berg (stim),10,19,22
+324,1,5,81,ours,13,21,11
+325,1,5,81,qiskit transpile,25,35,21
+326,1,5,81,Bravyi et al. (qiskit),19,25,18
+327,1,5,81,Ewout van den Berg (stim),19,16,15
+328,2,5,81,ours,14,21,14
+329,2,5,81,qiskit transpile,26,28,27
+330,2,5,81,Bravyi et al. (qiskit),15,17,16
+331,2,5,81,Ewout van den Berg (stim),13,12,22
+332,3,5,81,ours,20,26,13
+333,3,5,81,qiskit transpile,25,30,24
+334,3,5,81,Bravyi et al. (qiskit),18,23,21
+335,3,5,81,Ewout van den Berg (stim),16,15,19
+336,4,5,81,ours,21,24,19
+337,4,5,81,qiskit transpile,30,28,23
+338,4,5,81,Bravyi et al. (qiskit),14,13,17
+339,4,5,81,Ewout van den Berg (stim),9,12,17
+340,5,5,81,ours,17,15,11
+341,5,5,81,qiskit transpile,36,21,24
+342,5,5,81,Bravyi et al. (qiskit),17,19,22
+343,5,5,81,Ewout van den Berg (stim),15,19,14
+344,6,5,81,ours,16,21,16
+345,6,5,81,qiskit transpile,26,28,25
+346,6,5,81,Bravyi et al. (qiskit),12,18,17
+347,6,5,81,Ewout van den Berg (stim),18,23,20
+348,7,5,81,ours,13,20,16
+349,7,5,81,qiskit transpile,28,27,22
+350,7,5,81,Bravyi et al. (qiskit),13,21,17
+351,7,5,81,Ewout van den Berg (stim),16,14,18
+352,8,5,81,ours,14,20,13
+353,8,5,81,qiskit transpile,24,25,32
+354,8,5,81,Bravyi et al. (qiskit),12,21,18
+355,8,5,81,Ewout van den Berg (stim),15,20,17
+356,9,5,81,ours,20,26,16
+357,9,5,81,qiskit transpile,27,32,20
+358,9,5,81,Bravyi et al. (qiskit),18,19,21
+359,9,5,81,Ewout van den Berg (stim),18,17,22
+360,10,5,81,ours,14,20,15
+361,10,5,81,qiskit transpile,36,24,21
+362,10,5,81,Bravyi et al. (qiskit),14,25,16
+363,10,5,81,Ewout van den Berg (stim),17,16,20
+364,11,5,81,ours,20,23,16
+365,11,5,81,qiskit transpile,18,33,28
+366,11,5,81,Bravyi et al. (qiskit),13,17,15
+367,11,5,81,Ewout van den Berg (stim),19,14,24
+368,12,5,81,ours,15,21,14
+369,12,5,81,qiskit transpile,20,30,29
+370,12,5,81,Bravyi et al. (qiskit),15,17,19
+371,12,5,81,Ewout van den Berg (stim),13,19,24
+372,13,5,81,ours,11,15,11
+373,13,5,81,qiskit transpile,23,33,25
+374,13,5,81,Bravyi et al. (qiskit),14,19,12
+375,13,5,81,Ewout van den Berg (stim),14,14,15
+376,14,5,81,ours,16,18,12
+377,14,5,81,qiskit transpile,39,18,20
+378,14,5,81,Bravyi et al. (qiskit),20,21,21
+379,14,5,81,Ewout van den Berg (stim),25,30,23
+380,15,5,81,ours,17,20,14
+381,15,5,81,qiskit transpile,25,28,28
+382,15,5,81,Bravyi et al. (qiskit),11,23,15
+383,15,5,81,Ewout van den Berg (stim),18,23,24
+384,16,5,81,ours,15,20,14
+385,16,5,81,qiskit transpile,27,30,22
+386,16,5,81,Bravyi et al. (qiskit),18,19,16
+387,16,5,81,Ewout van den Berg (stim),15,18,18
+388,17,5,81,ours,13,17,16
+389,17,5,81,qiskit transpile,24,29,26
+390,17,5,81,Bravyi et al. (qiskit),10,12,19
+391,17,5,81,Ewout van den Berg (stim),22,21,25
+392,18,5,81,ours,11,11,14
+393,18,5,81,qiskit transpile,24,28,25
+394,18,5,81,Bravyi et al. (qiskit),12,14,18
+395,18,5,81,Ewout van den Berg (stim),12,8,24
+396,19,5,81,ours,21,26,14
+397,19,5,81,qiskit transpile,24,36,21
+398,19,5,81,Bravyi et al. (qiskit),18,19,15
+399,19,5,81,Ewout van den Berg (stim),11,20,18
+400,0,5,101,ours,12,16,13
+401,0,5,101,qiskit transpile,33,30,34
+402,0,5,101,Bravyi et al. (qiskit),13,22,14
+403,0,5,101,Ewout van den Berg (stim),19,15,24
+404,1,5,101,ours,16,22,14
+405,1,5,101,qiskit transpile,31,41,29
+406,1,5,101,Bravyi et al. (qiskit),14,16,15
+407,1,5,101,Ewout van den Berg (stim),15,13,18
+408,2,5,101,ours,20,19,16
+409,2,5,101,qiskit transpile,39,29,29
+410,2,5,101,Bravyi et al. (qiskit),12,17,12
+411,2,5,101,Ewout van den Berg (stim),18,13,18
+412,3,5,101,ours,13,18,14
+413,3,5,101,qiskit transpile,40,32,29
+414,3,5,101,Bravyi et al. (qiskit),13,16,18
+415,3,5,101,Ewout van den Berg (stim),15,16,24
+416,4,5,101,ours,16,17,16
+417,4,5,101,qiskit transpile,32,37,30
+418,4,5,101,Bravyi et al. (qiskit),15,13,21
+419,4,5,101,Ewout van den Berg (stim),16,13,19
+420,5,5,101,ours,20,21,16
+421,5,5,101,qiskit transpile,38,33,24
+422,5,5,101,Bravyi et al. (qiskit),14,12,13
+423,5,5,101,Ewout van den Berg (stim),18,12,20
+424,6,5,101,ours,22,23,15
+425,6,5,101,qiskit transpile,32,31,34
+426,6,5,101,Bravyi et al. (qiskit),16,23,13
+427,6,5,101,Ewout van den Berg (stim),12,14,22
+428,7,5,101,ours,19,17,16
+429,7,5,101,qiskit transpile,39,26,36
+430,7,5,101,Bravyi et al. (qiskit),16,18,15
+431,7,5,101,Ewout van den Berg (stim),14,19,17
+432,8,5,101,ours,16,25,14
+433,8,5,101,qiskit transpile,30,39,28
+434,8,5,101,Bravyi et al. (qiskit),13,13,14
+435,8,5,101,Ewout van den Berg (stim),13,9,20
+436,9,5,101,ours,16,16,11
+437,9,5,101,qiskit transpile,33,38,30
+438,9,5,101,Bravyi et al. (qiskit),14,11,13
+439,9,5,101,Ewout van den Berg (stim),16,16,16
+440,10,5,101,ours,15,19,16
+441,10,5,101,qiskit transpile,28,43,30
+442,10,5,101,Bravyi et al. (qiskit),16,17,18
+443,10,5,101,Ewout van den Berg (stim),22,19,23
+444,11,5,101,ours,16,21,17
+445,11,5,101,qiskit transpile,32,27,36
+446,11,5,101,Bravyi et al. (qiskit),15,16,16
+447,11,5,101,Ewout van den Berg (stim),18,18,31
+448,12,5,101,ours,16,20,10
+449,12,5,101,qiskit transpile,41,33,25
+450,12,5,101,Bravyi et al. (qiskit),20,18,17
+451,12,5,101,Ewout van den Berg (stim),16,18,15
+452,13,5,101,ours,16,24,17
+453,13,5,101,qiskit transpile,32,35,30
+454,13,5,101,Bravyi et al. (qiskit),17,27,18
+455,13,5,101,Ewout van den Berg (stim),16,19,19
+456,14,5,101,ours,19,19,16
+457,14,5,101,qiskit transpile,34,39,22
+458,14,5,101,Bravyi et al. (qiskit),10,15,15
+459,14,5,101,Ewout van den Berg (stim),16,21,24
+460,15,5,101,ours,20,22,14
+461,15,5,101,qiskit transpile,42,27,32
+462,15,5,101,Bravyi et al. (qiskit),11,12,17
+463,15,5,101,Ewout van den Berg (stim),17,22,20
+464,16,5,101,ours,16,24,16
+465,16,5,101,qiskit transpile,32,42,25
+466,16,5,101,Bravyi et al. (qiskit),13,18,13
+467,16,5,101,Ewout van den Berg (stim),13,14,17
+468,17,5,101,ours,17,23,14
+469,17,5,101,qiskit transpile,28,33,36
+470,17,5,101,Bravyi et al. (qiskit),15,17,17
+471,17,5,101,Ewout van den Berg (stim),10,11,22
+472,18,5,101,ours,11,18,14
+473,18,5,101,qiskit transpile,31,31,33
+474,18,5,101,Bravyi et al. (qiskit),14,9,19
+475,18,5,101,Ewout van den Berg (stim),13,16,19
+476,19,5,101,ours,16,20,11
+477,19,5,101,qiskit transpile,32,32,35
+478,19,5,101,Bravyi et al. (qiskit),15,23,18
+479,19,5,101,Ewout van den Berg (stim),12,14,19
+480,0,5,121,ours,23,28,16
+481,0,5,121,qiskit transpile,26,55,36
+482,0,5,121,Bravyi et al. (qiskit),12,14,17
+483,0,5,121,Ewout van den Berg (stim),15,16,14
+484,1,5,121,ours,15,21,15
+485,1,5,121,qiskit transpile,38,41,42
+486,1,5,121,Bravyi et al. (qiskit),14,21,20
+487,1,5,121,Ewout van den Berg (stim),21,17,20
+488,2,5,121,ours,15,22,13
+489,2,5,121,qiskit transpile,39,40,42
+490,2,5,121,Bravyi et al. (qiskit),13,18,16
+491,2,5,121,Ewout van den Berg (stim),9,13,22
+492,3,5,121,ours,17,18,16
+493,3,5,121,qiskit transpile,37,42,38
+494,3,5,121,Bravyi et al. (qiskit),11,13,14
+495,3,5,121,Ewout van den Berg (stim),19,27,17
+496,4,5,121,ours,19,22,14
+497,4,5,121,qiskit transpile,44,36,41
+498,4,5,121,Bravyi et al. (qiskit),19,23,15
+499,4,5,121,Ewout van den Berg (stim),22,29,19
+500,5,5,121,ours,20,26,15
+501,5,5,121,qiskit transpile,37,50,34
+502,5,5,121,Bravyi et al. (qiskit),10,15,21
+503,5,5,121,Ewout van den Berg (stim),14,12,21
+504,6,5,121,ours,15,20,16
+505,6,5,121,qiskit transpile,36,27,44
+506,6,5,121,Bravyi et al. (qiskit),9,17,18
+507,6,5,121,Ewout van den Berg (stim),18,22,23
+508,7,5,121,ours,16,21,16
+509,7,5,121,qiskit transpile,41,40,38
+510,7,5,121,Bravyi et al. (qiskit),12,19,13
+511,7,5,121,Ewout van den Berg (stim),21,22,27
+512,8,5,121,ours,17,19,16
+513,8,5,121,qiskit transpile,38,42,39
+514,8,5,121,Bravyi et al. (qiskit),15,22,19
+515,8,5,121,Ewout van den Berg (stim),11,18,21
+516,9,5,121,ours,12,20,12
+517,9,5,121,qiskit transpile,40,39,40
+518,9,5,121,Bravyi et al. (qiskit),13,19,16
+519,9,5,121,Ewout van den Berg (stim),12,14,22
+520,10,5,121,ours,19,26,13
+521,10,5,121,qiskit transpile,42,35,38
+522,10,5,121,Bravyi et al. (qiskit),9,11,13
+523,10,5,121,Ewout van den Berg (stim),16,18,18
+524,11,5,121,ours,19,27,15
+525,11,5,121,qiskit transpile,39,49,33
+526,11,5,121,Bravyi et al. (qiskit),13,17,17
+527,11,5,121,Ewout van den Berg (stim),17,21,18
+528,12,5,121,ours,14,24,14
+529,12,5,121,qiskit transpile,36,40,41
+530,12,5,121,Bravyi et al. (qiskit),19,25,17
+531,12,5,121,Ewout van den Berg (stim),18,25,17
+532,13,5,121,ours,21,28,16
+533,13,5,121,qiskit transpile,42,38,39
+534,13,5,121,Bravyi et al. (qiskit),17,21,16
+535,13,5,121,Ewout van den Berg (stim),17,20,20
+536,14,5,121,ours,13,24,15
+537,14,5,121,qiskit transpile,43,36,40
+538,14,5,121,Bravyi et al. (qiskit),10,18,15
+539,14,5,121,Ewout van den Berg (stim),12,19,19
+540,15,5,121,ours,19,24,15
+541,15,5,121,qiskit transpile,41,29,51
+542,15,5,121,Bravyi et al. (qiskit),13,16,17
+543,15,5,121,Ewout van den Berg (stim),15,19,19
+544,16,5,121,ours,18,26,16
+545,16,5,121,qiskit transpile,44,36,37
+546,16,5,121,Bravyi et al. (qiskit),13,19,17
+547,16,5,121,Ewout van den Berg (stim),20,24,17
+548,17,5,121,ours,19,24,18
+549,17,5,121,qiskit transpile,41,35,43
+550,17,5,121,Bravyi et al. (qiskit),9,21,19
+551,17,5,121,Ewout van den Berg (stim),20,23,23
+552,18,5,121,ours,11,18,16
+553,18,5,121,qiskit transpile,34,51,34
+554,18,5,121,Bravyi et al. (qiskit),18,24,21
+555,18,5,121,Ewout van den Berg (stim),15,16,24
+556,19,5,121,ours,16,14,14
+557,19,5,121,qiskit transpile,46,44,29
+558,19,5,121,Bravyi et al. (qiskit),20,20,16
+559,19,5,121,Ewout van den Berg (stim),22,30,17
+560,0,5,141,ours,23,26,16
+561,0,5,141,qiskit transpile,50,37,48
+562,0,5,141,Bravyi et al. (qiskit),13,21,16
+563,0,5,141,Ewout van den Berg (stim),16,17,23
+564,1,5,141,ours,19,22,13
+565,1,5,141,qiskit transpile,55,42,40
+566,1,5,141,Bravyi et al. (qiskit),15,18,18
+567,1,5,141,Ewout van den Berg (stim),19,21,21
+568,2,5,141,ours,17,28,15
+569,2,5,141,qiskit transpile,38,48,53
+570,2,5,141,Bravyi et al. (qiskit),12,14,24
+571,2,5,141,Ewout van den Berg (stim),14,19,19
+572,3,5,141,ours,16,17,17
+573,3,5,141,qiskit transpile,43,42,54
+574,3,5,141,Bravyi et al. (qiskit),16,20,18
+575,3,5,141,Ewout van den Berg (stim),18,20,20
+576,4,5,141,ours,22,24,15
+577,4,5,141,qiskit transpile,46,48,41
+578,4,5,141,Bravyi et al. (qiskit),17,21,20
+579,4,5,141,Ewout van den Berg (stim),16,15,25
+580,5,5,141,ours,16,23,20
+581,5,5,141,qiskit transpile,53,45,43
+582,5,5,141,Bravyi et al. (qiskit),14,18,11
+583,5,5,141,Ewout van den Berg (stim),12,18,18
+584,6,5,141,ours,20,22,18
+585,6,5,141,qiskit transpile,32,55,52
+586,6,5,141,Bravyi et al. (qiskit),12,16,16
+587,6,5,141,Ewout van den Berg (stim),18,13,21
+588,7,5,141,ours,17,24,14
+589,7,5,141,qiskit transpile,51,53,35
+590,7,5,141,Bravyi et al. (qiskit),19,27,15
+591,7,5,141,Ewout van den Berg (stim),17,12,17
+592,8,5,141,ours,22,23,18
+593,8,5,141,qiskit transpile,52,42,45
+594,8,5,141,Bravyi et al. (qiskit),14,23,21
+595,8,5,141,Ewout van den Berg (stim),12,13,18
+596,9,5,141,ours,18,26,15
+597,9,5,141,qiskit transpile,56,36,47
+598,9,5,141,Bravyi et al. (qiskit),16,18,19
+599,9,5,141,Ewout van den Berg (stim),17,16,19
+600,10,5,141,ours,22,24,16
+601,10,5,141,qiskit transpile,45,44,48
+602,10,5,141,Bravyi et al. (qiskit),11,19,14
+603,10,5,141,Ewout van den Berg (stim),15,16,22
+604,11,5,141,ours,9,11,14
+605,11,5,141,qiskit transpile,41,60,40
+606,11,5,141,Bravyi et al. (qiskit),10,11,16
+607,11,5,141,Ewout van den Berg (stim),13,14,22
+608,12,5,141,ours,16,27,15
+609,12,5,141,qiskit transpile,52,47,40
+610,12,5,141,Bravyi et al. (qiskit),18,20,16
+611,12,5,141,Ewout van den Berg (stim),15,18,23
+612,13,5,141,ours,16,21,15
+613,13,5,141,qiskit transpile,46,50,41
+614,13,5,141,Bravyi et al. (qiskit),15,19,16
+615,13,5,141,Ewout van den Berg (stim),12,15,20
+616,14,5,141,ours,22,23,16
+617,14,5,141,qiskit transpile,48,52,37
+618,14,5,141,Bravyi et al. (qiskit),13,15,18
+619,14,5,141,Ewout van den Berg (stim),16,18,23
+620,15,5,141,ours,13,19,18
+621,15,5,141,qiskit transpile,45,41,47
+622,15,5,141,Bravyi et al. (qiskit),7,15,19
+623,15,5,141,Ewout van den Berg (stim),15,17,25
+624,16,5,141,ours,12,21,13
+625,16,5,141,qiskit transpile,41,48,50
+626,16,5,141,Bravyi et al. (qiskit),17,23,12
+627,16,5,141,Ewout van den Berg (stim),14,23,16
+628,17,5,141,ours,12,20,15
+629,17,5,141,qiskit transpile,28,49,56
+630,17,5,141,Bravyi et al. (qiskit),8,10,15
+631,17,5,141,Ewout van den Berg (stim),13,13,19
+632,18,5,141,ours,17,24,11
+633,18,5,141,qiskit transpile,47,44,50
+634,18,5,141,Bravyi et al. (qiskit),12,15,13
+635,18,5,141,Ewout van den Berg (stim),11,15,14
+636,19,5,141,ours,22,27,16
+637,19,5,141,qiskit transpile,50,53,34
+638,19,5,141,Bravyi et al. (qiskit),18,23,14
+639,19,5,141,Ewout van den Berg (stim),13,18,25
+640,0,5,161,ours,19,22,13
+641,0,5,161,qiskit transpile,61,46,52
+642,0,5,161,Bravyi et al. (qiskit),14,24,16
+643,0,5,161,Ewout van den Berg (stim),14,12,15
+644,1,5,161,ours,19,20,16
+645,1,5,161,qiskit transpile,41,53,61
+646,1,5,161,Bravyi et al. (qiskit),12,20,15
+647,1,5,161,Ewout van den Berg (stim),20,17,17
+648,2,5,161,ours,14,15,13
+649,2,5,161,qiskit transpile,56,59,40
+650,2,5,161,Bravyi et al. (qiskit),10,18,14
+651,2,5,161,Ewout van den Berg (stim),13,17,16
+652,3,5,161,ours,21,22,14
+653,3,5,161,qiskit transpile,52,49,52
+654,3,5,161,Bravyi et al. (qiskit),17,24,17
+655,3,5,161,Ewout van den Berg (stim),15,14,22
+656,4,5,161,ours,10,14,14
+657,4,5,161,qiskit transpile,55,60,40
+658,4,5,161,Bravyi et al. (qiskit),16,20,12
+659,4,5,161,Ewout van den Berg (stim),15,19,15
+660,5,5,161,ours,14,17,13
+661,5,5,161,qiskit transpile,46,57,54
+662,5,5,161,Bravyi et al. (qiskit),17,21,17
+663,5,5,161,Ewout van den Berg (stim),19,30,18
+664,6,5,161,ours,11,22,17
+665,6,5,161,qiskit transpile,59,43,55
+666,6,5,161,Bravyi et al. (qiskit),11,22,17
+667,6,5,161,Ewout van den Berg (stim),18,19,21
+668,7,5,161,ours,9,9,17
+669,7,5,161,qiskit transpile,45,54,56
+670,7,5,161,Bravyi et al. (qiskit),15,25,22
+671,7,5,161,Ewout van den Berg (stim),14,16,24
+672,8,5,161,ours,14,19,20
+673,8,5,161,qiskit transpile,49,59,49
+674,8,5,161,Bravyi et al. (qiskit),22,25,18
+675,8,5,161,Ewout van den Berg (stim),19,26,21
+676,9,5,161,ours,14,20,13
+677,9,5,161,qiskit transpile,54,52,53
+678,9,5,161,Bravyi et al. (qiskit),17,14,22
+679,9,5,161,Ewout van den Berg (stim),11,12,21
+680,10,5,161,ours,16,18,18
+681,10,5,161,qiskit transpile,56,55,46
+682,10,5,161,Bravyi et al. (qiskit),17,21,21
+683,10,5,161,Ewout van den Berg (stim),17,22,24
+684,11,5,161,ours,12,21,18
+685,11,5,161,qiskit transpile,52,59,48
+686,11,5,161,Bravyi et al. (qiskit),9,14,17
+687,11,5,161,Ewout van den Berg (stim),11,17,18
+688,12,5,161,ours,14,23,17
+689,12,5,161,qiskit transpile,54,56,45
+690,12,5,161,Bravyi et al. (qiskit),12,22,9
+691,12,5,161,Ewout van den Berg (stim),9,12,18
+692,13,5,161,ours,15,21,18
+693,13,5,161,qiskit transpile,45,60,54
+694,13,5,161,Bravyi et al. (qiskit),14,18,17
+695,13,5,161,Ewout van den Berg (stim),21,22,21
+696,14,5,161,ours,15,26,19
+697,14,5,161,qiskit transpile,62,49,50
+698,14,5,161,Bravyi et al. (qiskit),17,20,16
+699,14,5,161,Ewout van den Berg (stim),14,22,20
+700,15,5,161,ours,15,23,17
+701,15,5,161,qiskit transpile,43,51,61
+702,15,5,161,Bravyi et al. (qiskit),14,14,22
+703,15,5,161,Ewout van den Berg (stim),15,16,15
+704,16,5,161,ours,16,24,15
+705,16,5,161,qiskit transpile,46,57,54
+706,16,5,161,Bravyi et al. (qiskit),12,17,19
+707,16,5,161,Ewout van den Berg (stim),12,17,25
+708,17,5,161,ours,12,13,15
+709,17,5,161,qiskit transpile,52,53,56
+710,17,5,161,Bravyi et al. (qiskit),15,24,18
+711,17,5,161,Ewout van den Berg (stim),23,24,19
+712,18,5,161,ours,13,20,18
+713,18,5,161,qiskit transpile,46,51,60
+714,18,5,161,Bravyi et al. (qiskit),14,21,17
+715,18,5,161,Ewout van den Berg (stim),11,22,19
+716,19,5,161,ours,14,18,13
+717,19,5,161,qiskit transpile,63,53,43
+718,19,5,161,Bravyi et al. (qiskit),13,10,18
+719,19,5,161,Ewout van den Berg (stim),21,20,22
+720,0,5,181,ours,13,15,12
+721,0,5,181,qiskit transpile,73,51,57
+722,0,5,181,Bravyi et al. (qiskit),12,12,16
+723,0,5,181,Ewout van den Berg (stim),14,13,17
+724,1,5,181,ours,15,24,16
+725,1,5,181,qiskit transpile,66,55,58
+726,1,5,181,Bravyi et al. (qiskit),10,17,22
+727,1,5,181,Ewout van den Berg (stim),15,16,17
+728,2,5,181,ours,18,18,15
+729,2,5,181,qiskit transpile,58,65,52
+730,2,5,181,Bravyi et al. (qiskit),6,16,19
+731,2,5,181,Ewout van den Berg (stim),19,14,19
+732,3,5,181,ours,15,20,13
+733,3,5,181,qiskit transpile,58,60,59
+734,3,5,181,Bravyi et al. (qiskit),12,14,20
+735,3,5,181,Ewout van den Berg (stim),10,11,25
+736,4,5,181,ours,19,19,15
+737,4,5,181,qiskit transpile,52,62,67
+738,4,5,181,Bravyi et al. (qiskit),16,18,19
+739,4,5,181,Ewout van den Berg (stim),18,21,20
+740,5,5,181,ours,12,18,15
+741,5,5,181,qiskit transpile,63,53,63
+742,5,5,181,Bravyi et al. (qiskit),16,17,16
+743,5,5,181,Ewout van den Berg (stim),14,18,29
+744,6,5,181,ours,15,22,16
+745,6,5,181,qiskit transpile,59,64,50
+746,6,5,181,Bravyi et al. (qiskit),13,19,16
+747,6,5,181,Ewout van den Berg (stim),12,19,25
+748,7,5,181,ours,8,15,17
+749,7,5,181,qiskit transpile,55,66,58
+750,7,5,181,Bravyi et al. (qiskit),13,23,19
+751,7,5,181,Ewout van den Berg (stim),11,15,20
+752,8,5,181,ours,12,24,15
+753,8,5,181,qiskit transpile,55,62,60
+754,8,5,181,Bravyi et al. (qiskit),14,16,20
+755,8,5,181,Ewout van den Berg (stim),20,24,24
+756,9,5,181,ours,18,23,15
+757,9,5,181,qiskit transpile,59,57,61
+758,9,5,181,Bravyi et al. (qiskit),14,16,11
+759,9,5,181,Ewout van den Berg (stim),17,18,22
+760,10,5,181,ours,20,23,18
+761,10,5,181,qiskit transpile,49,68,62
+762,10,5,181,Bravyi et al. (qiskit),13,26,16
+763,10,5,181,Ewout van den Berg (stim),17,25,21
+764,11,5,181,ours,20,27,18
+765,11,5,181,qiskit transpile,75,54,52
+766,11,5,181,Bravyi et al. (qiskit),15,21,19
+767,11,5,181,Ewout van den Berg (stim),18,20,18
+768,12,5,181,ours,14,18,14
+769,12,5,181,qiskit transpile,56,59,58
+770,12,5,181,Bravyi et al. (qiskit),15,19,18
+771,12,5,181,Ewout van den Berg (stim),18,16,19
+772,13,5,181,ours,15,25,18
+773,13,5,181,qiskit transpile,52,67,58
+774,13,5,181,Bravyi et al. (qiskit),14,23,20
+775,13,5,181,Ewout van den Berg (stim),19,20,18
+776,14,5,181,ours,22,29,17
+777,14,5,181,qiskit transpile,54,67,58
+778,14,5,181,Bravyi et al. (qiskit),15,22,18
+779,14,5,181,Ewout van den Berg (stim),21,21,25
+780,15,5,181,ours,18,23,15
+781,15,5,181,qiskit transpile,64,63,52
+782,15,5,181,Bravyi et al. (qiskit),15,16,25
+783,15,5,181,Ewout van den Berg (stim),15,19,19
+784,16,5,181,ours,15,19,14
+785,16,5,181,qiskit transpile,62,55,60
+786,16,5,181,Bravyi et al. (qiskit),17,17,15
+787,16,5,181,Ewout van den Berg (stim),17,14,25
+788,17,5,181,ours,20,24,15
+789,17,5,181,qiskit transpile,66,54,55
+790,17,5,181,Bravyi et al. (qiskit),17,16,22
+791,17,5,181,Ewout van den Berg (stim),15,17,22
+792,18,5,181,ours,13,22,16
+793,18,5,181,qiskit transpile,50,58,65
+794,18,5,181,Bravyi et al. (qiskit),14,20,11
+795,18,5,181,Ewout van den Berg (stim),14,25,17
+796,19,5,181,ours,15,19,13
+797,19,5,181,qiskit transpile,60,52,67
+798,19,5,181,Bravyi et al. (qiskit),9,23,13
+799,19,5,181,Ewout van den Berg (stim),12,18,23

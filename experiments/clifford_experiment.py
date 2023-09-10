@@ -14,7 +14,7 @@ import stim
 from qiskit import QuantumCircuit, transpile, execute, Aer
 from qiskit.providers import JobStatus
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, FakeQuito, \
-    FakeNairobi, FakePerth, ConfigurableFakeBackend
+    FakeNairobi, FakePerth, ConfigurableFakeBackend, FakeQuitoV2
 from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
@@ -175,16 +175,16 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
         backend = FakeVigo()
         df_name = f"{df_name}_vigo.csv"
     elif backend_name == "mumbai":
-        backend = FakeMumbai()
+        backend = FakeJSONBackend("ibmq_mumbai")
         df_name = f"{df_name}_mumbai.csv"
     elif backend_name == "guadalupe":
-        backend = FakeGuadalupe()
+        backend = FakeJSONBackend("ibmq_guadalupe")
         df_name = f"{df_name}_guadalupe.csv"
     elif backend_name == "quito":
-        backend = FakeQuito()
+        backend = FakeJSONBackend("ibmq_quito")
         df_name = f"{df_name}_quito.csv"
     elif backend_name == "nairobi":
-        backend = FakeNairobi()
+        backend = FakeJSONBackend("ibm_nairobi")
         df_name = f"{df_name}_nairobi.csv"
     elif backend_name == "perth":
         backend = FakeNairobi()
@@ -198,9 +198,9 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     elif backend_name == "brisbane":
         backend = FakeJSONBackend("ibm_brisbane")
         df_name = f"{df_name}_brisbane.csv"
-    elif backend_name == "complete":
+    elif "complete" in backend_name:
         backend = "complete"
-        df_name = f"{df_name}_complete.csv"
+        df_name = f"{df_name}_{backend_name}.csv"
 
     else:
         raise ValueError(f"Unknown backend: {backend_name}")
@@ -208,7 +208,8 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     if backend != "complete":
         num_qubits = backend.configuration().num_qubits
     else:
-        num_qubits = 16
+        num_qubits = int(backend_name.split("_")[1])
+
     print(df_name)
     print(num_qubits)
     df = pd.DataFrame(
@@ -668,23 +669,44 @@ class FakeJSONBackend(ConfigurableFakeBackend):
 
 
 if __name__ == "__main__":
-    # open backends_2023.json
-
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
 
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
 
-    # random_experiment(backend_name="complete", nr_input_gates=350, nr_steps=20)
-    # random_experiment(backend_name="guadalupe", nr_input_gates=350, nr_steps=20)
-    # random_experiment(backend_name="mumbai", nr_input_gates=700, nr_steps=40)
-    # random_experiment(backend_name="ithaca", nr_input_gates=1800, nr_steps=100)
-    random_experiment(backend_name="brisbane", nr_input_gates=7200, nr_steps=400)
-    # random_experiment(backend_name="seattle", nr_input_gates=7200, nr_steps=400)
+    # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=20)
+    # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
+
+    # random_experiment(backend_name="nairobi", nr_input_gates=300, nr_steps=20)
+    # random_experiment(backend_name="complete_7", nr_input_gates=300, nr_steps=20)
+    #
+    # random_experiment(backend_name="guadalupe", nr_input_gates=400, nr_steps=20)
+    # random_experiment(backend_name="complete_16", nr_input_gates=400, nr_steps=20)
+
+    # random_experiment(backend_name="mumbai", nr_input_gates=800, nr_steps=40)
+    # random_experiment(backend_name="complete_27", nr_input_gates=800, nr_steps=40)
+
+    random_experiment(backend_name="ithaca", nr_input_gates=2000, nr_steps=100)
+    random_experiment(backend_name="complete_65", nr_input_gates=2000, nr_steps=100)
+
+    # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
+    # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
     # plot_experiment(name="random_quito")
-    # plot_experiment(name="random_ithaca")
-    # plot_experiment(name="random_complete")
+    # plot_experiment(name="random_complete_5")
+    #
+    # plot_experiment(name="random_nairobi")
+    # plot_experiment(name="random_complete_7")
+    #
     # plot_experiment(name="random_guadalupe")
+    # plot_experiment(name="random_complete_16")
+
     # plot_experiment(name="random_mumbai")
+    # plot_experiment(name="random_complete_27")
+
+    # plot_experiment(name="random_ithaca")
+    # plot_experiment(name="random_complete_65")
+    #
+    # plot_experiment(name="random_brisbane")
+    # plot_experiment(name="random_complete_127")
