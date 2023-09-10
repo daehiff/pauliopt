@@ -688,7 +688,7 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete_27", nr_input_gates=800, nr_steps=40)
 
     random_experiment(backend_name="ithaca", nr_input_gates=2000, nr_steps=100)
-    random_experiment(backend_name="complete_65", nr_input_gates=2000, nr_steps=100)
+    # random_experiment(backend_name="complete_65", nr_input_gates=2000, nr_steps=100)
 
     # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
     # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
