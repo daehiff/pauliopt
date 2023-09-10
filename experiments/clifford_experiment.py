@@ -195,6 +195,9 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     elif backend_name == "seattle":
         backend = FakeJSONBackend("ibm_seattle")
         df_name = f"{df_name}_seattle.csv"
+    elif backend_name == "brisbane":
+        backend = FakeJSONBackend("ibm_brisbane")
+        df_name = f"{df_name}_brisbane.csv"
     elif backend_name == "complete":
         backend = "complete"
         df_name = f"{df_name}_complete.csv"
@@ -676,11 +679,12 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete", nr_input_gates=350, nr_steps=20)
     # random_experiment(backend_name="guadalupe", nr_input_gates=350, nr_steps=20)
     # random_experiment(backend_name="mumbai", nr_input_gates=700, nr_steps=40)
-    random_experiment(backend_name="ithaca", nr_input_gates=1800, nr_steps=100)
-    #random_experiment(backend_name="seattle", nr_input_gates=7200, nr_steps=400)
+    # random_experiment(backend_name="ithaca", nr_input_gates=1800, nr_steps=100)
+    random_experiment(backend_name="brisbane", nr_input_gates=7200, nr_steps=400)
+    # random_experiment(backend_name="seattle", nr_input_gates=7200, nr_steps=400)
 
     # plot_experiment(name="random_quito")
-    #plot_experiment(name="random_ithaca")
+    # plot_experiment(name="random_ithaca")
     # plot_experiment(name="random_complete")
     # plot_experiment(name="random_guadalupe")
     # plot_experiment(name="random_mumbai")
