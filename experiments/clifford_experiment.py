@@ -418,7 +418,7 @@ def run_clifford_experiment(exp_number=0, backend_name="ibm_perth"):
     return pd.DataFrame(col, index=[0])
 
 
-def plot_experiment(name="random_guadalupe"):
+def plot_experiment(name="random_guadalupe", v_line_cx=None):
     plt.rcParams.update({
         "text.usetex": True,
         "font.family": "sans-serif",
@@ -427,7 +427,7 @@ def plot_experiment(name="random_guadalupe"):
     sns.set_palette(sns.color_palette("colorblind"))
 
     df = pd.read_csv(f"data/{name}.csv")
-    #
+
     sns.lineplot(df, x="n_gadgets", y="h", hue="method")
     plt.title("H-Gates")
     plt.xlabel("Number of input Gates")
@@ -446,6 +446,9 @@ def plot_experiment(name="random_guadalupe"):
     plt.title("CNOT-Gates")
     plt.xlabel("Number of input Gates")
     plt.ylabel("Number of CNOT-Gates")
+    # add a vertical line for v_line_cx if not none
+    if v_line_cx is not None:
+        plt.axhline(y=v_line_cx, color="black", linestyle="--")
     plt.savefig(f"data/{name}_cx.pdf")
     plt.show()
 
@@ -469,6 +472,9 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     cumult_counts_ours = {}
     cumult_counts_stim = {}
     num_qubits = 1
+
+    df_fid = pd.DataFrame(columns=["fid_our", "fid_ibm", "fid_stim",
+                                   "time_our", "time_ibm", "time_stim"])
     df = pd.DataFrame(
         columns=["method", "h", "s", "cx", "fid", "execution_time"])
     for i in range(0, 20):
@@ -531,6 +537,17 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
             "execution_time": result_stim.time_taken,
         }
         df.loc[len(df)] = column
+
+        column = {
+            "fid_our": fid_ours,
+            "fid_ibm": fid_ibm,
+            "fid_stim": fid_stim,
+            "time_our": result_ours.time_taken,
+            "time_ibm": result_ibm.time_taken,
+            "time_stim": result_stim.time_taken
+        }
+        df_fid.loc[len(df_fid)] = column
+
         for key, value in counts_ibm.items():
             if key in cumult_counts_ibm:
                 cumult_counts_ibm[key] += [value]
@@ -555,11 +572,20 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
         print(
             f"Mean execution time {name}: {df[df['method'] == name]['execution_time'].mean()}")
 
+    print("=====================================")
+    print("Correlation Matrix:")
+
     df_ = df[df["method"] == "ours"]
     correlation_matrix = df_[["h", "s", "cx", "fid"]].corr()
     print("Correlation Matrix CNOTs:")
     print(correlation_matrix)
     print(df.groupby("method").mean())
+
+    print("=====================================")
+    print("Individual Fidelities:")
+    print(df_fid)
+    print(df_fid.mean().T.to_latex())
+    print("=====================================")
 
     lables = []
     values = []
@@ -615,17 +641,6 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     plt.savefig("data/clifford_experiment_real_hardware/counts_clifford.pdf")
     plt.show()
 
-    counts_expected = {'0' * num_qubits: 16000}
-    averga_counts_ours = {key: np.mean(value) for key, value in
-                          cumult_counts_ours.items()}
-    averga_counts_ibm = {key: np.mean(value) for key, value in cumult_counts_ibm.items()}
-    averga_counts_stim = {key: np.mean(value) for key, value in
-                          cumult_counts_stim.items()}
-    print("Final fidelity:")
-    print("IBM:  ", hellinger_fidelity(counts_expected, averga_counts_ibm))
-    print("Stim: ", hellinger_fidelity(counts_expected, averga_counts_stim))
-    print("Ours: ", hellinger_fidelity(counts_expected, averga_counts_ours))
-
 
 def arch_data_output(backend_name):
     if backend_name == "vigo":
@@ -668,6 +683,24 @@ class FakeJSONBackend(ConfigurableFakeBackend):
                          )
 
 
+def estimate_routing_overhead(arch_name, n_qubits, conv_gadgets):
+    print(f"Estimating routing overhead for {arch_name} with {n_qubits} qubits")
+
+    for method in ["Bravyi et al. (qiskit)", "ours", "Ewout van den Berg (stim)"]:
+        df = pd.read_csv(f"data/random_complete_{n_qubits}.csv")
+        df_ = df[df["method"] == method]
+        df_ = df_[df_["n_gadgets"] > conv_gadgets]
+
+        best_cx_complete = np.mean(df_["cx"])
+
+        df = pd.read_csv(f"data/random_{arch_name}.csv")
+        df = df[df["method"] == method]
+        df = df[df["n_gadgets"] > 75]
+        best_cx_quito = np.mean(df["cx"])
+        print(
+            f"{method}: {100.0 * (best_cx_quito - best_cx_complete) / best_cx_quito:.2f} %")
+
+
 if __name__ == "__main__":
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
@@ -691,22 +724,60 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete_65", nr_input_gates=2000, nr_steps=100)
 
     # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
-    random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
+    # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
-    # plot_experiment(name="random_quito")
-    # plot_experiment(name="random_complete_5")
+    # df = pd.read_csv(f"data/random_complete_5.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 75]
+    # v_line = np.mean(df_["cx"])
     #
-    # plot_experiment(name="random_nairobi")
-    # plot_experiment(name="random_complete_7")
+    # plot_experiment(name="random_quito", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_5", v_line_cx=v_line)
     #
-    # plot_experiment(name="random_guadalupe")
-    # plot_experiment(name="random_complete_16")
+    #
+    # df = pd.read_csv(f"data/random_complete_7.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 110]
+    # v_line = np.mean(df_["cx"])
+    #
+    # plot_experiment(name="random_nairobi", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_7", v_line_cx=v_line)
+    #
+    # df = pd.read_csv(f"data/random_complete_16.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 250]
+    # v_line = np.mean(df_["cx"])
+    # #
+    # plot_experiment(name="random_guadalupe", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_16", v_line_cx=v_line)
+    #
+    # df = pd.read_csv(f"data/random_complete_27.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 500]
+    # v_line = np.mean(df_["cx"])
+    #
+    # plot_experiment(name="random_mumbai", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_27", v_line_cx=v_line)
+    #
+    # df = pd.read_csv(f"data/random_complete_65.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 1250]
+    # v_line = np.mean(df_["cx"])
+    #
+    # plot_experiment(name="random_ithaca", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_65", v_line_cx=v_line)
 
-    # plot_experiment(name="random_mumbai")
-    # plot_experiment(name="random_complete_27")
-
-    # plot_experiment(name="random_ithaca")
-    # plot_experiment(name="random_complete_65")
+    # df = pd.read_csv(f"data/random_complete_127.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 3000]
+    # v_line = np.mean(df_["cx"])
     #
-    # plot_experiment(name="random_brisbane")
-    # plot_experiment(name="random_complete_127")
+    # plot_experiment(name="random_brisbane", v_line_cx=v_line)
+    # plot_experiment(name="random_complete_127", v_line_cx=v_line)
+
+    estimate_routing_overhead("quito", 5, 75)
+    estimate_routing_overhead("nairobi", 7, 110)
+    estimate_routing_overhead("guadalupe", 16, 250)
+    estimate_routing_overhead("mumbai", 27, 500)
+    estimate_routing_overhead("ithaca", 65, 1250)
+    estimate_routing_overhead("brisbane", 127, 3000)

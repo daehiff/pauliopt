@@ -354,18 +354,14 @@ def pp_decomposition():
 
 
 def test_clifford_1000():
-    ct = CliffordTableau(2)
+    circ = random_hscx_circuit(100, 4)
+
+    topo = Topology.line(circ.num_qubits)
+
+    ct = CliffordTableau.from_circuit(circ)
 
 
-    ct.append_h(0)
-    ct.append_cnot(0, 1)
-
-
-    #ct.append_h(0)
-    #ct.append_h(1)
-    #ct.append_cnot(1, 0)
-
-    ct.print_zx()
+    ct.to_cifford_circuit_arch_aware(topo)
 
 
 

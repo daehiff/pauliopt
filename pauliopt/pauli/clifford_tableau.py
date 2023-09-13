@@ -203,14 +203,17 @@ def steiner_reduce_column(pivot, sub_graph, remaining,
                               apply, swappable_nodes, permutation, include_swaps)
 
     # ensure that the pivots are in ZX basis
-    if remaining.z_out(pivot, pivot) == 3:
-        apply("S", (pivot,))
 
-    if remaining.z_out(pivot, pivot) != 2:
-        apply("H", (pivot,))
-
-    if remaining.x_out(pivot, pivot) != 1:
-        apply("S", (pivot,))
+    assert remaining.x_out(pivot, pivot) == 1
+    assert remaining.z_out(pivot, pivot) == 2
+    # if remaining.z_out(pivot, pivot) == 3:
+    #     apply("S", (pivot,))
+    #
+    # if remaining.z_out(pivot, pivot) != 2:
+    #     apply("H", (pivot,))
+    #
+    # if remaining.x_out(pivot, pivot) != 1:
+    #     apply("S", (pivot,))
 
 
 class CliffordTableau:
@@ -599,6 +602,7 @@ class CliffordTableau:
             if remaining.signs[col] != 0:
                 apply("S", (col,))
                 apply("S", (col,))
+
         permutation = [permutation[i] for i in range(self.n_qubits)]
         return qc, permutation
 
