@@ -3931,3 +3931,1102 @@ Set the `method` kwarg to remove this warning.
 /home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
 Set the `method` kwarg to remove this warning.
   traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11294), ('h', 5870), ('s', 3960)]) Time:  201.56696224212646
+Qiskit:  OrderedDict([('h', 2573), ('cx', 2532), ('s', 2494)]) Time:  0.574211835861206
+Qiskit Tableau:  OrderedDict([('cx', 8545), ('h', 3889), ('s', 3868)]) Time:  78.61670660972595
+Qiskit Tableau:  OrderedDict([('cx', 12202), ('h', 6264), ('s', 4331)]) Time:  4.5035529136657715
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11419), ('h', 5903), ('s', 4040)]) Time:  222.27661323547363
+Qiskit:  OrderedDict([('h', 2569), ('cx', 2562), ('s', 2466)]) Time:  0.33945560455322266
+Qiskit Tableau:  OrderedDict([('cx', 8577), ('h', 3980), ('s', 3882)]) Time:  72.78660726547241
+Qiskit Tableau:  OrderedDict([('cx', 12127), ('h', 6151), ('s', 4264)]) Time:  5.17251443862915
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11352), ('h', 5781), ('s', 4078)]) Time:  189.72269415855408
+Qiskit:  OrderedDict([('h', 2570), ('cx', 2549), ('s', 2472)]) Time:  0.2870337963104248
+Qiskit Tableau:  OrderedDict([('cx', 8528), ('h', 3971), ('s', 3820)]) Time:  74.15725421905518
+Qiskit Tableau:  OrderedDict([('cx', 12193), ('h', 6130), ('s', 4302)]) Time:  4.630430221557617
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11454), ('h', 5877), ('s', 4001)]) Time:  202.7828950881958
+Qiskit:  OrderedDict([('h', 2567), ('s', 2520), ('cx', 2510)]) Time:  0.3431370258331299
+Qiskit Tableau:  OrderedDict([('cx', 8510), ('h', 3965), ('s', 3878)]) Time:  81.70190477371216
+Qiskit Tableau:  OrderedDict([('cx', 12144), ('h', 6186), ('s', 4201)]) Time:  6.257857084274292
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11439), ('h', 5951), ('s', 4006)]) Time:  144.353280544281
+Qiskit:  OrderedDict([('h', 2566), ('s', 2537), ('cx', 2494)]) Time:  0.38587093353271484
+Qiskit Tableau:  OrderedDict([('cx', 8601), ('h', 4017), ('s', 3799)]) Time:  79.73823976516724
+Qiskit Tableau:  OrderedDict([('cx', 12196), ('h', 6224), ('s', 4462)]) Time:  5.356291055679321
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11374), ('h', 5836), ('s', 3975)]) Time:  195.6631989479065
+Qiskit:  OrderedDict([('s', 2550), ('cx', 2531), ('h', 2516)]) Time:  0.3431577682495117
+Qiskit Tableau:  OrderedDict([('cx', 8565), ('h', 3978), ('s', 3855)]) Time:  77.4533531665802
+Qiskit Tableau:  OrderedDict([('cx', 12148), ('h', 6221), ('s', 4311)]) Time:  5.835800647735596
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11432), ('h', 5813), ('s', 3898)]) Time:  160.19614839553833
+Qiskit:  OrderedDict([('s', 2560), ('h', 2550), ('cx', 2487)]) Time:  0.28951096534729004
+Qiskit Tableau:  OrderedDict([('cx', 8575), ('h', 3944), ('s', 3805)]) Time:  68.35123085975647
+Qiskit Tableau:  OrderedDict([('cx', 12214), ('h', 6233), ('s', 4352)]) Time:  3.1212351322174072
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11417), ('h', 5873), ('s', 4035)]) Time:  125.6718077659607
+Qiskit:  OrderedDict([('cx', 2550), ('h', 2540), ('s', 2509)]) Time:  0.3463101387023926
+Qiskit Tableau:  OrderedDict([('cx', 8573), ('h', 3798), ('s', 3753)]) Time:  78.36115264892578
+Qiskit Tableau:  OrderedDict([('cx', 12110), ('h', 6137), ('s', 4257)]) Time:  3.0832669734954834
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11395), ('h', 5830), ('s', 4033)]) Time:  203.19125747680664
+Qiskit:  OrderedDict([('s', 2568), ('cx', 2529), ('h', 2504)]) Time:  0.24901366233825684
+Qiskit Tableau:  OrderedDict([('cx', 8566), ('h', 3928), ('s', 3923)]) Time:  89.26807379722595
+Qiskit Tableau:  OrderedDict([('cx', 12192), ('h', 6189), ('s', 4301)]) Time:  4.61283278465271
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11420), ('h', 5825), ('s', 3983)]) Time:  179.04884958267212
+Qiskit:  OrderedDict([('cx', 2578), ('h', 2566), ('s', 2455)]) Time:  0.5062150955200195
+Qiskit Tableau:  OrderedDict([('cx', 8559), ('h', 3972), ('s', 3874)]) Time:  100.22326493263245
+Qiskit Tableau:  OrderedDict([('cx', 12218), ('h', 6247), ('s', 4296)]) Time:  5.308088302612305
+8001
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11394), ('h', 5860), ('s', 3981)]) Time:  203.8914897441864
+Qiskit:  OrderedDict([('cx', 2744), ('h', 2666), ('s', 2589)]) Time:  0.299541711807251
+Qiskit Tableau:  OrderedDict([('cx', 8573), ('h', 4013), ('s', 3885)]) Time:  83.59900712966919
+Qiskit Tableau:  OrderedDict([('cx', 12149), ('h', 6126), ('s', 4270)]) Time:  5.723381519317627
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11443), ('h', 5911), ('s', 3958)]) Time:  234.64697670936584
+Qiskit:  OrderedDict([('s', 2687), ('cx', 2683), ('h', 2627)]) Time:  0.36003780364990234
+Qiskit Tableau:  OrderedDict([('cx', 8572), ('h', 3948), ('s', 3856)]) Time:  98.65839624404907
+Qiskit Tableau:  OrderedDict([('cx', 12156), ('h', 6038), ('s', 4308)]) Time:  3.1052966117858887
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11381), ('h', 5860), ('s', 3960)]) Time:  220.99644374847412
+Qiskit:  OrderedDict([('s', 2701), ('cx', 2699), ('h', 2597)]) Time:  0.35831522941589355
+Qiskit Tableau:  OrderedDict([('cx', 8554), ('h', 4019), ('s', 3936)]) Time:  76.14665818214417
+Qiskit Tableau:  OrderedDict([('cx', 12151), ('h', 6100), ('s', 4185)]) Time:  3.476827621459961
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11429), ('h', 5767), ('s', 4069)]) Time:  164.78966641426086
+Qiskit:  OrderedDict([('h', 2680), ('cx', 2672), ('s', 2647)]) Time:  0.3001692295074463
+Qiskit Tableau:  OrderedDict([('cx', 8573), ('h', 3983), ('s', 3925)]) Time:  78.80292510986328
+Qiskit Tableau:  OrderedDict([('cx', 12092), ('h', 6114), ('s', 4246)]) Time:  3.2201907634735107
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11465), ('h', 5844), ('s', 3916)]) Time:  132.05985307693481
+Qiskit:  OrderedDict([('s', 2714), ('cx', 2643), ('h', 2642)]) Time:  0.3702707290649414
+Qiskit Tableau:  OrderedDict([('cx', 8551), ('h', 3933), ('s', 3843)]) Time:  82.32491850852966
+Qiskit Tableau:  OrderedDict([('cx', 12080), ('h', 6130), ('s', 4325)]) Time:  3.113898992538452
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11396), ('h', 5867), ('s', 3963)]) Time:  231.63791584968567
+Qiskit:  OrderedDict([('h', 2699), ('s', 2664), ('cx', 2634)]) Time:  0.583484411239624
+Qiskit Tableau:  OrderedDict([('cx', 8562), ('h', 3982), ('s', 3857)]) Time:  112.45040130615234
+Qiskit Tableau:  OrderedDict([('cx', 12186), ('h', 6153), ('s', 4285)]) Time:  6.5574870109558105
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11333), ('h', 5851), ('s', 3996)]) Time:  136.64003086090088
+Qiskit:  OrderedDict([('cx', 2708), ('h', 2647), ('s', 2640)]) Time:  0.30055975914001465
+Qiskit Tableau:  OrderedDict([('cx', 8542), ('h', 3900), ('s', 3824)]) Time:  68.13896346092224
+Qiskit Tableau:  OrderedDict([('cx', 12206), ('h', 6262), ('s', 4355)]) Time:  3.803995132446289
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11366), ('h', 5772), ('s', 3940)]) Time:  173.18215584754944
+Qiskit:  OrderedDict([('s', 2711), ('h', 2674), ('cx', 2614)]) Time:  0.35535311698913574
+Qiskit Tableau:  OrderedDict([('cx', 8544), ('h', 3966), ('s', 3754)]) Time:  91.49995064735413
+Qiskit Tableau:  OrderedDict([('cx', 12250), ('h', 6201), ('s', 4306)]) Time:  4.065838813781738
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11327), ('h', 5735), ('s', 3949)]) Time:  144.47749304771423
+Qiskit:  OrderedDict([('cx', 2669), ('s', 2664), ('h', 2662)]) Time:  0.3615090847015381
+Qiskit Tableau:  OrderedDict([('cx', 8563), ('s', 3968), ('h', 3932)]) Time:  71.64964365959167
+Qiskit Tableau:  OrderedDict([('cx', 12087), ('h', 6272), ('s', 4336)]) Time:  3.1255240440368652
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11516), ('h', 5939), ('s', 3941)]) Time:  149.8957803249359
+Qiskit:  OrderedDict([('s', 2684), ('cx', 2679), ('h', 2634)]) Time:  0.29928088188171387
+Qiskit Tableau:  OrderedDict([('cx', 8514), ('h', 3934), ('s', 3763)]) Time:  74.47471904754639
+Qiskit Tableau:  OrderedDict([('cx', 12136), ('h', 6169), ('s', 4218)]) Time:  3.0480973720550537
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11358), ('h', 5796), ('s', 3934)]) Time:  180.68647146224976
+Qiskit:  OrderedDict([('s', 2758), ('h', 2624), ('cx', 2617)]) Time:  0.35602331161499023
+Qiskit Tableau:  OrderedDict([('cx', 8565), ('h', 3992), ('s', 3737)]) Time:  91.07231402397156
+Qiskit Tableau:  OrderedDict([('cx', 12149), ('h', 6258), ('s', 4327)]) Time:  4.600242853164673
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11452), ('h', 5748), ('s', 3938)]) Time:  161.87852239608765
+Qiskit:  OrderedDict([('s', 2709), ('h', 2690), ('cx', 2600)]) Time:  0.2980470657348633
+Qiskit Tableau:  OrderedDict([('cx', 8532), ('h', 4017), ('s', 3818)]) Time:  75.79886388778687
+Qiskit Tableau:  OrderedDict([('cx', 12135), ('h', 6178), ('s', 4307)]) Time:  5.14780592918396
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11456), ('h', 5827), ('s', 4005)]) Time:  177.78858613967896
+Qiskit:  OrderedDict([('s', 2681), ('cx', 2662), ('h', 2652)]) Time:  0.35677099227905273
+Qiskit Tableau:  OrderedDict([('cx', 8582), ('h', 3934), ('s', 3768)]) Time:  76.05823564529419
+Qiskit Tableau:  OrderedDict([('cx', 12107), ('h', 6219), ('s', 4309)]) Time:  4.525476694107056
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11394), ('h', 5934), ('s', 4005)]) Time:  239.96946120262146
+Qiskit:  OrderedDict([('s', 2688), ('cx', 2679), ('h', 2628)]) Time:  0.35601258277893066
+Qiskit Tableau:  OrderedDict([('cx', 8614), ('h', 3980), ('s', 3947)]) Time:  74.90096044540405
+Qiskit Tableau:  OrderedDict([('cx', 12138), ('h', 6176), ('s', 4317)]) Time:  5.759479999542236
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11455), ('h', 5972), ('s', 3994)]) Time:  204.43070101737976
+Qiskit:  OrderedDict([('s', 2807), ('cx', 2629), ('h', 2559)]) Time:  0.36073803901672363
+Qiskit Tableau:  OrderedDict([('cx', 8555), ('h', 3942), ('s', 3824)]) Time:  81.26899290084839
+Qiskit Tableau:  OrderedDict([('cx', 12148), ('h', 6193), ('s', 4405)]) Time:  4.278316497802734
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11373), ('h', 5954), ('s', 3922)]) Time:  186.04301238059998
+Qiskit:  OrderedDict([('h', 2713), ('s', 2657), ('cx', 2627)]) Time:  0.6001443862915039
+Qiskit Tableau:  OrderedDict([('cx', 8598), ('h', 4007), ('s', 3760)]) Time:  96.05850338935852
+Qiskit Tableau:  OrderedDict([('cx', 12074), ('h', 6125), ('s', 4325)]) Time:  5.2393999099731445
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11434), ('h', 5745), ('s', 4000)]) Time:  211.90971040725708
+Qiskit:  OrderedDict([('h', 2710), ('s', 2676), ('cx', 2609)]) Time:  0.528820276260376
+Qiskit Tableau:  OrderedDict([('cx', 8553), ('h', 3915), ('s', 3813)]) Time:  85.82516503334045
+Qiskit Tableau:  OrderedDict([('cx', 12211), ('h', 6280), ('s', 4329)]) Time:  3.7967164516448975
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11426), ('h', 5773), ('s', 3949)]) Time:  170.86511182785034
+Qiskit:  OrderedDict([('s', 2699), ('h', 2669), ('cx', 2629)]) Time:  0.3591632843017578
+Qiskit Tableau:  OrderedDict([('cx', 8541), ('h', 3985), ('s', 3753)]) Time:  74.98960208892822
+Qiskit Tableau:  OrderedDict([('cx', 12109), ('h', 6258), ('s', 4355)]) Time:  3.1182427406311035
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11379), ('h', 5822), ('s', 3983)]) Time:  163.3969612121582
+Qiskit:  OrderedDict([('s', 2733), ('h', 2700), ('cx', 2566)]) Time:  0.3583657741546631
+Qiskit Tableau:  OrderedDict([('cx', 8530), ('h', 3982), ('s', 3855)]) Time:  70.74156332015991
+Qiskit Tableau:  OrderedDict([('cx', 12210), ('h', 6179), ('s', 4436)]) Time:  5.352530241012573
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11391), ('h', 5809), ('s', 3974)]) Time:  226.00844621658325
+Qiskit:  OrderedDict([('h', 2712), ('s', 2651), ('cx', 2636)]) Time:  0.29866552352905273
+Qiskit Tableau:  OrderedDict([('cx', 8551), ('h', 3977), ('s', 3923)]) Time:  80.58148145675659
+Qiskit Tableau:  OrderedDict([('cx', 12151), ('h', 6056), ('s', 4318)]) Time:  5.649903774261475
+8401
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11360), ('h', 5839), ('s', 4034)]) Time:  161.57781314849854
+Qiskit:  OrderedDict([('s', 2827), ('h', 2792), ('cx', 2780)]) Time:  0.5538711547851562
+Qiskit Tableau:  OrderedDict([('cx', 8552), ('h', 3950), ('s', 3769)]) Time:  72.75902724266052
+Qiskit Tableau:  OrderedDict([('cx', 12152), ('h', 6189), ('s', 4378)]) Time:  3.8248324394226074
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11449), ('h', 5764), ('s', 4111)]) Time:  167.3805811405182
+Qiskit:  OrderedDict([('h', 2813), ('s', 2802), ('cx', 2782)]) Time:  0.3760945796966553
+Qiskit Tableau:  OrderedDict([('cx', 8592), ('h', 3974), ('s', 3806)]) Time:  76.85913634300232
+Qiskit Tableau:  OrderedDict([('cx', 12143), ('h', 6247), ('s', 4382)]) Time:  6.155029773712158
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11437), ('h', 5900), ('s', 4017)]) Time:  229.068293094635
+Qiskit:  OrderedDict([('h', 2849), ('cx', 2777), ('s', 2773)]) Time:  0.3711559772491455
+Qiskit Tableau:  OrderedDict([('cx', 8515), ('h', 3983), ('s', 3889)]) Time:  84.16203427314758
+Qiskit Tableau:  OrderedDict([('cx', 12116), ('h', 6205), ('s', 4268)]) Time:  3.896902322769165
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11418), ('h', 5790), ('s', 3898)]) Time:  164.24860191345215
+Qiskit:  OrderedDict([('s', 2864), ('cx', 2791), ('h', 2738)]) Time:  0.38138365745544434
+Qiskit Tableau:  OrderedDict([('cx', 8523), ('h', 4024), ('s', 3906)]) Time:  96.00356721878052
+Qiskit Tableau:  OrderedDict([('cx', 12217), ('h', 6228), ('s', 4276)]) Time:  4.931583881378174
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11462), ('h', 5829), ('s', 3914)]) Time:  218.12941646575928
+Qiskit:  OrderedDict([('h', 2841), ('cx', 2794), ('s', 2764)]) Time:  0.3742244243621826
+Qiskit Tableau:  OrderedDict([('cx', 8562), ('h', 3957), ('s', 3845)]) Time:  97.00969934463501
+Qiskit Tableau:  OrderedDict([('cx', 12300), ('h', 6337), ('s', 4303)]) Time:  3.946298122406006
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11467), ('h', 5844), ('s', 4041)]) Time:  162.68975973129272
+Qiskit:  OrderedDict([('h', 2905), ('s', 2802), ('cx', 2690)]) Time:  0.31753039360046387
+Qiskit Tableau:  OrderedDict([('cx', 8561), ('h', 3974), ('s', 3899)]) Time:  87.07161211967468
+Qiskit Tableau:  OrderedDict([('cx', 12207), ('h', 6178), ('s', 4354)]) Time:  4.856763601303101
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11435), ('h', 5785), ('s', 4031)]) Time:  213.41109228134155
+Qiskit:  OrderedDict([('h', 2804), ('s', 2803), ('cx', 2786)]) Time:  0.5570461750030518
+Qiskit Tableau:  OrderedDict([('cx', 8572), ('h', 3877), ('s', 3784)]) Time:  97.215017080307
+Qiskit Tableau:  OrderedDict([('cx', 12093), ('h', 6084), ('s', 4168)]) Time:  5.751604080200195
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11443), ('h', 5929), ('s', 4063)]) Time:  164.0868899822235
+Qiskit:  OrderedDict([('s', 2871), ('h', 2804), ('cx', 2724)]) Time:  0.6190164089202881
+Qiskit Tableau:  OrderedDict([('cx', 8545), ('h', 3957), ('s', 3775)]) Time:  79.36942720413208
+Qiskit Tableau:  OrderedDict([('cx', 12188), ('h', 6263), ('s', 4314)]) Time:  6.334983825683594
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11423), ('h', 5793), ('s', 3887)]) Time:  199.51180744171143
+Qiskit:  OrderedDict([('cx', 2840), ('h', 2821), ('s', 2738)]) Time:  0.4151177406311035
+Qiskit Tableau:  OrderedDict([('cx', 8537), ('h', 3947), ('s', 3811)]) Time:  78.83343863487244
+Qiskit Tableau:  OrderedDict([('cx', 12070), ('h', 6165), ('s', 4294)]) Time:  6.306743383407593
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11450), ('h', 5828), ('s', 3977)]) Time:  194.66712498664856
+Qiskit:  OrderedDict([('h', 2837), ('cx', 2779), ('s', 2777)]) Time:  0.31882238388061523
+Qiskit Tableau:  OrderedDict([('cx', 8617), ('h', 3989), ('s', 3833)]) Time:  74.0443549156189
+Qiskit Tableau:  OrderedDict([('cx', 12112), ('h', 6163), ('s', 4306)]) Time:  5.10180926322937
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11421), ('h', 5735), ('s', 3929)]) Time:  261.2342035770416
+Qiskit:  OrderedDict([('s', 2834), ('cx', 2804), ('h', 2759)]) Time:  0.5566802024841309
+Qiskit Tableau:  OrderedDict([('cx', 8480), ('s', 3969), ('h', 3922)]) Time:  109.17918801307678
+Qiskit Tableau:  OrderedDict([('cx', 12290), ('h', 6280), ('s', 4403)]) Time:  4.844092130661011
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11420), ('h', 5844), ('s', 4036)]) Time:  186.8295841217041
+Qiskit:  OrderedDict([('cx', 2816), ('s', 2801), ('h', 2774)]) Time:  0.31412339210510254
+Qiskit Tableau:  OrderedDict([('cx', 8566), ('h', 4013), ('s', 3894)]) Time:  88.11591386795044
+Qiskit Tableau:  OrderedDict([('cx', 12219), ('h', 6218), ('s', 4367)]) Time:  5.837332725524902
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11398), ('h', 5809), ('s', 4036)]) Time:  185.760098695755
+Qiskit:  OrderedDict([('cx', 2843), ('s', 2835), ('h', 2723)]) Time:  0.2727501392364502
+Qiskit Tableau:  OrderedDict([('cx', 8515), ('h', 4052), ('s', 3816)]) Time:  78.31488513946533
+Qiskit Tableau:  OrderedDict([('cx', 12163), ('h', 6169), ('s', 4149)]) Time:  6.577798128128052
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11418), ('h', 5838), ('s', 4048)]) Time:  203.3952934741974
+Qiskit:  OrderedDict([('cx', 2842), ('s', 2810), ('h', 2747)]) Time:  0.6356048583984375
+Qiskit Tableau:  OrderedDict([('cx', 8544), ('h', 3995), ('s', 3821)]) Time:  78.59033632278442
+Qiskit Tableau:  OrderedDict([('cx', 12184), ('h', 6149), ('s', 4212)]) Time:  4.643331527709961
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11455), ('h', 5892), ('s', 3907)]) Time:  187.14553260803223
+Qiskit:  OrderedDict([('cx', 2844), ('h', 2782), ('s', 2769)]) Time:  0.6255431175231934
+Qiskit Tableau:  OrderedDict([('cx', 8541), ('h', 3965), ('s', 3886)]) Time:  111.60302543640137
+Qiskit Tableau:  OrderedDict([('cx', 12188), ('h', 6248), ('s', 4304)]) Time:  3.601925849914551
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11437), ('h', 5895), ('s', 4010)]) Time:  157.4257528781891
+Qiskit:  OrderedDict([('s', 2879), ('cx', 2775), ('h', 2739)]) Time:  0.31795191764831543
+Qiskit Tableau:  OrderedDict([('cx', 8520), ('h', 3962), ('s', 3904)]) Time:  78.59222412109375
+Qiskit Tableau:  OrderedDict([('cx', 12202), ('h', 6159), ('s', 4302)]) Time:  6.53392219543457
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11494), ('h', 5930), ('s', 3928)]) Time:  153.9461476802826
+Qiskit:  OrderedDict([('s', 2850), ('cx', 2807), ('h', 2736)]) Time:  0.3175945281982422
+Qiskit Tableau:  OrderedDict([('cx', 8556), ('h', 4000), ('s', 3819)]) Time:  73.11392021179199
+Qiskit Tableau:  OrderedDict([('cx', 12110), ('h', 6183), ('s', 4210)]) Time:  3.146289825439453
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11382), ('h', 5807), ('s', 4002)]) Time:  211.25980520248413
+Qiskit:  OrderedDict([('h', 2834), ('s', 2820), ('cx', 2747)]) Time:  0.3306269645690918
+Qiskit Tableau:  OrderedDict([('cx', 8556), ('h', 4006), ('s', 3923)]) Time:  88.70161986351013
+Qiskit Tableau:  OrderedDict([('cx', 12075), ('h', 6158), ('s', 4428)]) Time:  4.043396234512329
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11315), ('h', 5788), ('s', 3878)]) Time:  186.57765173912048
+Qiskit:  OrderedDict([('s', 2874), ('cx', 2831), ('h', 2690)]) Time:  0.37209653854370117
+Qiskit Tableau:  OrderedDict([('cx', 8598), ('h', 3904), ('s', 3869)]) Time:  80.92032098770142
+Qiskit Tableau:  OrderedDict([('cx', 12174), ('h', 6264), ('s', 4358)]) Time:  5.868727922439575
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11309), ('h', 5667), ('s', 3975)]) Time:  127.88022375106812
+Qiskit:  OrderedDict([('h', 2803), ('cx', 2800), ('s', 2792)]) Time:  0.3144705295562744
+Qiskit Tableau:  OrderedDict([('cx', 8580), ('h', 3981), ('s', 3819)]) Time:  72.90272450447083
+Qiskit Tableau:  OrderedDict([('cx', 12192), ('h', 6241), ('s', 4404)]) Time:  5.081717014312744
+8801
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11388), ('h', 5803), ('s', 3829)]) Time:  220.81410670280457
+Qiskit:  OrderedDict([('h', 2961), ('s', 2938), ('cx', 2900)]) Time:  0.32761716842651367
+Qiskit Tableau:  OrderedDict([('cx', 8535), ('h', 3976), ('s', 3830)]) Time:  70.52434301376343
+Qiskit Tableau:  OrderedDict([('cx', 12180), ('h', 6306), ('s', 4354)]) Time:  3.1724185943603516
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11364), ('h', 5661), ('s', 3958)]) Time:  181.4182071685791
+Qiskit:  OrderedDict([('cx', 2991), ('s', 2972), ('h', 2832)]) Time:  0.3852205276489258
+Qiskit Tableau:  OrderedDict([('cx', 8541), ('s', 3902), ('h', 3866)]) Time:  101.1950249671936
+Qiskit Tableau:  OrderedDict([('cx', 12189), ('h', 6148), ('s', 4343)]) Time:  4.237462282180786
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11406), ('h', 5787), ('s', 3996)]) Time:  167.82163333892822
+Qiskit:  OrderedDict([('s', 3003), ('h', 2923), ('cx', 2869)]) Time:  0.32869696617126465
+Qiskit Tableau:  OrderedDict([('cx', 8563), ('h', 3969), ('s', 3841)]) Time:  78.64622139930725
+Qiskit Tableau:  OrderedDict([('cx', 12132), ('h', 6165), ('s', 4330)]) Time:  5.4662230014801025
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11382), ('h', 5848), ('s', 4010)]) Time:  262.26568126678467
+Qiskit:  OrderedDict([('s', 2992), ('h', 2926), ('cx', 2881)]) Time:  0.6546761989593506
+Qiskit Tableau:  OrderedDict([('cx', 8597), ('h', 4057), ('s', 3857)]) Time:  94.05358052253723
+Qiskit Tableau:  OrderedDict([('cx', 12181), ('h', 6187), ('s', 4334)]) Time:  3.1097569465637207
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11387), ('h', 5705), ('s', 4017)]) Time:  175.8505825996399
+Qiskit:  OrderedDict([('cx', 2952), ('s', 2933), ('h', 2910)]) Time:  0.32945704460144043
+Qiskit Tableau:  OrderedDict([('cx', 8578), ('h', 4026), ('s', 3880)]) Time:  73.43918466567993
+Qiskit Tableau:  OrderedDict([('cx', 12176), ('h', 6185), ('s', 4264)]) Time:  6.71357536315918
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11420), ('h', 5822), ('s', 3982)]) Time:  190.40316438674927
+Qiskit:  OrderedDict([('cx', 3017), ('h', 2896), ('s', 2880)]) Time:  0.6468262672424316
+Qiskit Tableau:  OrderedDict([('cx', 8597), ('h', 3939), ('s', 3855)]) Time:  79.44159770011902
+Qiskit Tableau:  OrderedDict([('cx', 12044), ('h', 6187), ('s', 4239)]) Time:  4.216642141342163
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11426), ('h', 5795), ('s', 3977)]) Time:  213.7721815109253
+Qiskit:  OrderedDict([('cx', 3019), ('s', 2909), ('h', 2867)]) Time:  0.39204955101013184
+Qiskit Tableau:  OrderedDict([('cx', 8526), ('h', 3953), ('s', 3844)]) Time:  75.51162767410278
+Qiskit Tableau:  OrderedDict([('cx', 12220), ('h', 6253), ('s', 4360)]) Time:  4.928413152694702
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11399), ('h', 5820), ('s', 3929)]) Time:  162.6537811756134
+Qiskit:  OrderedDict([('cx', 2979), ('s', 2907), ('h', 2905)]) Time:  0.32938551902770996
+Qiskit Tableau:  OrderedDict([('cx', 8571), ('h', 4050), ('s', 3816)]) Time:  78.60040950775146
+Qiskit Tableau:  OrderedDict([('cx', 12217), ('h', 6168), ('s', 4254)]) Time:  4.273342132568359
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11395), ('h', 5767), ('s', 4075)]) Time:  248.4517171382904
+Qiskit:  OrderedDict([('s', 3005), ('h', 2915), ('cx', 2873)]) Time:  0.6566002368927002
+Qiskit Tableau:  OrderedDict([('cx', 8573), ('h', 3902), ('s', 3844)]) Time:  87.25212359428406
+Qiskit Tableau:  OrderedDict([('cx', 12160), ('h', 6148), ('s', 4223)]) Time:  5.731749534606934
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11295), ('h', 5837), ('s', 3993)]) Time:  235.08055996894836
+Qiskit:  OrderedDict([('cx', 2981), ('h', 2934), ('s', 2880)]) Time:  0.33045315742492676
+Qiskit Tableau:  OrderedDict([('cx', 8549), ('h', 3946), ('s', 3766)]) Time:  80.46229696273804
+Qiskit Tableau:  OrderedDict([('cx', 12076), ('h', 6131), ('s', 4345)]) Time:  4.567055702209473
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11362), ('h', 5774), ('s', 3947)]) Time:  213.54306817054749
+Qiskit:  OrderedDict([('s', 2949), ('h', 2930), ('cx', 2916)]) Time:  0.5790164470672607
+Qiskit Tableau:  OrderedDict([('cx', 8530), ('s', 3919), ('h', 3909)]) Time:  105.82654857635498
+Qiskit Tableau:  OrderedDict([('cx', 12097), ('h', 6216), ('s', 4298)]) Time:  5.021873712539673
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11382), ('h', 5790), ('s', 3960)]) Time:  171.31403970718384
+Qiskit:  OrderedDict([('cx', 2989), ('h', 2944), ('s', 2864)]) Time:  0.5873785018920898
+Qiskit Tableau:  OrderedDict([('cx', 8570), ('h', 4015), ('s', 3859)]) Time:  76.33893752098083
+Qiskit Tableau:  OrderedDict([('cx', 12188), ('h', 6205), ('s', 4298)]) Time:  5.419047117233276
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11524), ('h', 5839), ('s', 3947)]) Time:  181.70248293876648
+Qiskit:  OrderedDict([('s', 2935), ('cx', 2933), ('h', 2929)]) Time:  0.3290553092956543
+Qiskit Tableau:  OrderedDict([('cx', 8548), ('h', 3999), ('s', 3928)]) Time:  73.79577469825745
+Qiskit Tableau:  OrderedDict([('cx', 12200), ('h', 6149), ('s', 4284)]) Time:  4.255802154541016
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11519), ('h', 5914), ('s', 4065)]) Time:  188.1941397190094
+Qiskit:  OrderedDict([('h', 2987), ('s', 2911), ('cx', 2899)]) Time:  0.39008402824401855
+Qiskit Tableau:  OrderedDict([('cx', 8538), ('h', 3956), ('s', 3829)]) Time:  81.65265846252441
+Qiskit Tableau:  OrderedDict([('cx', 12083), ('h', 6158), ('s', 4329)]) Time:  4.267529726028442
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11416), ('h', 5902), ('s', 4014)]) Time:  198.9128201007843
+Qiskit:  OrderedDict([('cx', 3019), ('s', 2986), ('h', 2790)]) Time:  0.33022618293762207
+Qiskit Tableau:  OrderedDict([('cx', 8583), ('h', 3999), ('s', 3854)]) Time:  75.85310649871826
+Qiskit Tableau:  OrderedDict([('cx', 12229), ('h', 6203), ('s', 4417)]) Time:  4.460617780685425
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11404), ('h', 5783), ('s', 4009)]) Time:  156.51290106773376
+Qiskit:  OrderedDict([('h', 2948), ('s', 2941), ('cx', 2906)]) Time:  0.38783860206604004
+Qiskit Tableau:  OrderedDict([('cx', 8566), ('h', 3980), ('s', 3880)]) Time:  90.98621559143066
+Qiskit Tableau:  OrderedDict([('cx', 12139), ('h', 6117), ('s', 4317)]) Time:  3.5911855697631836
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11417), ('h', 5760), ('s', 3976)]) Time:  143.44772744178772
+Qiskit:  OrderedDict([('h', 2997), ('s', 2909), ('cx', 2895)]) Time:  0.3453712463378906
+Qiskit Tableau:  OrderedDict([('cx', 8520), ('h', 4031), ('s', 3741)]) Time:  78.94151663780212
+Qiskit Tableau:  OrderedDict([('cx', 12121), ('h', 6235), ('s', 4311)]) Time:  5.349201440811157
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11458), ('h', 5848), ('s', 3973)]) Time:  161.46606993675232
+Qiskit:  OrderedDict([('cx', 2952), ('s', 2950), ('h', 2891)]) Time:  0.3898344039916992
+Qiskit Tableau:  OrderedDict([('cx', 8577), ('h', 4007), ('s', 3847)]) Time:  98.5297589302063
+Qiskit Tableau:  OrderedDict([('cx', 12216), ('h', 6268), ('s', 4366)]) Time:  5.417805433273315
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11414), ('h', 5825), ('s', 3961)]) Time:  184.93593764305115
+Qiskit:  OrderedDict([('cx', 2946), ('h', 2933), ('s', 2916)]) Time:  0.3306396007537842
+Qiskit Tableau:  OrderedDict([('cx', 8552), ('h', 4041), ('s', 3808)]) Time:  78.67341089248657
+Qiskit Tableau:  OrderedDict([('cx', 12238), ('h', 6196), ('s', 4352)]) Time:  6.6183717250823975
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11428), ('h', 5967), ('s', 4080)]) Time:  195.3291473388672
+Qiskit:  OrderedDict([('s', 2954), ('h', 2943), ('cx', 2904)]) Time:  0.2830166816711426
+Qiskit Tableau:  OrderedDict([('cx', 8562), ('h', 3978), ('s', 3944)]) Time:  74.38401389122009
+Qiskit Tableau:  OrderedDict([('cx', 12256), ('h', 6247), ('s', 4398)]) Time:  6.338521480560303
+9201
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11420), ('h', 5888), ('s', 3995)]) Time:  211.78689098358154
+Qiskit:  OrderedDict([('s', 3147), ('h', 3049), ('cx', 3001)]) Time:  0.678464412689209
+Qiskit Tableau:  OrderedDict([('cx', 8537), ('h', 3926), ('s', 3907)]) Time:  93.96351432800293
+Qiskit Tableau:  OrderedDict([('cx', 12171), ('h', 6170), ('s', 4313)]) Time:  4.633471488952637
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11350), ('h', 5682), ('s', 3873)]) Time:  190.6591501235962
+Qiskit:  OrderedDict([('cx', 3142), ('s', 3053), ('h', 3004)]) Time:  0.40827488899230957
+Qiskit Tableau:  OrderedDict([('cx', 8581), ('h', 4020), ('s', 3863)]) Time:  82.76640129089355
+Qiskit Tableau:  OrderedDict([('cx', 12133), ('h', 6201), ('s', 4381)]) Time:  3.193685293197632
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11442), ('h', 5787), ('s', 3944)]) Time:  146.69606709480286
+Qiskit:  OrderedDict([('s', 3091), ('h', 3059), ('cx', 3051)]) Time:  0.5126936435699463
+Qiskit Tableau:  OrderedDict([('cx', 8571), ('h', 3964), ('s', 3805)]) Time:  67.74417352676392
+Qiskit Tableau:  OrderedDict([('cx', 12109), ('h', 6200), ('s', 4331)]) Time:  4.03145432472229
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11372), ('h', 5838), ('s', 3885)]) Time:  201.14824795722961
+Qiskit:  OrderedDict([('s', 3121), ('h', 3043), ('cx', 3035)]) Time:  0.40108180046081543
+Qiskit Tableau:  OrderedDict([('cx', 8549), ('h', 3950), ('s', 3847)]) Time:  70.28488230705261
+Qiskit Tableau:  OrderedDict([('cx', 12214), ('h', 6119), ('s', 4418)]) Time:  5.980515718460083
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11441), ('h', 5908), ('s', 4053)]) Time:  132.0120508670807
+Qiskit:  OrderedDict([('s', 3108), ('cx', 3054), ('h', 3037)]) Time:  0.6817357540130615
+Qiskit Tableau:  OrderedDict([('cx', 8604), ('h', 4001), ('s', 3841)]) Time:  80.08383107185364
+Qiskit Tableau:  OrderedDict([('cx', 12133), ('h', 6193), ('s', 4335)]) Time:  6.527712106704712
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11497), ('h', 5854), ('s', 3998)]) Time:  137.6993317604065
+Qiskit:  OrderedDict([('h', 3132), ('s', 3064), ('cx', 3001)]) Time:  0.34522414207458496
+Qiskit Tableau:  OrderedDict([('cx', 8523), ('h', 3995), ('s', 3854)]) Time:  74.06615948677063
+Qiskit Tableau:  OrderedDict([('cx', 12172), ('h', 6214), ('s', 4329)]) Time:  5.324443817138672
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11392), ('h', 5858), ('s', 3912)]) Time:  189.66255450248718
+Qiskit:  OrderedDict([('s', 3107), ('cx', 3067), ('h', 3023)]) Time:  0.3429863452911377
+Qiskit Tableau:  OrderedDict([('cx', 8536), ('h', 3927), ('s', 3843)]) Time:  80.31235194206238
+Qiskit Tableau:  OrderedDict([('cx', 12068), ('h', 5985), ('s', 4244)]) Time:  3.1597888469696045
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11363), ('h', 5817), ('s', 4088)]) Time:  176.2545027732849
+Qiskit:  OrderedDict([('s', 3128), ('cx', 3043), ('h', 3028)]) Time:  0.34265565872192383
+Qiskit Tableau:  OrderedDict([('cx', 8534), ('h', 3996), ('s', 3836)]) Time:  81.6400716304779
+Qiskit Tableau:  OrderedDict([('cx', 12096), ('h', 6127), ('s', 4321)]) Time:  6.196252822875977
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11376), ('h', 5800), ('s', 4013)]) Time:  155.89512944221497
+Qiskit:  OrderedDict([('h', 3108), ('s', 3069), ('cx', 3022)]) Time:  0.5729222297668457
+Qiskit Tableau:  OrderedDict([('cx', 8567), ('h', 3880), ('s', 3861)]) Time:  82.9168438911438
+Qiskit Tableau:  OrderedDict([('cx', 12177), ('h', 6170), ('s', 4293)]) Time:  3.195582628250122
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11372), ('h', 5724), ('s', 4049)]) Time:  236.08804893493652
+Qiskit:  OrderedDict([('cx', 3102), ('h', 3081), ('s', 3014)]) Time:  0.40602779388427734
+Qiskit Tableau:  OrderedDict([('cx', 8555), ('h', 4001), ('s', 3861)]) Time:  74.03993821144104
+Qiskit Tableau:  OrderedDict([('cx', 12195), ('h', 6300), ('s', 4303)]) Time:  3.223802089691162
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11378), ('h', 5856), ('s', 3920)]) Time:  171.36606192588806
+Qiskit:  OrderedDict([('cx', 3217), ('s', 3030), ('h', 2942)]) Time:  0.6173996925354004
+Qiskit Tableau:  OrderedDict([('cx', 8580), ('h', 3970), ('s', 3881)]) Time:  81.53287601470947
+Qiskit Tableau:  OrderedDict([('cx', 12145), ('h', 6123), ('s', 4332)]) Time:  5.72341513633728
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11422), ('h', 5928), ('s', 4002)]) Time:  247.3714883327484
+Qiskit:  OrderedDict([('cx', 3146), ('s', 3063), ('h', 2986)]) Time:  0.3984529972076416
+Qiskit Tableau:  OrderedDict([('cx', 8562), ('h', 4025), ('s', 3735)]) Time:  103.61165738105774
+Qiskit Tableau:  OrderedDict([('cx', 12143), ('h', 6163), ('s', 4246)]) Time:  5.784753084182739
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11396), ('h', 5799), ('s', 4007)]) Time:  171.25649452209473
+Qiskit:  OrderedDict([('s', 3080), ('h', 3057), ('cx', 3056)]) Time:  0.3444366455078125
+Qiskit Tableau:  OrderedDict([('cx', 8583), ('h', 4029), ('s', 3851)]) Time:  80.83912181854248
+Qiskit Tableau:  OrderedDict([('cx', 12179), ('h', 6282), ('s', 4410)]) Time:  3.158087730407715
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11326), ('h', 5748), ('s', 3964)]) Time:  193.4093120098114
+Qiskit:  OrderedDict([('h', 3105), ('cx', 3072), ('s', 3022)]) Time:  0.38619327545166016
+Qiskit Tableau:  OrderedDict([('cx', 8551), ('h', 4003), ('s', 3856)]) Time:  71.922039270401
+Qiskit Tableau:  OrderedDict([('cx', 12244), ('h', 6231), ('s', 4417)]) Time:  3.9529945850372314
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11401), ('h', 5812), ('s', 3952)]) Time:  172.18270635604858
+Qiskit:  OrderedDict([('h', 3110), ('s', 3066), ('cx', 3023)]) Time:  0.6091103553771973
+Qiskit Tableau:  OrderedDict([('cx', 8568), ('h', 3985), ('s', 3913)]) Time:  87.18633890151978
+Qiskit Tableau:  OrderedDict([('cx', 12162), ('h', 6197), ('s', 4299)]) Time:  5.827074766159058
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11406), ('h', 5727), ('s', 3968)]) Time:  152.90660500526428
+Qiskit:  OrderedDict([('h', 3131), ('cx', 3052), ('s', 3010)]) Time:  0.3476409912109375
+Qiskit Tableau:  OrderedDict([('cx', 8582), ('h', 4031), ('s', 3903)]) Time:  67.62594032287598
+Qiskit Tableau:  OrderedDict([('cx', 12245), ('h', 6183), ('s', 4403)]) Time:  3.1468842029571533
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11291), ('h', 5822), ('s', 3952)]) Time:  185.56293725967407
+Qiskit:  OrderedDict([('s', 3105), ('cx', 3059), ('h', 3033)]) Time:  0.40842676162719727
+Qiskit Tableau:  OrderedDict([('cx', 8503), ('h', 3922), ('s', 3790)]) Time:  78.67949271202087
+Qiskit Tableau:  OrderedDict([('cx', 12194), ('h', 6238), ('s', 4346)]) Time:  5.529980659484863
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11386), ('h', 5787), ('s', 3965)]) Time:  204.92941546440125
+Qiskit:  OrderedDict([('cx', 3083), ('h', 3079), ('s', 3033)]) Time:  0.34562253952026367
+Qiskit Tableau:  OrderedDict([('cx', 8538), ('h', 4016), ('s', 3868)]) Time:  79.77594590187073
+Qiskit Tableau:  OrderedDict([('cx', 12169), ('h', 6189), ('s', 4354)]) Time:  3.197178840637207
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11407), ('h', 5851), ('s', 3977)]) Time:  162.32080125808716
+Qiskit:  OrderedDict([('s', 3132), ('h', 3036), ('cx', 3025)]) Time:  0.3442494869232178
+Qiskit Tableau:  OrderedDict([('cx', 8505), ('h', 3972), ('s', 3871)]) Time:  70.07168340682983
+Qiskit Tableau:  OrderedDict([('cx', 12176), ('h', 6231), ('s', 4367)]) Time:  3.2026329040527344
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11526), ('h', 5917), ('s', 4027)]) Time:  131.64060759544373
+Qiskit:  OrderedDict([('h', 3102), ('s', 3052), ('cx', 3041)]) Time:  0.4028012752532959
+Qiskit Tableau:  OrderedDict([('cx', 8579), ('h', 4002), ('s', 3803)]) Time:  79.1687376499176
+Qiskit Tableau:  OrderedDict([('cx', 12105), ('h', 6191), ('s', 4304)]) Time:  4.8138368129730225
+9601
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11367), ('h', 5854), ('s', 3954)]) Time:  168.51615405082703
+Qiskit:  OrderedDict([('s', 3357), ('h', 3121), ('cx', 3115)]) Time:  0.4141714572906494
+Qiskit Tableau:  OrderedDict([('cx', 8547), ('h', 3901), ('s', 3835)]) Time:  102.62107253074646
+Qiskit Tableau:  OrderedDict([('cx', 12125), ('h', 6229), ('s', 4376)]) Time:  3.2117018699645996
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11467), ('h', 5920), ('s', 3951)]) Time:  134.73060941696167
+Qiskit:  OrderedDict([('cx', 3230), ('h', 3189), ('s', 3170)]) Time:  0.6642136573791504
+Qiskit Tableau:  OrderedDict([('cx', 8550), ('h', 3985), ('s', 3826)]) Time:  95.34019565582275
+Qiskit Tableau:  OrderedDict([('cx', 12234), ('h', 6216), ('s', 4292)]) Time:  6.500406265258789
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11506), ('h', 5877), ('s', 3962)]) Time:  176.67866373062134
+Qiskit:  OrderedDict([('cx', 3236), ('h', 3220), ('s', 3139)]) Time:  0.4208219051361084
+Qiskit Tableau:  OrderedDict([('cx', 8545), ('h', 3940), ('s', 3882)]) Time:  96.9297206401825
+Qiskit Tableau:  OrderedDict([('cx', 12244), ('h', 6315), ('s', 4412)]) Time:  3.256409168243408
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11431), ('h', 5904), ('s', 3903)]) Time:  168.71949815750122
+Qiskit:  OrderedDict([('s', 3296), ('cx', 3175), ('h', 3122)]) Time:  0.3607778549194336
+Qiskit Tableau:  OrderedDict([('cx', 8535), ('h', 3920), ('s', 3794)]) Time:  66.8906741142273
+Qiskit Tableau:  OrderedDict([('cx', 12139), ('h', 6256), ('s', 4321)]) Time:  3.1589322090148926
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11407), ('h', 5790), ('s', 3916)]) Time:  231.50545167922974
+Qiskit:  OrderedDict([('cx', 3215), ('s', 3199), ('h', 3179)]) Time:  0.4143803119659424
+Qiskit Tableau:  OrderedDict([('cx', 8575), ('h', 3969), ('s', 3841)]) Time:  85.08252477645874
+Qiskit Tableau:  OrderedDict([('cx', 12148), ('h', 6222), ('s', 4245)]) Time:  3.907003164291382
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11397), ('h', 5685), ('s', 3975)]) Time:  150.4048969745636
+Qiskit:  OrderedDict([('h', 3216), ('s', 3198), ('cx', 3177)]) Time:  0.7062315940856934
+Qiskit Tableau:  OrderedDict([('cx', 8548), ('h', 3951), ('s', 3918)]) Time:  77.07817959785461
+Qiskit Tableau:  OrderedDict([('cx', 12162), ('h', 6222), ('s', 4363)]) Time:  5.54587984085083
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11424), ('h', 5854), ('s', 3928)]) Time:  223.8066930770874
+Qiskit:  OrderedDict([('cx', 3310), ('h', 3198), ('s', 3091)]) Time:  0.3613760471343994
+Qiskit Tableau:  OrderedDict([('cx', 8553), ('h', 3976), ('s', 3800)]) Time:  81.3691918849945
+Qiskit Tableau:  OrderedDict([('cx', 12195), ('h', 6218), ('s', 4197)]) Time:  3.149646043777466
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11449), ('h', 5854), ('s', 3937)]) Time:  181.70936274528503
+Qiskit:  OrderedDict([('cx', 3217), ('s', 3213), ('h', 3171)]) Time:  0.31019115447998047
+Qiskit Tableau:  OrderedDict([('cx', 8583), ('h', 3942), ('s', 3794)]) Time:  68.694753408432
+Qiskit Tableau:  OrderedDict([('cx', 12195), ('h', 6147), ('s', 4289)]) Time:  4.031610727310181
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11426), ('h', 5736), ('s', 3981)]) Time:  207.43809270858765
+Qiskit:  OrderedDict([('s', 3213), ('h', 3196), ('cx', 3186)]) Time:  0.5741419792175293
+Qiskit Tableau:  OrderedDict([('cx', 8565), ('h', 4013), ('s', 3852)]) Time:  98.19965934753418
+Qiskit Tableau:  OrderedDict([('cx', 12222), ('h', 6222), ('s', 4212)]) Time:  6.185832738876343
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11398), ('h', 5826), ('s', 4051)]) Time:  220.83395648002625
+Qiskit:  OrderedDict([('cx', 3247), ('s', 3221), ('h', 3131)]) Time:  0.41477489471435547
+Qiskit Tableau:  OrderedDict([('cx', 8597), ('h', 3919), ('s', 3788)]) Time:  72.5270745754242
+Qiskit Tableau:  OrderedDict([('cx', 12195), ('h', 6131), ('s', 4349)]) Time:  6.474990129470825
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11407), ('h', 5704), ('s', 3984)]) Time:  183.85867404937744
+Qiskit:  OrderedDict([('s', 3210), ('cx', 3209), ('h', 3178)]) Time:  0.3653390407562256
+Qiskit Tableau:  OrderedDict([('cx', 8607), ('h', 3973), ('s', 3849)]) Time:  82.30244040489197
+Qiskit Tableau:  OrderedDict([('cx', 12120), ('h', 6151), ('s', 4412)]) Time:  3.2006723880767822
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11458), ('h', 5748), ('s', 3946)]) Time:  223.3602249622345
+Qiskit:  OrderedDict([('s', 3241), ('cx', 3194), ('h', 3160)]) Time:  0.5875461101531982
+Qiskit Tableau:  OrderedDict([('cx', 8511), ('h', 3934), ('s', 3825)]) Time:  89.27818441390991
+Qiskit Tableau:  OrderedDict([('cx', 12137), ('h', 6124), ('s', 4397)]) Time:  3.151371479034424
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11541), ('h', 5943), ('s', 4031)]) Time:  151.5110535621643
+Qiskit:  OrderedDict([('cx', 3239), ('s', 3186), ('h', 3170)]) Time:  0.3639979362487793
+Qiskit Tableau:  OrderedDict([('cx', 8560), ('h', 4027), ('s', 3879)]) Time:  76.00463724136353
+Qiskit Tableau:  OrderedDict([('cx', 12262), ('h', 6285), ('s', 4309)]) Time:  3.2691004276275635
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11298), ('h', 5777), ('s', 3939)]) Time:  176.49883890151978
+Qiskit:  OrderedDict([('h', 3268), ('cx', 3208), ('s', 3123)]) Time:  0.35790371894836426
+Qiskit Tableau:  OrderedDict([('cx', 8573), ('h', 3969), ('s', 3834)]) Time:  111.2183427810669
+Qiskit Tableau:  OrderedDict([('cx', 12082), ('h', 6237), ('s', 4345)]) Time:  5.954901933670044
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11412), ('h', 5680), ('s', 3992)]) Time:  229.74804306030273
+Qiskit:  OrderedDict([('s', 3240), ('h', 3181), ('cx', 3172)]) Time:  0.6351203918457031
+Qiskit Tableau:  OrderedDict([('cx', 8541), ('h', 3949), ('s', 3839)]) Time:  88.25916528701782
+Qiskit Tableau:  OrderedDict([('cx', 12182), ('h', 6099), ('s', 4151)]) Time:  3.2369062900543213
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11397), ('h', 5891), ('s', 3961)]) Time:  181.75700449943542
+Qiskit:  OrderedDict([('s', 3204), ('cx', 3203), ('h', 3190)]) Time:  0.634289026260376
+Qiskit Tableau:  OrderedDict([('cx', 8572), ('h', 3910), ('s', 3832)]) Time:  81.9623191356659
+Qiskit Tableau:  OrderedDict([('cx', 12116), ('h', 6209), ('s', 4396)]) Time:  6.715503931045532
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11446), ('h', 5823), ('s', 3919)]) Time:  216.39762353897095
+Qiskit:  OrderedDict([('s', 3236), ('h', 3203), ('cx', 3158)]) Time:  0.7066845893859863
+Qiskit Tableau:  OrderedDict([('cx', 8590), ('h', 3969), ('s', 3793)]) Time:  86.92627882957458
+Qiskit Tableau:  OrderedDict([('cx', 12064), ('h', 6145), ('s', 4337)]) Time:  3.9803946018218994
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11457), ('h', 5832), ('s', 3903)]) Time:  132.55100536346436
+Qiskit:  OrderedDict([('h', 3202), ('cx', 3202), ('s', 3191)]) Time:  0.3642234802246094
+Qiskit Tableau:  OrderedDict([('cx', 8560), ('h', 4006), ('s', 3832)]) Time:  78.33393883705139
+Qiskit Tableau:  OrderedDict([('cx', 12226), ('h', 6157), ('s', 4388)]) Time:  6.717060327529907
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11408), ('h', 5919), ('s', 4024)]) Time:  181.56284046173096
+Qiskit:  OrderedDict([('cx', 3259), ('h', 3224), ('s', 3116)]) Time:  0.42261815071105957
+Qiskit Tableau:  OrderedDict([('cx', 8585), ('s', 3984), ('h', 3983)]) Time:  79.70913338661194
+Qiskit Tableau:  OrderedDict([('cx', 12178), ('h', 6215), ('s', 4302)]) Time:  3.168225049972534
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:178: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_x_, sub_graph, lookup,
+/home/w/winderl/miniconda3/envs/pauliopt1/lib/python3.9/site-packages/pauliopt/pauli/clifford_tableau.py:162: FutureWarning: steiner_tree will change default method from 'kou' to 'mehlhorn'in version 3.2.
+Set the `method` kwarg to remove this warning.
+  traversal = compute_steiner_tree(pivot, row_z_, sub_graph, lookup,
+Our:  OrderedDict([('cx', 11329), ('h', 5650), ('s', 3921)]) Time:  188.0634036064148
+Qiskit:  OrderedDict([('s', 3273), ('h', 3226), ('cx', 3098)]) Time:  0.7112860679626465
+Qiskit Tableau:  OrderedDict([('cx', 8558), ('h', 3927), ('s', 3815)]) Time:  101.55960965156555
+Qiskit Tableau:  OrderedDict([('cx', 12259), ('h', 6183), ('s', 4334)]) Time:  5.057220458984375
