@@ -18,6 +18,7 @@ from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, 
 from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
+from qiskit.transpiler.preset_passmanagers.plugin import list_stage_plugins
 from qiskit_ibm_provider import IBMProvider
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
@@ -701,6 +702,32 @@ def estimate_routing_overhead(arch_name, n_qubits, conv_gadgets):
             f"{method}: {100.0 * (best_cx_quito - best_cx_complete) / best_cx_quito:.2f} %")
 
 
+def get_complete_cx_count():
+    for n_qubits, conv_gadgets in [(5, 75), (7, 110), (16, 250),
+                                   (27, 500), (65, 1250), (127, 3000)]:
+        print("n_qubits: ", n_qubits)
+        bound_l = np.round(n_qubits ** 2 / np.log2(n_qubits))
+        bound_u = np.round(n_qubits ** 2)
+        print("Bound_l: ", bound_l)
+        print("Bound_u: ", bound_u)
+        df = pd.read_csv(f"data/random_complete_{n_qubits}.csv")
+
+        df['method'] = pd.Categorical(df['method'], categories=['ours',
+                                                                'Bravyi et al. (qiskit)',
+                                                                'Ewout van den Berg (stim)'],
+                                      ordered=True)
+        df = df.sort_values(by='method')
+        df_ = df[df["n_gadgets"] > conv_gadgets]
+        print("Complete: ")
+        print(df_.groupby("method").mean().round()["cx"])
+        print()
+        print("Bound_l: ")
+        print((df_.groupby("method").mean().round()["cx"] / bound_l).round(2))
+        print()
+        print("Bound_u: ")
+        print((df_.groupby("method").mean().round()["cx"] / bound_u).round(2))
+
+
 if __name__ == "__main__":
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
@@ -710,19 +737,19 @@ if __name__ == "__main__":
 
     # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=20)
     # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
-
+    #
     # random_experiment(backend_name="nairobi", nr_input_gates=300, nr_steps=20)
     # random_experiment(backend_name="complete_7", nr_input_gates=300, nr_steps=20)
     #
     # random_experiment(backend_name="guadalupe", nr_input_gates=400, nr_steps=20)
     # random_experiment(backend_name="complete_16", nr_input_gates=400, nr_steps=20)
-
+    #
     # random_experiment(backend_name="mumbai", nr_input_gates=800, nr_steps=40)
     # random_experiment(backend_name="complete_27", nr_input_gates=800, nr_steps=40)
-
+    #
     # random_experiment(backend_name="ithaca", nr_input_gates=2000, nr_steps=100)
     # random_experiment(backend_name="complete_65", nr_input_gates=2000, nr_steps=100)
-
+    #
     # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
     # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
@@ -775,9 +802,11 @@ if __name__ == "__main__":
     # plot_experiment(name="random_brisbane", v_line_cx=v_line)
     # plot_experiment(name="random_complete_127", v_line_cx=v_line)
 
-    estimate_routing_overhead("quito", 5, 75)
-    estimate_routing_overhead("nairobi", 7, 110)
-    estimate_routing_overhead("guadalupe", 16, 250)
-    estimate_routing_overhead("mumbai", 27, 500)
-    estimate_routing_overhead("ithaca", 65, 1250)
-    estimate_routing_overhead("brisbane", 127, 3000)
+    # estimate_routing_overhead("quito", 5, 75)
+    # estimate_routing_overhead("nairobi", 7, 110)
+    # estimate_routing_overhead("guadalupe", 16, 250)
+    # estimate_routing_overhead("mumbai", 27, 500)
+    # estimate_routing_overhead("ithaca", 65, 1250)
+    # estimate_routing_overhead("brisbane", 127, 3000)
+
+    get_complete_cx_count()
