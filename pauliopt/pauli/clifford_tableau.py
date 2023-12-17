@@ -1,3 +1,8 @@
+import itertools
+import math
+from functools import partial
+from multiprocessing import Pool
+
 import networkx as nx
 import numpy as np
 import stim
@@ -191,6 +196,7 @@ def steiner_reduce_column(pivot, sub_graph, remaining,
     row_x = [col for col in sub_graph.nodes if remaining.x_out(pivot, col) != 0]
     for col in row_x:
         sanitize_field_x(pivot, col, remaining, apply)
+
     steiner_up_down_process_x(pivot, row_x, sub_graph, remaining,
                               apply, swappable_nodes, permutation, include_swaps)
 
@@ -216,6 +222,31 @@ def steiner_reduce_column(pivot, sub_graph, remaining,
     #     apply("S", (pivot,))
 
 
+def optimal_remove_signs(qc, remaining, apply, ):
+    signs_copy_z = remaining.signs[remaining.n_qubits:2 * remaining.n_qubits].copy()
+    for col in range(remaining.n_qubits):
+        if signs_copy_z[col] != 0:
+            apply(qc, remaining, "H", (col,))
+
+    for col in range(remaining.n_qubits):
+        if signs_copy_z[col] != 0:
+            apply(qc, remaining, "S", (col,))
+            apply(qc, remaining, "S", (col,))
+
+    for col in range(remaining.n_qubits):
+        if signs_copy_z[col] != 0:
+            apply(qc, remaining, "H", (col,))
+
+    for col in range(remaining.n_qubits):
+        if remaining.signs[col] != 0:
+            apply(qc, remaining, "S", (col,))
+            apply(qc, remaining, "S", (col,))
+
+
+def optimal_pivot_removal(qc, remaining, apply, pivot):
+    pass
+
+
 class CliffordTableau:
     def __init__(self, n_qubits: int = None, tableau: np.array = None,
                  signs: np.array = None):
@@ -238,6 +269,9 @@ class CliffordTableau:
             if not 2 * self.n_qubits == tableau.shape[1]:
                 raise Exception(
                     f"Tableau of shape: {tableau.shape}, is not a factor of 2")
+
+    def copy(self):
+        return CliffordTableau(tableau=self.tableau.copy(), signs=self.signs.copy())
 
     def prepend_h(self, qubit):
         self.signs[[qubit, self.n_qubits + qubit]] = \
@@ -306,6 +340,16 @@ class CliffordTableau:
 
         tmp_sum = ((x_ib + z_ia) % 2 + np.ones(z_ia.shape)) % 2
         self.signs = (self.signs + x_ia * z_ib * tmp_sum) % 2
+
+    def append_v(self, qubit):
+        self.append_h(qubit)
+        self.append_s(qubit)
+        self.append_h(qubit)
+
+    def prepend_v(self, qubit):
+        self.prepend_h(qubit)
+        self.prepend_s(qubit)
+        self.prepend_h(qubit)
 
     def swap_rows(self, a, b):
         # swap in stabilizer basis
@@ -610,6 +654,369 @@ class CliffordTableau:
                                               include_swaps: bool = True):
         circ, perm = self.to_cifford_circuit_arch_aware(topo, include_swaps)
         return circ.to_qiskit(), perm
+
+    def _optimal_synth(self, topo: Topology, order):
+
+        qc = QuantumCircuit(self.n_qubits)
+        remaining = self.inverse()
+
+        def apply(gate_name: str, gate_data: tuple):
+            if gate_name == "CNOT":
+                remaining.append_cnot(gate_data[0], gate_data[1])
+                qc.cx(gate_data[0], gate_data[1])
+            elif gate_name == "H":
+                remaining.append_h(gate_data[0])
+                qc.h(gate_data[0])
+            elif gate_name == "S":
+                remaining.append_s(gate_data[0])
+                qc.s(gate_data[0])
+            else:
+                raise Exception("Unknown Gate")
+
+        G = topo.to_nx
+        for pivot in order:
+            if is_cutting(pivot, G):
+                return None
+            steiner_reduce_column(pivot, G, remaining, apply, [], [], False)
+            G.remove_node(pivot)
+
+        signs_copy_z = remaining.signs[self.n_qubits:2 * self.n_qubits].copy()
+        for col in range(self.n_qubits):
+            if signs_copy_z[col] != 0:
+                apply("H", (col,))
+
+        for col in range(self.n_qubits):
+            if signs_copy_z[col] != 0:
+                apply("S", (col,))
+                apply("S", (col,))
+
+        for col in range(self.n_qubits):
+            if signs_copy_z[col] != 0:
+                apply("H", (col,))
+
+        for col in range(self.n_qubits):
+            if remaining.signs[col] != 0:
+                apply("S", (col,))
+                apply("S", (col,))
+        return qc
+
+    def optimal_to_circuit(self, topo: Topology):
+        seed = list(range(self.n_qubits))
+        final_circuits = []
+        for comb in itertools.permutations(seed):
+            circ = self._optimal_synth(topo, comb)
+            if circ is not None:
+                cx_count = circ.count_ops()["cx"] if "cx" in circ.count_ops() else 0
+                final_circuits.append((circ, cx_count))
+        print(list(sorted([x[1] for x in final_circuits])))
+        return min(final_circuits, key=lambda x: x[1])[0]
+
+    def to_clifford_circuit_opt(self):
+        qc = QuantumCircuit(self.n_qubits)
+
+        remaining = self.inverse()
+
+        m = math.ceil(math.log2(self.n_qubits))
+        n = self.n_qubits
+
+        def apply(gate_name: str, gate_data: tuple):
+            if gate_name == "CNOT":
+                remaining.append_cnot(gate_data[0], gate_data[1])
+                qc.cx(gate_data[0], gate_data[1])
+            elif gate_name == "H":
+                remaining.append_h(gate_data[0])
+                qc.h(gate_data[0])
+            elif gate_name == "S":
+                remaining.append_s(gate_data[0])
+                qc.s(gate_data[0])
+            elif gate_name == "V":
+                remaining.append_v(gate_data[0])
+                qc.sx(gate_data[0])
+            else:
+                raise Exception("Unknown Gate")
+
+        def change_ps(gate_name, p):
+            if gate_name == "H":
+                if p == 0:
+                    return 0
+                elif p == 1:
+                    return 2
+                elif p == 2:
+                    return 1
+                elif p == 3:
+                    return 3
+                else:
+                    raise Exception("Unknown Pauli: ", p)
+            elif gate_name == "S":
+                if p == 0:
+                    return 0
+                elif p == 1:
+                    return 3
+                elif p == 2:
+                    return 2
+                elif p == 3:
+                    return 1
+                else:
+                    raise Exception("Unknown Pauli: ", p)
+            elif gate_name == "V":
+                if p == 0:
+                    return 0
+                elif p == 1:
+                    return 1
+                elif p == 2:
+                    return 3
+                elif p == 3:
+                    return 2
+            elif gate_name == "I":
+                return p
+            else:
+                raise Exception("Unknown gate: ", gate_name)
+
+        def effect_XX(p_1, p_2):
+            for i in range(len(p_1)):
+                if p_1[i] == 1 and p_2[i] != 1:
+                    return False
+                elif p_1[i] == 3 and p_2[i] != 1:
+                    return False
+                elif p_1[i] == 2 and p_2[i] != 0:
+                    return False
+                elif p_1[i] == 0 and p_2[i] != 0:
+                    return False
+            return True
+
+        def effect_XI(p_1, p_2):
+            for i in range(len(p_1)):
+                if p_1[i] == 1 and p_2[i] != 0:
+                    return False
+                elif p_1[i] == 3 and p_2[i] != 2:
+                    return False
+                elif p_1[i] == 2 and p_2[i] != 2:
+                    return False
+                elif p_1[i] == 0 and p_2[i] != 0:
+                    return False
+            return True
+
+        step_A = 0
+        for cols in range(0, n, m):
+            #######################################
+            # remove duplicates from destabilizers
+            #######################################
+            destabilizers = list(range(cols, min(cols + m, n)))
+            for destab_idx in range(cols, n):
+                for target in range(destab_idx, n):
+                    if target == destab_idx:
+                        continue
+                    p_1_x = [remaining.x_out(x, destab_idx) for x in destabilizers]
+                    p_2_x = [remaining.x_out(x, target) for x in destabilizers]
+                    final_word_1 = []
+
+                    for gate_1 in ["I", "H", "S", "V", "H", "S", "V"]:
+                        if gate_1 != "I":
+                            final_word_1.append(gate_1)
+                        p_1_x = [change_ps(gate_1, p) for p in p_1_x]
+
+                        final_word_2 = []
+                        change = False
+                        for gate_2 in ["I", "H", "S", "V", "H", "S", "V"]:
+                            p_2_x = [change_ps(gate_2, p) for p in p_2_x]
+                            if all([p == 0 for p in p_2_x]):
+                                continue
+                            if all([p == 0 for p in p_1_x]):
+                                continue
+                            if gate_2 != "I":
+                                final_word_2.append(gate_2)
+
+                            if effect_XI(p_1_x, p_2_x):
+                                for word in final_word_1:
+                                    apply(word, (destab_idx,))
+                                for word in final_word_2:
+                                    apply(word, (target,))
+                                apply("CNOT", (target, destab_idx))
+                                step_A += 1
+                                change = True
+                                break
+                            elif effect_XX(p_1_x, p_2_x):
+                                for word in final_word_1:
+                                    apply(word, (destab_idx,))
+                                for word in final_word_2:
+                                    apply(word, (target,))
+                                apply("CNOT", (destab_idx, target))
+                                step_A += 1
+                                change = True
+                                break
+                        if change:
+                            break
+            #######################################
+            # Remove all remainders from the destabilizers
+            #######################################
+            for col in range(cols, min(cols + m, n)):
+                if remaining.x_out(col, col) == 0:
+                    for row in range(col + 1, n):
+                        if remaining.x_out(col, row) == 3:
+                            apply("S", (row,))
+                        if remaining.x_out(col, row) == 2:
+                            apply("H", (row,))
+                        if remaining.x_out(col, row) != 0:
+                            apply("CNOT", (row, col))
+                            break
+
+                if remaining.x_out(col, col) == 3:
+                    apply("S", (col,))
+
+                if remaining.x_out(col, col) == 2:
+                    apply("H", (col,))
+
+                for row in range(col + 1, n):
+                    if remaining.x_out(col, row) == 3:
+                        apply("S", (row,))
+
+                for row in range(col + 1, n):
+                    if remaining.x_out(col, row) == 2:
+                        apply("H", (row,))
+
+                for row in range(col + 1, n):
+                    if remaining.x_out(col, row) != 0:
+                        apply("CNOT", (col, row))
+
+            #######################################
+            # remove duplicates from stabilizers
+            #######################################
+            destabilizers = list(range(cols, min(cols + m, n)))
+
+            for col in range(cols, min(cols + m, n)):
+                if remaining.z_out(col, col) == 3:
+                    apply("H", (col,))
+                    apply("S", (col,))
+                    apply("H", (col,))
+
+            for destab_idx in range(cols, n):
+                p_1_z = [remaining.z_out(x, destab_idx) for x in destabilizers]
+                if all([p == 0 for p in p_1_z]):
+                    continue
+                for target in range(destab_idx, n):
+                    if target in destabilizers:
+                        x_out_target = remaining.x_out(target, target)
+                        final_word_1 = []
+                        for gate_1 in ["I", "H", "S", "V", "H", "S", "V"]:
+                            if gate_1 != "I":
+                                final_word_1.append(gate_1)
+                            p_1_z = [change_ps(gate_1, p) for p in p_1_z]
+                            x_out_target = change_ps(gate_1, x_out_target)
+                            p_2_z = [remaining.z_out(x, target) for x in destabilizers]
+                            final_word_2 = []
+                            change = False
+                            for gate_2 in ["I", "H", "S", "V", "H", "S", "V"]:
+                                p_2_z = [change_ps(gate_2, p) for p in p_2_z]
+                                if all([p == 0 for p in p_2_z]):
+                                    continue
+                                if all([p == 0 for p in p_1_z]):
+                                    continue
+                                if gate_2 != "I":
+                                    final_word_2.append(gate_2)
+                                if effect_ZI(p_1_z, p_2_z) and x_out_target == 2:
+                                    for word in final_word_1:
+                                        apply(word, (destab_idx,))
+                                    for word in final_word_2:
+                                        apply(word, (target,))
+                                    apply("CNOT", (target, destab_idx))
+                                    step_A += 1
+                                    change = True
+                                    break
+                                elif effect_ZZ(p_1_z, p_2_z) and x_out_target == 2:
+                                    for word in final_word_1:
+                                        apply(word, (destab_idx,))
+                                    for word in final_word_2:
+                                        apply(word, (target,))
+                                    apply("CNOT", (destab_idx, target))
+                                    step_A += 1
+                                    change = True
+                                    break
+                            if change:
+                                break
+                    elif destab_idx in destabilizers:
+                        continue
+                    else:
+                        p_2_x = [remaining.x_out(x, target) for x in destabilizers]
+                        p_2_z = [remaining.z_out(x, target) for x in destabilizers]
+                        if all([p == 0 for p in p_2_x]) or all([p == 0 for p in p_2_z]):
+                            continue
+                        final_word_1 = []
+
+                        for gate_1 in ["I", "H", "S", "V", "H", "S", "V"]:
+                            if gate_1 != "I":
+                                final_word_1.append(gate_1)
+                            p_1_z = [change_ps(gate_1, p) for p in p_1_z]
+
+                            p_2_z = [remaining.z_out(x, target) for x in destabilizers]
+                            final_word_2 = []
+                            change = False
+                            for gate_2 in ["I", "H", "S", "V", "H", "S", "V"]:
+                                p_2_z = [change_ps(gate_2, p) for p in p_2_z]
+                                if gate_2 != "I":
+                                    final_word_2.append(gate_2)
+                                if effect_XX(p_1_z, p_2_z):
+                                    for word in final_word_1:
+                                        apply(word, (destab_idx,))
+                                    for word in final_word_2:
+                                        apply(word, (target,))
+                                    apply("CNOT", (destab_idx, target))
+                                    step_A += 1
+                                    change = True
+                                    break
+                                if effect_XI(p_1_z, p_2_z):
+                                    for word in final_word_1:
+                                        apply(word, (destab_idx,))
+                                    for word in final_word_2:
+                                        apply(word, (target,))
+                                    apply("CNOT", (target, destab_idx))
+                                    step_A += 1
+                                    change = True
+                                    break
+                            if change:
+                                break
+
+            #######################################
+            # Remove all remainders from the stabilizers
+            #######################################
+            for col in range(cols, min(cols + m, n)):
+                if remaining.z_out(col, col) == 3:
+                    apply("S", (col,))
+
+                if remaining.z_out(col, col) != 2:
+                    apply("H", (col,))
+
+                if remaining.x_out(col, col) != 1:
+                    apply("S", (col,))
+
+                for row in range(col + 1, n):
+                    if remaining.z_out(col, row) == 3:
+                        apply("S", (row,))
+                    if remaining.z_out(col, row) == 1:
+                        apply("H", (row,))
+
+                    if remaining.z_out(col, row) != 0:
+                        apply("CNOT", (row, col))
+
+        signs_copy_z = remaining.signs[n:2 * n].copy()
+        for col in range(n):
+            if signs_copy_z[col] != 0:
+                apply("H", (col,))
+
+        for col in range(n):
+            if signs_copy_z[col] != 0:
+                apply("S", (col,))
+                apply("S", (col,))
+
+        for col in range(n):
+            if signs_copy_z[col] != 0:
+                apply("H", (col,))
+        for col in range(n):
+            if remaining.signs[col] != 0:
+                apply("S", (col,))
+                apply("S", (col,))
+        # remaining.print_zx()
+
+        return qc
 
     def to_clifford_circuit(self):
         qc = QuantumCircuit(self.n_qubits)

@@ -3,7 +3,10 @@ import time
 from numbers import Number
 
 import numpy as np
+import pandas as pd
 import pytket
+from matplotlib import pyplot as plt
+from mqt import qmap
 from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
@@ -12,7 +15,8 @@ from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
 from pyzx import Mat2
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
+from qiskit.quantum_info import Clifford, random_clifford
 from sympy.core.symbol import Symbol
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
@@ -20,6 +24,7 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar, π
+import seaborn as sns
 
 
 def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
@@ -353,20 +358,129 @@ def pp_decomposition():
     print(pp.to_latex())
 
 
-def test_clifford_1000():
-    circ = random_hscx_circuit(100, 4)
-
+def test_clifford_1001():
+    start = time.time()
+    circ = random_hscx_circuit(10, 5)
     topo = Topology.line(circ.num_qubits)
+    coupling = [list(x) for x in topo.couplings]
+
+    circ_ = transpile(circ,
+                      initial_layout=[x for x in range(circ.num_qubits)],
+                      basis_gates=["cx", "h", "s"],
+                      coupling_map=coupling)
+    print("Original: ", circ.count_ops())
 
     ct = CliffordTableau.from_circuit(circ)
+    ct.print_zx()
+
+    circ_out_opt = ct.optimal_to_circuit(topo)
+
+    circ_out_ours, _ = ct.to_clifford_circuit_arch_aware_qiskit(topo,
+                                                                include_swaps=False)
+    tableau = Clifford.from_circuit(circ)
+    circ_out_bravi = tableau.to_circuit()
+    circ_out_bravi = transpile(circ_out_bravi,
+                               initial_layout=[x for x in range(circ.num_qubits)],
+                               coupling_map=coupling,
+                               basis_gates=["cx", "h", "s"])
+
+    print(verify_equality(circ_out_opt, circ))
+
+    print("Optimal:   ", circ_out_opt.count_ops()["cx"])
+    print("Bravi:     ", circ_out_bravi.count_ops()["cx"])
+    print("Ours:      ", circ_out_ours.count_ops()["cx"])
+    print("Original:  ", circ_.count_ops()["cx"])
+    print("dt:        ", time.time() - start)
 
 
-    ct.to_cifford_circuit_arch_aware(topo)
+def test_clifford_1000(num_qubits=7):
+    def get_ops(circ):
+        return circ.count_ops()["cx"] if "cx" in circ.count_ops() else 0
+
+    topo = Topology.complete(num_qubits)
+    coupling = [list(x) for x in topo.couplings]
+
+    df = pd.DataFrame(columns=["output", "input", "method"])
+    for gates in range(5, 20, 3):
+        print(gates)
+        for _ in range(5):
+            circ = random_hscx_circuit(gates, num_qubits)
+            circ_ = transpile(circ,
+                              initial_layout=[x for x in range(circ.num_qubits)],
+                              coupling_map=coupling,
+                              basis_gates=["cx", "h", "s"])
+            if get_ops(circ_) == 0:
+                continue
+            ct = CliffordTableau.from_circuit(circ)
+
+            circ_out_opt = ct.optimal_to_circuit(topo)
+
+            circ_out_ours, _ = ct.to_clifford_circuit_arch_aware_qiskit(topo,
+                                                                        include_swaps=False)
+
+            tableau = Clifford.from_circuit(circ)
+            circ_out_bravi = tableau.to_circuit()
+            circ_out_bravi = transpile(circ_out_bravi,
+                                       initial_layout=[x for x in range(circ.num_qubits)],
+                                       coupling_map=coupling,
+                                       basis_gates=["cx", "h", "s"])
+
+            bravi = pd.DataFrame({"output": get_ops(circ_out_bravi) / get_ops(circ_),
+                                  "input": gates,
+                                  "method": "Bravi"}, index=[0])
+            ours = pd.DataFrame({"output": get_ops(circ_out_ours) / get_ops(circ_),
+                                 "input": gates,
+                                 "method": "Ours"}, index=[0])
+            opt = pd.DataFrame({"output": get_ops(circ_out_opt) / get_ops(circ_),
+                                "input": gates,
+                                "method": "Optimal"}, index=[0])
+
+            df = pd.concat([df, bravi, ours, opt], ignore_index=True)
+
+    sns.lineplot(x="input", y="output", hue="method", data=df)
+    plt.show()
 
 
+def test_tableau_1001(n_qubits=6):
+    clifford = random_clifford(n_qubits)
 
+    circ_bravi = clifford.to_circuit()
+    circ_bravi = transpile(circ_bravi, optimization_level=0, basis_gates=["cx", "h", "s"])
+    # exit(0)
+    ct = CliffordTableau.from_circuit(circ_bravi)
+    circ_out = ct.to_clifford_circuit_opt()
+    circ_out = transpile(circ_out, optimization_level=0, basis_gates=["cx", "h", "s"])
+    print(circ_out.count_ops())
+    print(circ_bravi.count_ops())
+
+    print("lb: ", math.ceil(n_qubits ** 2 / math.log2(n_qubits)))
+    print("Ours: ", circ_out.count_ops()["cx"])
+    print("Bravi: ", circ_bravi.count_ops()["cx"])
+    print("UB: ", n_qubits ** 2)
+    return math.ceil(n_qubits ** 2 / math.log(n_qubits)), \
+           circ_out.count_ops()["cx"], \
+           circ_bravi.count_ops()["cx"], n_qubits ** 2
 
 
 if __name__ == '__main__':
-    test_clifford_1000()
-    #pp_decomposition()
+    qubits = list(range(3, 50, 5))
+    ours_all = []
+    bravi_all = []
+    lb_all = []
+    ub_all = []
+    for n_qubits in qubits:
+        lb, ours, bravi, ub = test_tableau_1001(n_qubits)
+        ours_all.append(ours)
+        bravi_all.append(bravi)
+        lb_all.append(lb)
+        ub_all.append(ub)
+
+    plt.plot(qubits, ours_all, label="Ours")
+    plt.plot(qubits, bravi_all, label="Bravi")
+    plt.plot(qubits, lb_all, label="Lower bound")
+    plt.plot(qubits, ub_all, label="Upper bound")
+    plt.legend()
+    plt.show()
+    # test_tableau_1001(20)
+    # test_tableau_1001()
+    # pp_decomposition()

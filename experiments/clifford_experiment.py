@@ -428,6 +428,10 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None):
     sns.set_palette(sns.color_palette("colorblind"))
 
     df = pd.read_csv(f"data/{name}.csv")
+    df = df[df["method"] != "Ewout van den Berg (stim)"]
+    df['method'] = df['method'].replace({'qiskit transpile': 'qiskit',
+                                         'ours': 'tableau (ours)',
+                                         'Bravyi et al. (qiskit)': 'qiskit_tableau'})
 
     sns.lineplot(df, x="n_gadgets", y="h", hue="method")
     plt.title("H-Gates")
@@ -758,7 +762,7 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 75]
     # v_line = np.mean(df_["cx"])
     #
-    # plot_experiment(name="random_quito", v_line_cx=v_line)
+    plot_experiment(name="random_quito", v_line_cx=None)
     # plot_experiment(name="random_complete_5", v_line_cx=v_line)
     #
     #
@@ -775,7 +779,7 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 250]
     # v_line = np.mean(df_["cx"])
     # #
-    # plot_experiment(name="random_guadalupe", v_line_cx=v_line)
+    plot_experiment(name="random_guadalupe", v_line_cx=None)
     # plot_experiment(name="random_complete_16", v_line_cx=v_line)
     #
     # df = pd.read_csv(f"data/random_complete_27.csv")
@@ -783,7 +787,7 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 500]
     # v_line = np.mean(df_["cx"])
     #
-    # plot_experiment(name="random_mumbai", v_line_cx=v_line)
+    plot_experiment(name="random_mumbai", v_line_cx=None)
     # plot_experiment(name="random_complete_27", v_line_cx=v_line)
     #
     # df = pd.read_csv(f"data/random_complete_65.csv")

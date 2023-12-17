@@ -1,6 +1,7 @@
 import os
 import pickle
 import shutil
+from functools import partial
 from numbers import Number
 
 import matplotlib.pyplot as plt
@@ -651,7 +652,7 @@ def plot_fidelity():
 
         sns.lineplot(df, x="t", y="fid_default", label="Default")
         sns.lineplot(df, x="t", y="fid_ours", label="PSGS")
-        sns.lineplot(df, x="t", y="fid_tket", label="UCCDS-pair")
+        sns.lineplot(df, x="t", y="fid_tket", label="UCCDS-set")
         # set ticks to be between 0 and 2pi and label them
         plt.xticks(np.linspace(0.0, 2 * np.pi, 5),
                    [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"])
@@ -665,6 +666,19 @@ def plot_fidelity():
         plt.tight_layout()
         plt.savefig(f"data/pauli/fidelity/{name}.pdf")
         plt.show()
+
+
+def bold_max(df, alg, type, row):
+    values = [f'tket_uccs_set_{type}',
+              f'pauliopt_steiner_nc_{type}',
+              f"pauliopt_ucc_{type}"]
+    max_val = min(df.loc[row.name, values])
+    curr_alg = f"{alg}{type}"
+    outstring = f"{row[f'{alg}{type}']} ({row[f'{alg}{type}_reduction']:.2f})"
+    if row[curr_alg] == max_val:
+        return f"\\textbf{{{outstring}}}"
+    else:
+        return outstring
 
 
 def sanatize_uccsd_molecules():
@@ -682,19 +696,26 @@ def sanatize_uccsd_molecules():
             del df["tket_uccs_pair_depth"]
             df.sort_values(by=["n_qubits", "gadgets"], inplace=True)
             df.reset_index(drop=True, inplace=True)
+
             for alg, rename in [("tket_uccs_set_", "UCCSD-set"),
                                 ("pauliopt_steiner_nc_", "pauli-steiner-gray-synth"),
                                 ("pauliopt_ucc_", "architecture-aware-UCCSD-set")]:
                 for type in ["cx", "depth"]:
                     df[f"{alg}{type}_reduction"] \
-                        = (df[f"{alg}{type}"] - df[f"naive_{type}"]) / df[
+                        = (df[f"naive_{type}"] - df[f"{alg}{type}"]) / df[
                         f"naive_{type}"] * 100
 
+                    # assign df, alg, type to lambda function
+                    bold_max_ = lambda row: bold_max(df, alg, type, row)
+
                     # create a new column {rename} ({type}) which is formatted as a string: "{{alg}{type}}, ({alg}{type}_reduction)"
-                    df[f"{rename} ({type})"] = df.apply(lambda
-                                                            row: f"{row[f'{alg}{type}']} ({row[f'{alg}{type}_reduction']:.2f})",
-                                                        axis=1)
+                    df[f"{rename} ({type})"] = df.apply(bold_max_, axis=1)
                     # drop the old columns
+
+            for alg, rename in [("tket_uccs_set_", "UCCSD-set"),
+                                ("pauliopt_steiner_nc_", "pauli-steiner-gray-synth"),
+                                ("pauliopt_ucc_", "architecture-aware-UCCSD-set")]:
+                for type in ["cx", "depth"]:
                     del df[f"{alg}{type}"]
                     del df[f"{alg}{type}_reduction"]
 
@@ -704,13 +725,13 @@ def sanatize_uccsd_molecules():
             df.to_csv(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.csv")
             with open(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.tex",
                       "w") as f:
-                df.to_latex(f, index=False, escape=True, float_format="%.2f")
+                df.to_latex(f, index=False, escape=False, float_format="%.2f")
 
 
 if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
     plot_fidelity()
     # random_pauli_polynomial_experiment()
-    plot_random_pauli_polynomial_experiment()
+    # plot_random_pauli_polynomial_experiment()
     # synth_ucc_evaluation()
     # sanatize_uccsd_molecules()
