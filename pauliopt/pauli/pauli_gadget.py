@@ -2,7 +2,6 @@ from collections import deque
 from typing import List, Collection, Callable, Dict
 
 import networkx as nx
-import numba
 import numpy as np
 
 from pauliopt.pauli.pauli_circuit import PauliCircuit

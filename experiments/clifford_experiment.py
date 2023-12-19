@@ -5,12 +5,15 @@ import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date
+import matplotlib
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import qiskit
 import seaborn as sns
 import stim
+from mqt import qmap
 from qiskit import QuantumCircuit, transpile, execute, Aer
 from qiskit.providers import JobStatus
 from qiskit.providers.fake_provider import FakeVigo, FakeMumbai, FakeGuadalupe, FakeQuito, \
@@ -19,11 +22,13 @@ from qiskit.providers.ibmq import IBMQ
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
 from qiskit.transpiler.preset_passmanagers.plugin import list_stage_plugins
-from qiskit_ibm_provider import IBMProvider
+# from qiskit_ibm_provider import IBMProvider
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
+
+from mqt import qmap
 
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
@@ -52,8 +57,13 @@ def random_hscx_circuit(nr_gates=20, nr_qubits=4):
     return qc
 
 
+def random_clifford_circuit(nr_qubits=4):
+    clifford = qiskit.quantum_info.random_clifford(nr_qubits)
+    return clifford
+
+
 def get_ops_count(qc: QuantumCircuit):
-    count = {"h": 0, "cx": 0, "s": 0}
+    count = {"h": 0, "cx": 0, "s": 0, "depth": qc.depth()}
     ops = qc.count_ops()
     if "cx" in ops.keys():
         count["cx"] += ops['cx']
@@ -108,11 +118,19 @@ def stim_compilation(circ: QuantumCircuit, backend):
     tableau = circuit_to_stim_tableau(circ)
     circ_out = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
     if backend == "complete":
-        circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
+        circ_out = transpile(circ_out,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    elif backend == "line":
+        circ_out = transpile(circ, coupling_map=[[i, i + 1] for i in
+                                                 range(circ.num_qubits - 1)],
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
     else:
         circ_out = transpile(circ_out,
                              coupling_map=backend.coupling_map,
-                             basis_gates=["cx", "h", "s"])
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
     print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
     column = get_ops_count(circ_out)
     return column
@@ -123,9 +141,17 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
     tableau = Clifford.from_circuit(circ)
     circ_out = tableau.to_circuit()
     if backend == "complete":
-        circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
+        circ_out = transpile(circ_out,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    elif backend == "line":
+        circ_out = transpile(circ, coupling_map=[[i, i + 1] for i in
+                                                 range(circ.num_qubits - 1)],
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
     else:
         circ_out = transpile(circ_out,
+                             routing_method="sabre",
                              coupling_map=backend.coupling_map,
                              basis_gates=["cx", "h", "s"])
     print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
@@ -136,7 +162,14 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
 def qiskit_compilation(circ: QuantumCircuit, backend):
     start = time.time()
     if backend == "complete":
-        circ_out = transpile(circ, basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(circ,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    elif backend == "line":
+        circ_out = transpile(circ, coupling_map=[[i, i + 1] for i in
+                                                 range(circ.num_qubits - 1)],
+                             routing_method="sabre",
+                             basis_gates=['h', 's', 'cx'])
     else:
         circ_out = transpile(circ, coupling_map=backend.coupling_map,
                              basis_gates=['s', 'h', 'cx'])
@@ -145,10 +178,39 @@ def qiskit_compilation(circ: QuantumCircuit, backend):
     return column
 
 
+def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
+    start = time.time()
+
+    circ, _ = qmap.synthesize_clifford(clifford,
+                                       use_maxsat=True,
+                                       dump_intermediate_results=True,
+                                       include_destabilizers=True)
+    print("done!")
+    if backend == "complete":
+        circ_out = transpile(circ,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    elif backend == "line":
+        circ_out = transpile(circ,
+                             routing_method="sabre",
+                             coupling_map=[[i, i + 1] for i in
+                                           range(circ.num_qubits - 1)],
+                             basis_gates=['s', 'h', 'cx'])
+    else:
+        circ_out = transpile(circ, coupling_map=backend.coupling_map,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    column = get_ops_count(circ_out)
+    print("Optimal: ", circ_out.count_ops(), "Time: ", time.time() - start)
+    return column
+
+
 def our_compilation(circ: QuantumCircuit, backend):
     start = time.time()
     if backend == "complete":
         topo = Topology.complete(circ.num_qubits)
+    elif backend == "line":
+        topo = Topology.line(circ.num_qubits)
     else:
         topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_circuit(circ)
@@ -160,18 +222,23 @@ def our_compilation(circ: QuantumCircuit, backend):
     return column
 
 
-def our_compilation_tableau(tab: Clifford, backend):
-    topo = Topology.from_qiskit_backend(backend)
+def our_compilation_tableau(tab: Clifford, backend, num_qubits):
+    if backend == "complete":
+        topo = Topology.complete(num_qubits)
+    elif backend == "line":
+        topo = Topology.line(num_qubits)
+    else:
+        topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_qiskit(tab)
     circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+    circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out)
     # assert verify_equality(tab.to_circuit(), apply_permutation(circ_out, perm))
     print("Our: ", circ_out.count_ops())
     return column
 
 
-def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
-    df_name = "data/random"
+def get_backend_and_df_name(backend_name, df_name="data/random"):
     if backend_name == "vigo":
         backend = FakeVigo()
         df_name = f"{df_name}_vigo.csv"
@@ -202,11 +269,46 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     elif "complete" in backend_name:
         backend = "complete"
         df_name = f"{df_name}_{backend_name}.csv"
+    elif "line" in backend_name:
+        backend = "line"
+        df_name = f"{df_name}_{backend_name}.csv"
 
     else:
         raise ValueError(f"Unknown backend: {backend_name}")
+    return backend, df_name
 
-    if backend != "complete":
+
+def random_experiment_complete(backend_name="vigo"):
+    backend, df_name = get_backend_and_df_name(backend_name,
+                                               df_name="data/random_converged")
+    if backend not in ["complete", "line"]:
+        num_qubits = backend.configuration().num_qubits
+    else:
+        num_qubits = int(backend_name.split("_")[1])
+    print(num_qubits)
+    print(df_name)
+    df = pd.DataFrame(
+        columns=["n_rep", "num_qubits", "method", "h", "s", "cx", "depth"])
+
+    for _ in range(20):
+        clifford = random_clifford_circuit(nr_qubits=num_qubits)
+        column = {"n_rep": _, "num_qubits": num_qubits, "method": "ours"} | \
+                 our_compilation_tableau(clifford, backend, num_qubits)
+        df.loc[len(df)] = column
+        df.to_csv(df_name)
+
+        column = {"n_rep": _, "num_qubits": num_qubits, "method": "optimal"} | \
+                 optimal_compilation(clifford, backend)
+        df.loc[len(df)] = column
+        df.to_csv(df_name)
+    df.to_csv(df_name)
+
+    print(df.groupby("method").mean())
+
+
+def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
+    backend, df_name = get_backend_and_df_name(backend_name)
+    if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
         num_qubits = int(backend_name.split("_")[1])
@@ -278,146 +380,146 @@ def json_serial(obj):
     return str(obj)
 
 
-def run_clifford_experiment(exp_number=0, backend_name="ibm_perth"):
-    base_path = f"data/clifford_experiment_real_hardware/{backend_name}/{exp_number}"
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
-
-    # read token from env IBM_TOKEN
-    token = os.environ.get("IBM_TOKEN")
-    assert token
-    # provider = IBMQ.enable_account(token)
-    provider = IBMProvider(token=token, instance="ibm-q-research-2/tu-munich-2/main")
-    backend = provider.get_backend(backend_name)
-    if backend_name == "ibm_perth" or backend_name == "ibm_nairobi":
-        nr_gates = 30
-    else:
-        nr_gates = 25
-    # Get the provider and choose the backend
-    clifford_circ = random_hscx_circuit(nr_gates=nr_gates,
-                                        nr_qubits=backend.configuration().num_qubits)
-    clifford = Clifford.from_circuit(clifford_circ)
-    ct = CliffordTableau(tableau=clifford.symplectic_matrix, signs=clifford.phase)
-    with open(f"{base_path}/clifford.json", "w") as f:
-        json.dump(clifford.to_dict(), f)
-
-    backend_simulator = Aer.get_backend('statevector_simulator')
-    circ_simulated = clifford.to_circuit()
-    circ_simulated_ = QuantumCircuit(circ_simulated.num_qubits,
-                                     name=f"clifford_simulated_{exp_number}")
-    circ_simulated_.compose(circ_simulated, inplace=True)
-    circ_simulated_.barrier()
-    circ_simulated_.compose(circ_simulated.inverse(), inplace=True)
-    circ_simulated_.measure_all()
-    circ_simulated = circ_simulated_
-    circ_simulated.qasm(filename=f"{base_path}/clifford_simulated.qasm")
-    job = execute(circ_simulated, backend_simulator, shots=16000)
-    result = job.result()
-    counts_simulated = result.get_counts()
-    print(counts_simulated)
-
-    ######################
-    # Stim execution
-    ######################
-
-    tableau = circuit_to_stim_tableau(clifford_circ)
-    circ_stim = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
-    circ_stim = transpile(circ_stim, backend)
-
-    circ_stim_ = QuantumCircuit(circ_stim.num_qubits,
-                                name=f"clifford_stim_{exp_number}")
-    circ_stim_.compose(circ_stim, inplace=True)
-    circ_stim_.barrier()
-    circ_stim_.compose(circ_stim.inverse(), inplace=True)
-    circ_stim_.measure_all()
-
-    job_stim = execute(circ_stim_, backend, shots=16000)
-
-    print("Stim: ", circ_stim_.count_ops()["cx"])
-
-    while job_stim.status() != JobStatus.DONE:
-        time.sleep(1)
-    result_stim = job_stim.result()
-    with open(f"{base_path}/result_stim.json", "w") as f:
-        json.dump(result_stim.to_dict(), f, default=json_serial)
-
-    circ_stim_.qasm(filename=f"{base_path}/stim.qasm")
-
-    ######################
-    # Our execution of the quantum circuit
-    ######################
-
-    topo = Topology.from_qiskit_backend(backend)
-    circ_ours, perm = ct.to_cifford_circuit_arch_aware(topo)
-    circ_ours = apply_permutation(circ_ours.to_qiskit(), perm)
-
-    circ_ours_ = QuantumCircuit(circ_ours.num_qubits,
-                                name=f"clifford_synth_{exp_number}")
-    circ_ours_.compose(circ_ours, inplace=True)
-    circ_ours_.barrier()
-    circ_ours_.compose(circ_ours.inverse(), inplace=True)
-    circ_ours_.measure_all()
-    circ_ours = circ_ours_
-    circ_ours.qasm(filename=f"{base_path}/ours.qasm")
-
-    job_ours = execute(circ_ours, backend, shots=16000)
-
-    ######################
-    # IBM execution of the quantum circuit
-    ######################
-    circ = clifford.to_circuit()
-
-    circ = transpile(circ, backend)
-
-    circ_ = QuantumCircuit(circ_ours.num_qubits,
-                           name=f"ibm_synth_{exp_number}")
-    circ_.compose(circ, inplace=True)
-    circ_.barrier()
-    circ_.compose(circ.inverse(), inplace=True)
-    circ_.measure_all()
-    circ = circ_
-    circ.qasm(filename=f"{base_path}/ibm.qasm")
-    job_ibm = execute(circ, backend, shots=16000)
-
-    print("Ours: ", circ_ours.count_ops()["cx"])
-    print("IBM: ", circ.count_ops()["cx"])
-
-    while job_ibm.status() != JobStatus.DONE:
-        time.sleep(1)
-
-    result_ibm = job_ibm.result()
-    with open(f"{base_path}/result_ibm.json", "w") as f:
-        json.dump(result_ibm.to_dict(), f, default=json_serial)
-
-    while job_ours.status() != JobStatus.DONE:
-        time.sleep(1)
-    result_ours = job_ours.result()
-    with open(f"{base_path}/result_ours.json", "w") as f:
-        json.dump(result_ours.to_dict(), f, default=json_serial)
-
-    count_ours = result_ours.get_counts()
-    count_ours = apply_permutation_measurements(count_ours, perm)
-    count_ibm = result_ibm.get_counts()
-    count_stim = result_stim.get_counts()
-
-    fidelity_ours = hellinger_fidelity(count_ours, counts_simulated)
-    fidelity_ibm = hellinger_fidelity(count_ibm, counts_simulated)
-    fidelity_stim = hellinger_fidelity(count_stim, counts_simulated)
-
-    print("Ours: ", fidelity_ours)
-    print("IBM: ", fidelity_ibm)
-    print("Stim: ", fidelity_stim)
-
-    col = {
-        "cx_ours": circ_ours.count_ops()["cx"],
-        "cx_ibm": circ.count_ops()["cx"],
-        "fidelity_ours": fidelity_ours,
-        "fidelity_ibm": fidelity_ibm,
-        "time_ours": result_ours.time_taken,
-        "time_ibm": result_ibm.time_taken
-    }
-    return pd.DataFrame(col, index=[0])
-
+# def run_clifford_experiment(exp_number=0, backend_name="ibm_perth"):
+#     base_path = f"data/clifford_experiment_real_hardware/{backend_name}/{exp_number}"
+#     if not os.path.exists(base_path):
+#         os.makedirs(base_path)
+#
+#     # read token from env IBM_TOKEN
+#     token = os.environ.get("IBM_TOKEN")
+#     assert token
+#     # provider = IBMQ.enable_account(token)
+#     provider = IBMProvider(token=token, instance="ibm-q-research-2/tu-munich-2/main")
+#     backend = provider.get_backend(backend_name)
+#     if backend_name == "ibm_perth" or backend_name == "ibm_nairobi":
+#         nr_gates = 30
+#     else:
+#         nr_gates = 25
+#     # Get the provider and choose the backend
+#     clifford_circ = random_hscx_circuit(nr_gates=nr_gates,
+#                                         nr_qubits=backend.configuration().num_qubits)
+#     clifford = Clifford.from_circuit(clifford_circ)
+#     ct = CliffordTableau(tableau=clifford.symplectic_matrix, signs=clifford.phase)
+#     with open(f"{base_path}/clifford.json", "w") as f:
+#         json.dump(clifford.to_dict(), f)
+#
+#     backend_simulator = Aer.get_backend('statevector_simulator')
+#     circ_simulated = clifford.to_circuit()
+#     circ_simulated_ = QuantumCircuit(circ_simulated.num_qubits,
+#                                      name=f"clifford_simulated_{exp_number}")
+#     circ_simulated_.compose(circ_simulated, inplace=True)
+#     circ_simulated_.barrier()
+#     circ_simulated_.compose(circ_simulated.inverse(), inplace=True)
+#     circ_simulated_.measure_all()
+#     circ_simulated = circ_simulated_
+#     circ_simulated.qasm(filename=f"{base_path}/clifford_simulated.qasm")
+#     job = execute(circ_simulated, backend_simulator, shots=16000)
+#     result = job.result()
+#     counts_simulated = result.get_counts()
+#     print(counts_simulated)
+#
+#     ######################
+#     # Stim execution
+#     ######################
+#
+#     tableau = circuit_to_stim_tableau(clifford_circ)
+#     circ_stim = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
+#     circ_stim = transpile(circ_stim, backend)
+#
+#     circ_stim_ = QuantumCircuit(circ_stim.num_qubits,
+#                                 name=f"clifford_stim_{exp_number}")
+#     circ_stim_.compose(circ_stim, inplace=True)
+#     circ_stim_.barrier()
+#     circ_stim_.compose(circ_stim.inverse(), inplace=True)
+#     circ_stim_.measure_all()
+#
+#     job_stim = execute(circ_stim_, backend, shots=16000)
+#
+#     print("Stim: ", circ_stim_.count_ops()["cx"])
+#
+#     while job_stim.status() != JobStatus.DONE:
+#         time.sleep(1)
+#     result_stim = job_stim.result()
+#     with open(f"{base_path}/result_stim.json", "w") as f:
+#         json.dump(result_stim.to_dict(), f, default=json_serial)
+#
+#     circ_stim_.qasm(filename=f"{base_path}/stim.qasm")
+#
+#     ######################
+#     # Our execution of the quantum circuit
+#     ######################
+#
+#     topo = Topology.from_qiskit_backend(backend)
+#     circ_ours, perm = ct.to_cifford_circuit_arch_aware(topo)
+#     circ_ours = apply_permutation(circ_ours.to_qiskit(), perm)
+#
+#     circ_ours_ = QuantumCircuit(circ_ours.num_qubits,
+#                                 name=f"clifford_synth_{exp_number}")
+#     circ_ours_.compose(circ_ours, inplace=True)
+#     circ_ours_.barrier()
+#     circ_ours_.compose(circ_ours.inverse(), inplace=True)
+#     circ_ours_.measure_all()
+#     circ_ours = circ_ours_
+#     circ_ours.qasm(filename=f"{base_path}/ours.qasm")
+#
+#     job_ours = execute(circ_ours, backend, shots=16000)
+#
+#     ######################
+#     # IBM execution of the quantum circuit
+#     ######################
+#     circ = clifford.to_circuit()
+#
+#     circ = transpile(circ, backend)
+#
+#     circ_ = QuantumCircuit(circ_ours.num_qubits,
+#                            name=f"ibm_synth_{exp_number}")
+#     circ_.compose(circ, inplace=True)
+#     circ_.barrier()
+#     circ_.compose(circ.inverse(), inplace=True)
+#     circ_.measure_all()
+#     circ = circ_
+#     circ.qasm(filename=f"{base_path}/ibm.qasm")
+#     job_ibm = execute(circ, backend, shots=16000)
+#
+#     print("Ours: ", circ_ours.count_ops()["cx"])
+#     print("IBM: ", circ.count_ops()["cx"])
+#
+#     while job_ibm.status() != JobStatus.DONE:
+#         time.sleep(1)
+#
+#     result_ibm = job_ibm.result()
+#     with open(f"{base_path}/result_ibm.json", "w") as f:
+#         json.dump(result_ibm.to_dict(), f, default=json_serial)
+#
+#     while job_ours.status() != JobStatus.DONE:
+#         time.sleep(1)
+#     result_ours = job_ours.result()
+#     with open(f"{base_path}/result_ours.json", "w") as f:
+#         json.dump(result_ours.to_dict(), f, default=json_serial)
+#
+#     count_ours = result_ours.get_counts()
+#     count_ours = apply_permutation_measurements(count_ours, perm)
+#     count_ibm = result_ibm.get_counts()
+#     count_stim = result_stim.get_counts()
+#
+#     fidelity_ours = hellinger_fidelity(count_ours, counts_simulated)
+#     fidelity_ibm = hellinger_fidelity(count_ibm, counts_simulated)
+#     fidelity_stim = hellinger_fidelity(count_stim, counts_simulated)
+#
+#     print("Ours: ", fidelity_ours)
+#     print("IBM: ", fidelity_ibm)
+#     print("Stim: ", fidelity_stim)
+#
+#     col = {
+#         "cx_ours": circ_ours.count_ops()["cx"],
+#         "cx_ibm": circ.count_ops()["cx"],
+#         "fidelity_ours": fidelity_ours,
+#         "fidelity_ibm": fidelity_ibm,
+#         "time_ours": result_ours.time_taken,
+#         "time_ibm": result_ibm.time_taken
+#     }
+#     return pd.DataFrame(col, index=[0])
+#
 
 def plot_experiment(name="random_guadalupe", v_line_cx=None):
     plt.rcParams.update({
@@ -458,18 +560,18 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None):
     plt.show()
 
 
-def run_clifford_real_hardware(backend_name="ibm_perth"):
-    experiment_numbers = [i for i in range(0, 20)]
-    run_clifford_experiment_ = functools.partial(run_clifford_experiment,
-                                                 backend_name=backend_name)
-    # create a threadpool and run run_clifford_experiment
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        # Submit tasks to the thread pool
-
-        results = executor.map(run_clifford_experiment_, experiment_numbers)
-    df = pd.concat(results, ignore_index=True)
-    print(df)
-    df.to_csv("data/clifford_experiment_real_hardware/results.csv")
+# def run_clifford_real_hardware(backend_name="ibm_perth"):
+#     experiment_numbers = [i for i in range(0, 20)]
+#     run_clifford_experiment_ = functools.partial(run_clifford_experiment,
+#                                                  backend_name=backend_name)
+#     # create a threadpool and run run_clifford_experiment
+#     with ThreadPoolExecutor(max_workers=20) as executor:
+#         # Submit tasks to the thread pool
+#
+#         results = executor.map(run_clifford_experiment_, experiment_numbers)
+#     df = pd.concat(results, ignore_index=True)
+#     print(df)
+#     df.to_csv("data/clifford_experiment_real_hardware/results.csv")
 
 
 def analyze_real_hw(backend_name="ibm_nairobi"):
@@ -739,9 +841,9 @@ if __name__ == "__main__":
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
 
-    # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=20)
+    # random_experiment(backend_name="quito", nr_input_gates=20, nr_steps=4)
     # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
-    #
+
     # random_experiment(backend_name="nairobi", nr_input_gates=300, nr_steps=20)
     # random_experiment(backend_name="complete_7", nr_input_gates=300, nr_steps=20)
     #
@@ -761,8 +863,12 @@ if __name__ == "__main__":
     # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
     # df_ = df_[df_["n_gadgets"] > 75]
     # v_line = np.mean(df_["cx"])
+
+    # random_experiment_complete(backend_name="line_3")
+    random_experiment_complete(backend_name="line_4")
+    # random_experiment_complete(backend_name="line_5")
     #
-    plot_experiment(name="random_quito", v_line_cx=None)
+    # plot_experiment(name="random_line_3", v_line_cx=None)
     # plot_experiment(name="random_complete_5", v_line_cx=v_line)
     #
     #
@@ -779,7 +885,7 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 250]
     # v_line = np.mean(df_["cx"])
     # #
-    plot_experiment(name="random_guadalupe", v_line_cx=None)
+    # plot_experiment(name="random_guadalupe", v_line_cx=None)
     # plot_experiment(name="random_complete_16", v_line_cx=v_line)
     #
     # df = pd.read_csv(f"data/random_complete_27.csv")
@@ -787,7 +893,7 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 500]
     # v_line = np.mean(df_["cx"])
     #
-    plot_experiment(name="random_mumbai", v_line_cx=None)
+    # plot_experiment(name="random_mumbai", v_line_cx=None)
     # plot_experiment(name="random_complete_27", v_line_cx=v_line)
     #
     # df = pd.read_csv(f"data/random_complete_65.csv")
@@ -813,4 +919,4 @@ if __name__ == "__main__":
     # estimate_routing_overhead("ithaca", 65, 1250)
     # estimate_routing_overhead("brisbane", 127, 3000)
 
-    get_complete_cx_count()
+    # get_complete_cx_count()
