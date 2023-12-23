@@ -182,7 +182,7 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
     start = time.time()
 
     circ, _ = qmap.synthesize_clifford(clifford,
-                                       use_maxsat=True,
+                                       #use_maxsat=True,
                                        dump_intermediate_results=True,
                                        include_destabilizers=True)
     print("done!")
@@ -866,7 +866,7 @@ if __name__ == "__main__":
 
     # random_experiment_complete(backend_name="line_3")
     # random_experiment_complete(backend_name="line_4")
-    random_experiment_complete(backend_name="line_5")
+    random_experiment_complete(backend_name="line_3")
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
     # plot_experiment(name="random_complete_5", v_line_cx=v_line)
