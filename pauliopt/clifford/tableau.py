@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def mult_paulis(p1, p2, sign1, sign2, n_qubits):
+def mult_paulis(p1:np.array, p2:np.array, sign1:float, sign2:float, n_qubits:int):
     x_1 = p1[:n_qubits].copy()
     z_1 = p1[n_qubits:].copy()
     x_2 = p2[:n_qubits].copy()
@@ -146,10 +146,10 @@ class CliffordTableau:
                 self.tableau[row, i] = (self.tableau[row, i] + 1) % 2
 
             if (self.tableau[row, i + self.n_qubits] + pauli[i + self.n_qubits]) % 2 == 1:
-                self.tableau[row, i + self.n_qubits] = (self.tableau[
-                                                            row, i + self.n_qubits] + 1) % 2
+                self.tableau[row, i + self.n_qubits] = (self.tableau[row, i + self.n_qubits] + 1) % 2
         if (self.signs[row] + p_sing) % 2 == 1:
             self.signs[row] = (self.signs[row] + 1) % 2
+
 
     def inverse(self):
         n_qubits = self.n_qubits
