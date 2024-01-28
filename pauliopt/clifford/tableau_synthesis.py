@@ -30,7 +30,7 @@ def heurisitc_fkt(row, G, remaining: CliffordTableau):
     return dist_x + dist_z
 
 
-def pick_pivot(G, remaining: "CliffordTableau", possible_swaps, include_swaps):
+def pick_pivot(G, remaining: "CliffordTableau", possible_swaps, include_swaps, r_cols):
     """
     Pick the pivot to eliminate the next column in the tableau synthesis algorithm.
 
@@ -44,7 +44,7 @@ def pick_pivot(G, remaining: "CliffordTableau", possible_swaps, include_swaps):
     """
     scores = []
     has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
-    for col in G.nodes:
+    for col in r_cols:
         if not is_cutting(col, G) or (
             include_swaps and has_cutting_swappable and col in possible_swaps
         ):
@@ -366,12 +366,16 @@ def synthesize_tableau(tableau: CliffordTableau, topo: Topology, include_swaps=T
     [1] Winderl, Huang, et al. "Architecture-Aware Synthesis of Stabilizer Circuits from Clifford Tableaus." arXiv preprint arXiv:2309.08972 (2023).
 
     """
+    if tableau.n_qubits > topo.num_qubits:
+        raise Exception("The topology is too small for the given tableau")
 
     qc = Circuit(tableau.n_qubits)
 
     remaining = tableau.inverse()
     permutation = {v: v for v in range(tableau.n_qubits)}
     swappable_nodes = list(range(tableau.n_qubits))
+
+    remaining_cols = list(range(tableau.n_qubits))
 
     G = topo.to_nx
     for e1, e2 in G.edges:
@@ -395,7 +399,7 @@ def synthesize_tableau(tableau: CliffordTableau, topo: Topology, include_swaps=T
         else:
             raise Exception("Unknown Gate")
 
-    while G.nodes:
+    while remaining_cols:
         # 1. Pick a pivot
         pivot_col, pivot_row = pick_pivot(G, remaining, swappable_nodes, include_swaps)
 
