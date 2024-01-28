@@ -910,10 +910,7 @@ class PhaseCircuit(Sequence[PhaseGadget]):
                 gate.on_qiskit_circuit(topology, circuit)
             else:
                 circuit.cx(*gate)
-        if cx_synth != "naive":
-            cxs = CXCircuit.from_parity_matrix(
-                cxs.parity_matrix(), topology, method=cx_synth, reallocate=reallocate
-            )
+        cxs = cxs.optimize_cx_block(method=cx_synth, reallocate=reallocate)
         if return_cx:
             return circuit, cxs
         new_cxs = cxs.to_qiskit(method="naive")

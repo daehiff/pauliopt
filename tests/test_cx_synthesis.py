@@ -77,25 +77,6 @@ class TestCXSynthesis(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertNdArrEqual(self.col_matrix[i], self.row_matrix[i].T)
 
-    def test_synthesis(self):
-        for i in range(self.n_tests):
-            for wise in [True, False]:
-                if wise:
-                    matrix = self.col_matrix[i]
-                else:
-                    matrix = self.row_matrix[i]
-                for method in synthesis_methods:
-                    with self.subTest(i=i, parity_as_columns=wise, method=method):
-                        synthesized_circuit = CXCircuit.from_parity_matrix(
-                            matrix,
-                            self.topology,
-                            parities_as_columns=wise,
-                            reallocate=False,
-                            method=method,
-                        )
-                        synth_matrix = synthesized_circuit.parity_matrix(wise)
-                        self.assertNdArrEqual(synth_matrix, matrix)
-
     def test_synthesis_alt(self):
         for i in range(self.n_tests):
             for col_wise in [True, False]:
@@ -106,33 +87,6 @@ class TestCXSynthesis(unittest.TestCase):
                             method, reallocate=False, parities_as_columns=col_wise
                         )
                         self.assertQCEqual(baseline, synthesized)
-
-    def test_reallocation(self):
-        for i in range(self.n_tests):
-            for wise in [True, False]:
-                if wise:
-                    matrix = self.col_matrix[i]
-                else:
-                    matrix = self.row_matrix[i]
-                for (
-                    method
-                ) in (
-                    synthesis_methods
-                ):  # TODO when more synthesis methods are available, maybe not all are up-to-permutation.
-                    with self.subTest(i=i, parity_as_columns=wise, method=method):
-                        synthesized_circuit = CXCircuit.from_parity_matrix(
-                            matrix,
-                            self.topology,
-                            parities_as_columns=wise,
-                            reallocate=True,
-                            method=method,
-                        )
-                        synth_matrix = synthesized_circuit.parity_matrix(wise)
-                        permutation = synthesized_circuit._output_mapping
-                        if wise:
-                            self.assertNdArrEqual(matrix, synth_matrix[:, permutation])
-                        else:
-                            self.assertNdArrEqual(matrix, synth_matrix[permutation, :])
 
     def test_reallocation_alt(self):
         for i in range(self.n_tests):

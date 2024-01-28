@@ -526,9 +526,7 @@ class OptimizedPhaseCircuit:
         if self._cx_method == "naive":
             front_cx_count = self._cx_block.num_gates
         else:
-            front_cx_count = CXCircuit.from_parity_matrix(
-                self._cx_block.parity_matrix(),
-                self.topology,
+            front_cx_count = self._cx_block.optimize_cx_block(
                 reallocate=self._reallocate,
                 method=self._cx_method,
             ).num_gates
@@ -549,9 +547,7 @@ class OptimizedPhaseCircuit:
         if self._cx_method == "naive":
             new_cxs = cxs
         else:
-            new_cxs = CXCircuit.from_parity_matrix(
-                cxs.parity_matrix(),
-                self.topology,
+            new_cxs = cxs.optimize_cx_block(
                 reallocate=self._reallocate,
                 method=self._cx_method,
             )

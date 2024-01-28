@@ -55,9 +55,17 @@ def _get_qubits_qiskit(qubits, qreg):
 class Circuit:
     """Class for representing quantum circuits."""
 
-    def __init__(self, n_qubits, _gates=None):
+    def __init__(self, n_qubits, _gates=None, initial_mapping=None, final_mapping=None):
         self.n_qubits = n_qubits
         self._gates = [] if _gates is None else _gates
+
+        if initial_mapping is None:
+            initial_mapping = list(range(n_qubits))
+        self.initial_mapping = initial_mapping
+
+        if final_mapping is None:
+            final_mapping = list(range(n_qubits))
+        self.final_mapping = final_mapping
 
         for gate in self._gates:
             self._check_gate(gate)
@@ -186,12 +194,36 @@ class Circuit:
     def to_qiskit(self):
         try:
             from qiskit import QuantumCircuit
+            from qiskit.circuit.library import Permutation
         except ModuleNotFoundError:
             raise ModuleNotFoundError("You must install the 'qiskit' library.")
 
         qc = QuantumCircuit(self.n_qubits)
-
+        qc.compose(
+            Permutation(self.n_qubits, pattern=self.initial_mapping),
+            qubits=range(self.n_qubits),
+            inplace=True,
+        )
         for gate in self._gates:
             op, qubits = gate.to_qiskit()
             qc.append(op, qubits)
+
+        qc.compose(
+            Permutation(self.n_qubits, pattern=self.final_mapping),
+            qubits=range(self.n_qubits),
+            inplace=True,
+        )
         return qc
+
+    def apply_permutation(self, permutation):
+        """
+        Applies a permutation to the qubits of the circuit.
+
+        Args:
+            permutation: A permutation of the qubits.
+        Returns:
+            The circuit with the permutation applied.
+        """
+        for gate in self._gates:
+            gate.apply_permutation(permutation)
+        return self

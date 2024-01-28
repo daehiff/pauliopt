@@ -12,7 +12,7 @@ class Gate(ABC):
     """Base class for quantum gates."""
 
     def __init__(self, *qubits):
-        self.qubits = qubits
+        self.qubits = list(qubits)
         self.name = self.__class__.__name__
         if len(qubits) != self.n_qubits:
             name, n_qubits = self.name, self.n_qubits
@@ -21,6 +21,13 @@ class Gate(ABC):
     def __repr__(self) -> str:
         args = map(repr, self.qubits)
         return f"{self.name}({', '.join(args)})"
+
+    def apply_permutation(self, permutation):
+        """
+        Apply the permutation to the qubits of the gate.
+        """
+        self.qubits = [permutation[q] for q in self.qubits]
+        return self
 
     @property
     def width(self):
@@ -271,7 +278,25 @@ class Tdg(Gate):
         return TdgGate(), self.qubits
 
 
-class SWAP(Gate):
+class ControlledGate(Gate, ABC):
+    @property
+    def control(self):
+        return self.qubits[0]
+
+    @property
+    def target(self):
+        return self.qubits[1]
+
+    @control.setter
+    def control(self, q):
+        self.qubits[0] = q
+
+    @target.setter
+    def target(self, q):
+        self.qubits[1] = q
+
+
+class SWAP(ControlledGate):
     n_qubits = 2
     draw_as_zx = True
 
@@ -289,7 +314,7 @@ class SWAP(Gate):
         return SwapGate(), self.qubits
 
 
-class CX(Gate):
+class CX(ControlledGate):
     n_qubits = 2
     draw_as_zx = True
     width = 40
@@ -322,7 +347,7 @@ class CX(Gate):
         return CXGate(), self.qubits
 
 
-class CY(Gate):
+class CY(ControlledGate):
     n_qubits = 2
     draw_as_zx = True
 
@@ -340,7 +365,7 @@ class CY(Gate):
         return CYGate(), self.qubits
 
 
-class CZ(Gate):
+class CZ(ControlledGate):
     n_qubits = 2
     draw_as_zx = True
 
