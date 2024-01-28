@@ -1,9 +1,7 @@
-from pauliopt.circuits import Circuit
 from bidict import bidict
 
-
-class CNOTComb:
-    pass
+from pauliopt.circuits import Circuit
+from pauliopt.combs.cx_comb import CNOTComb
 
 
 def circuit_to_cnot_comb(circuit: Circuit) -> CNOTComb:
@@ -99,4 +97,28 @@ def circuit_to_cnot_comb(circuit: Circuit) -> CNOTComb:
             hole_plugs[hole_qubit_mappings[qubit]] = open_holes.pop(qubit)
             n_qubits = n_qubits + 1
 
-    print(CNOTs_for_comb)
+    qubit_dependence = dict([(i, set()) for i in range(n_qubits)])
+    for gate in CNOTs_for_comb:
+        # Example, gate = CNOT(2,3)
+        # Qubit 3 now depends on qubit 2 being available
+        # All the qubits that depended on 2 being available now depend on 3 being available
+        # Qubit 2 now depends on qubit 3 being available
+        # All the qubits that depended on 3 being available now depend on 2 being available
+        qubit_dependence[gate.control].add(gate.target)
+        qubit_dependence[gate.control] = qubit_dependence[gate.control].union(
+            qubit_dependence[gate.target]
+        )
+        qubit_dependence[gate.target].add(gate.control)
+        qubit_dependence[gate.target] = qubit_dependence[gate.target].union(
+            qubit_dependence[gate.control]
+        )
+
+    comb_circuit = Circuit(n_qubits)
+    comb_circuit.add_gates(CNOTs_for_comb)
+
+    cnot_comb = CNOTComb(
+        n_qubits, hole_qubit_mappings, new_to_old_qubit_mappings, qubit_dependence, hole_plugs
+    )
+    cnot_comb.append_circuit(comb_circuit)
+
+    return cnot_comb

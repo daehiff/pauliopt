@@ -191,7 +191,7 @@ class Circuit:
 
         return circ
 
-    def to_qiskit(self):
+    def to_qiskit(self, include_permutations=True):
         try:
             from qiskit import QuantumCircuit
             from qiskit.circuit.library import Permutation
@@ -199,20 +199,21 @@ class Circuit:
             raise ModuleNotFoundError("You must install the 'qiskit' library.")
 
         qc = QuantumCircuit(self.n_qubits)
-        qc.compose(
-            Permutation(self.n_qubits, pattern=self.initial_mapping),
-            qubits=range(self.n_qubits),
-            inplace=True,
-        )
+        if include_permutations:
+            qc.compose(
+                Permutation(self.n_qubits, pattern=self.initial_mapping),
+                qubits=range(self.n_qubits),
+                inplace=True,
+            )
         for gate in self._gates:
             op, qubits = gate.to_qiskit()
             qc.append(op, qubits)
-
-        qc.compose(
-            Permutation(self.n_qubits, pattern=self.final_mapping),
-            qubits=range(self.n_qubits),
-            inplace=True,
-        )
+        if include_permutations:
+            qc.compose(
+                Permutation(self.n_qubits, pattern=self.final_mapping),
+                qubits=range(self.n_qubits),
+                inplace=True,
+            )
         return qc
 
     def apply_permutation(self, permutation):

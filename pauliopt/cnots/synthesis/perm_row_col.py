@@ -1,7 +1,8 @@
-from typing import Tuple, List
+from typing import List
 
 import networkx as nx
 import numpy as np
+from pyzx import Mat2
 
 from pauliopt.circuits import Circuit
 from pauliopt.cnots.parity_map import ParityMap
@@ -25,7 +26,9 @@ def choose_column(options, row, parity_map, n_qubits, reallocate=False):
     return row
 
 
-def get_rows_to_eliminate(p_matrix, qubits_to_process, columns_to_eliminate, row, col):
+def get_rows_to_eliminate(
+    p_matrix, rows_to_eliminate, cols_to_eliminate, choice_row, choice_col
+):
     """
     Get the rows to elminiate the row of the parity map by computing a system of linear
     equations:
@@ -37,10 +40,10 @@ def get_rows_to_eliminate(p_matrix, qubits_to_process, columns_to_eliminate, row
 
     Args:
         p_matrix (np.ndarray): The parity map matrix
-        qubits_to_process (List[int]): The qubits that are not yet eliminated
-        columns_to_eliminate (List[int]): The columns that are not yet eliminated
-        row (int): The row to eliminate
-        col (int): The column to eliminate
+        rows_to_eliminate (List[int]): The qubits that are not yet eliminated
+        cols_to_eliminate (List[int]): The columns that are not yet eliminated
+        choice_row (int): The row to eliminate
+        choice_col (int): The column to eliminate
 
     Returns:
         List[int]: The rows to eliminate
@@ -52,27 +55,78 @@ def get_rows_to_eliminate(p_matrix, qubits_to_process, columns_to_eliminate, row
         raise ImportError(
             "The perm-row-col synthesis algorithm requires the galois library."
         )
-    qubits_to_process_ = [i for i in qubits_to_process if i != row]
-    columns_to_eliminate_ = [i for i in columns_to_eliminate if i != col]
-    submatrix = [
-        [p_matrix[i, j] for i in qubits_to_process if i != row]
-        for j in columns_to_eliminate
-        if j != col
-    ]
-    A = galois.GF(2)(submatrix)
-    A_inv = np.linalg.inv(A)
-    B = galois.GF(2)(
-        [p_matrix[row, i] for i in columns_to_eliminate if i != col], dtype=np.int32
+    A_ = Mat2(
+        np.array(
+            [
+                [
+                    int(p_matrix[row][col])
+                    for row in rows_to_eliminate
+                    if row != choice_row
+                ]
+                for col in cols_to_eliminate
+                if col != choice_col
+            ]
+        )
     )
-    # A = p_matrix[columns_to_eliminate_, :][:, qubits_to_process_].T
-    # A_inv = np.linalg.inv(A)
-    # B = p_matrix[row, columns_to_eliminate_]
-    X1 = np.matmul(A_inv, B)
-    # Add the row that we removed back in for easier indexing.
-    X = np.insert(X1, qubits_to_process.index(row), 1)
+    B_ = Mat2(
+        np.array(
+            [
+                [int(p_matrix[choice_row][col])]
+                for col in cols_to_eliminate
+                if col != choice_col
+            ]
+        )
+    )
+    A_.gauss(full_reduce=True, x=B_)
+    X = A_.data.transpose().dot(B_.data).flatten()
+    find_index = lambda i: [j for j in rows_to_eliminate if j != choice_row].index(i)
+    return [
+        i for i in rows_to_eliminate if i == choice_row or X[find_index(i)]
+    ]  # This is S'
 
-    # subselect the columns that we need to process (that are one)
-    return [qubits_to_process[i] for i in range(len(qubits_to_process)) if X[i] == 1]
+
+def row_col_iteration(
+    matrix,
+    topology: Topology,
+    row: int,
+    col: int,
+    qubits_to_process: list,
+    columns_to_eliminate: list,
+    add_cnot,
+):
+    col_nodes = [i for i in qubits_to_process if matrix[i, col] == 1]
+    if matrix[row, col] == 0:
+        col_nodes.append(row)
+
+    # Reduce the columns
+    if len(col_nodes) > 1:
+        steiner_tree = topology.steiner_tree(col_nodes, qubits_to_process)
+        traversal = list(reversed(list(nx.bfs_edges(steiner_tree, source=row))))
+        for parent, child in traversal:
+            if matrix[parent, col] == 0:
+                add_cnot(parent, child, matrix)
+
+        for parent, child in traversal:
+            add_cnot(child, parent, matrix)
+    # assert np.sum(np.asarray(matrix[:, col])) == 1
+    # assert matrix[row, col] == 1
+
+    # Reduce the row
+    ones_in_the_row = [i for i in columns_to_eliminate if matrix[row, i] == 1]
+    if len(ones_in_the_row) > 1:
+        row_nodes = get_rows_to_eliminate(
+            matrix, qubits_to_process, columns_to_eliminate, row, col
+        )
+        steiner_tree = topology.steiner_tree(row_nodes, qubits_to_process)
+        traversal = list(nx.bfs_edges(steiner_tree, source=row))
+        for parent, child in traversal:
+            if child not in row_nodes:
+                add_cnot(parent, child, matrix)
+        for parent, child in reversed(traversal):
+            add_cnot(parent, child, matrix)
+
+    # assert np.sum(np.asarray(matrix[row, :])) == 1
+    # assert matrix[row, col] == 1
 
 
 def _perm_row_col(
@@ -109,60 +163,35 @@ def _perm_row_col(
         # This synthesis technique only works when parities are columns.
         parity_map = parity_map.transpose()
 
-    def add_cnot(ctrl, trgt):
-        parity_map.append_cnot(trgt, ctrl)
+    def add_cnot(ctrl, trgt, matrix):
+        matrix[ctrl, :] += matrix[trgt, :]
         cnot_circuit.add_gate(CX(ctrl, trgt))
 
     qubits_to_process = list(range(topology.num_qubits))
     columns_to_eliminate = list(range(topology.num_qubits))
     new_mapping = [-1] * topology.num_qubits
+    matrix = parity_map.matrix
     while len(qubits_to_process) > 1:
         # Pick the pivot location
         possible_qubits = topology.non_cutting_qubits(qubits_to_process)
-        row = choose_row(possible_qubits, parity_map)
+        row = choose_row(possible_qubits, matrix)
         col = choose_column(
             columns_to_eliminate,
             row,
-            parity_map,
+            matrix,
             topology.num_qubits,
             reallocate=reallocate,
         )
 
-        # Reduce the column
-        col_nodes = [i for i in qubits_to_process if parity_map[i, col] == 1]
-        if parity_map[row, col] == 0:
-            col_nodes.append(row)
-
-        steiner_tree = topology.steiner_tree(col_nodes, qubits_to_process)
-        if len(col_nodes) > 1:
-            traversal = list(reversed(list(nx.bfs_edges(steiner_tree, source=row))))
-            for parent, child in traversal:
-                if parity_map[parent, col] == 0:
-                    add_cnot(parent, child)
-                    # parity_map.append_cnot(child, parent)
-
-            for parent, child in traversal:
-                add_cnot(child, parent)
-
-        assert np.sum(np.asarray(parity_map[:, col])) == 1
-        assert parity_map[row, col] == 1
-
-        # Reduce the row
-        ones_in_the_row = [i for i in columns_to_eliminate if parity_map[row, i] == 1]
-        if len(ones_in_the_row) > 1:
-            row_nodes = get_rows_to_eliminate(
-                parity_map.matrix, qubits_to_process, columns_to_eliminate, row, col
-            )
-            steiner_tree = topology.steiner_tree(row_nodes, qubits_to_process)
-            traversal = list(nx.bfs_edges(steiner_tree, source=row))
-            for parent, child in traversal:
-                if child not in row_nodes:
-                    add_cnot(parent, child)
-            for parent, child in reversed(traversal):
-                add_cnot(parent, child)
-
-        assert np.sum(np.asarray(parity_map[row, :])) == 1
-        assert parity_map[row, col] == 1
+        row_col_iteration(
+            matrix,
+            topology,
+            row,
+            col,
+            qubits_to_process,
+            columns_to_eliminate,
+            add_cnot,
+        )
 
         qubits_to_process.remove(row)
         columns_to_eliminate.remove(col)

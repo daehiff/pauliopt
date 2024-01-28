@@ -28,6 +28,14 @@ class ParityMap:
         new.matrix = self.matrix.copy()
         return new
 
+    def append_circuit(self, circuit):
+        # TODO add inital and final permutation
+        for gate in circuit._gates:
+            if gate.name == "CX":
+                self.append_cnot(gate.control, gate.target)
+            else:
+                raise ValueError("Only CNOT gates are supported.")
+
     @property
     def T(self):
         return self.transpose()

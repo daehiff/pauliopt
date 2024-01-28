@@ -4,7 +4,9 @@ from qiskit import QuantumCircuit
 from pauliopt.circuits import Circuit
 from pauliopt.cnots.parity_map import ParityMap
 from pauliopt.cnots.synthesis.perm_row_col import _perm_row_col
+from pauliopt.combs.synthesis.cx_comb_synthesis import comb_row_col
 from pauliopt.topologies import Topology
+from tests.utils import verify_equality
 
 
 def random_clifford_circuit(nr_gates=20, nr_qubits=4, gate_choice=None):
@@ -42,12 +44,30 @@ def random_clifford_circuit(nr_gates=20, nr_qubits=4, gate_choice=None):
 
 
 def main():
-    qc = random_clifford_circuit(nr_gates=10, gate_choice=["CX", "H"])
+    qc = QuantumCircuit(3)
+
+    qc.cx(0, 1)
+    qc.cx(1, 2)
+
+    qc.h(0)
+    qc.h(1)
+
+    qc.cx(0, 1)
+    qc.cx(2, 1)
+
+    topo = Topology.line(3)
 
     circ = Circuit.from_qiskit(qc)
-    print(circ.to_qiskit())
-    circ = circ.apply_permutation([3, 1, 0, 2])
-    print(circ.to_qiskit())
+    circ_ = Circuit.from_qiskit(qc)
+
+    circ_out = comb_row_col(circ, topo)
+
+    circ_out = circ_out.to_qiskit(include_permutations=False)
+
+    print(circ_out)
+    print(qc)
+
+    print(verify_equality(qc, circ_out))
 
     # comb = circuit_to_cnot_comb(circ)
 
