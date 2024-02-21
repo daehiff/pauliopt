@@ -71,7 +71,7 @@ def traversal_sum(pivot, traversal, remaining: "CliffordTableau"):
     return score
 
 
-def pick_pivots(G, remaining: "CliffordTableau", possible_swaps, include_swaps):
+def pick_pivots(G, remaining: "CliffordTableau", possible_swaps, include_swaps, choice_fn=min):
     scores = []
     has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
     for col in G.nodes:
@@ -85,7 +85,7 @@ def pick_pivots(G, remaining: "CliffordTableau", possible_swaps, include_swaps):
             dist_z = sum(row_z)
             scores.append((col, col, dist_x + dist_z))
     assert len(scores) > 0
-    return min(scores, key=lambda x: x[2])[:2]
+    return choice_fn(scores, key=lambda x: x[2])[:2]
 
 
 def update_dfs(dfs, parent, child):
