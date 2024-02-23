@@ -1,3 +1,8 @@
+import functools
+import json
+import math
+import os
+import time
 import warnings
 
 from qiskit.qasm2 import dumps
@@ -32,6 +37,8 @@ from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.topologies import Topology
 
 import pyzx as zx
+from mqt import qmap
+from choice_fn import heat_chooser, random_chooser
 
 
 def random_hscx_circuit(nr_gates=20, nr_qubits=4):
