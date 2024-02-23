@@ -140,32 +140,34 @@ def stim_compilation(circ: QuantumCircuit, backend):
     tableau = circuit_to_stim_tableau(circ)
     circ_out = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
     if backend == "complete":
-        circ_out = transpile(
-            circ_out, routing_method="sabre", basis_gates=["s", "h", "cx"]
-        )
+        start = time.time()
+        circ_out = transpile(circ_out,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
     elif backend == "line":
-        circ_out = transpile(
-            circ,
-            coupling_map=[[i, i + 1] for i in range(circ.num_qubits - 1)],
-            routing_method="sabre",
-            basis_gates=["s", "h", "cx"],
-        )
+        start = time.time()
+        circ_out = transpile(circ, coupling_map=[[i, i + 1] for i in
+                                                 range(circ.num_qubits - 1)],
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
     else:
-        circ_out = transpile(
-            circ_out,
-            coupling_map=backend.coupling_map,
-            routing_method="sabre",
-            basis_gates=["s", "h", "cx"],
-        )
-    print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
-    column = get_ops_count(circ_out)
+        start = time.time()
+        circ_out = transpile(circ_out,
+                             coupling_map=backend.coupling_map,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    act_time = time.time() - start
+    # print("Qiskit Tableau: ", circ_out.count_ops(),
+    #   "Time: ", time.time() - start)
+    column = get_ops_count(circ_out) | {
+        "time": act_time, "depth": circ_out.depth()}
     return column
 
 
 def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
-    start = time.time()
     tableau = Clifford.from_circuit(circ)
     circ_out = tableau.to_circuit()
+    start = time.time()
     if backend == "complete":
         circ_out = transpile(
             circ_out, routing_method="sabre", basis_gates=["s", "h", "cx"]
@@ -178,14 +180,15 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
             basis_gates=["s", "h", "cx"],
         )
     else:
-        circ_out = transpile(
-            circ_out,
-            routing_method="sabre",
-            coupling_map=backend.coupling_map,
-            basis_gates=["cx", "h", "s"],
-        )
-    print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
-    column = get_ops_count(circ_out)
+        circ_out = transpile(circ_out,
+                             routing_method="sabre",
+                             coupling_map=backend.coupling_map,
+                             basis_gates=["cx", "h", "s"])
+    act_time = time.time() - start
+    # print("Qiskit Tableau: ", circ_out.count_ops(),
+    #       "Time: ", time.time() - start)
+    column = get_ops_count(circ_out) | {
+        "time": act_time, "depth": circ_out.depth()}
     return column
 
 
@@ -201,24 +204,23 @@ def qiskit_compilation(circ: QuantumCircuit, backend):
             basis_gates=["h", "s", "cx"],
         )
     else:
-        circ_out = transpile(
-            circ, coupling_map=backend.coupling_map, basis_gates=["s", "h", "cx"]
-        )
-    column = get_ops_count(circ_out)
-    print("Qiskit: ", circ_out.count_ops(), "Time: ", time.time() - start)
+        circ_out = transpile(circ, coupling_map=backend.coupling_map,
+                             basis_gates=['s', 'h', 'cx'])
+    act_time = time.time() - start
+    column = get_ops_count(circ_out) | {
+        "time": act_time, "depth": circ_out.depth()}
+    # print("Qiskit: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
 
 def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
     start = time.time()
 
-    circ, _ = qmap.synthesize_clifford(
-        clifford,
-        # use_maxsat=True,
-        dump_intermediate_results=True,
-        include_destabilizers=True,
-    )
-    print("done!")
+    circ, _ = qmap.synthesize_clifford(clifford,
+                                       #use_maxsat=True,
+                                       dump_intermediate_results=True,
+                                       include_destabilizers=True)
+    start = time.time()
     if backend == "complete":
         circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx"])
     elif backend == "line":
@@ -229,19 +231,17 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
             basis_gates=["s", "h", "cx"],
         )
     else:
-        circ_out = transpile(
-            circ,
-            coupling_map=backend.coupling_map,
-            routing_method="sabre",
-            basis_gates=["s", "h", "cx"],
-        )
-    column = get_ops_count(circ_out)
-    print("Optimal: ", circ_out.count_ops(), "Time: ", time.time() - start)
+        circ_out = transpile(circ, coupling_map=backend.coupling_map,
+                             routing_method="sabre",
+                             basis_gates=['s', 'h', 'cx'])
+    act_time = time.time() - start
+    column = get_ops_count(circ_out) | {
+        "time": act_time, "depth": circ_out.depth()}
+    # print("Optimal: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
 
-def our_compilation(circ: QuantumCircuit, backend):
-    start = time.time()
+def our_compilation(circ: QuantumCircuit, backend, choice_fn=min):
     if backend == "complete":
         topo = Topology.complete(circ.num_qubits)
     elif backend == "line":
@@ -249,11 +249,43 @@ def our_compilation(circ: QuantumCircuit, backend):
     else:
         topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_circuit(circ)
-    circ_out, _ = ct.to_cifford_circuit_arch_aware(topo, include_swaps=True)
+    start = time.time()
+    circ_out, _ = ct.to_cifford_circuit_arch_aware(
+        topo, include_swaps=True, choice_fn=choice_fn)
+    act_time = time.time() - start
     circ_out = circ_out.to_qiskit()
-    column = get_ops_count(circ_out)
+    column = get_ops_count(circ_out) | {
+        "time": act_time, "depth": circ_out.depth()}
     # assert verify_equality(circ, circ_out)
-    print("Our: ", circ_out.count_ops(), "Time: ", time.time() - start)
+    # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
+    return column
+
+
+def our_compilation_heat(circ: QuantumCircuit, backend, choice_fn=min):
+    if backend == "complete":
+        topo = Topology.complete(circ.num_qubits)
+    elif backend == "line":
+        topo = Topology.line(circ.num_qubits)
+    else:
+        topo = Topology.from_qiskit_backend(backend)
+    ct = CliffordTableau.from_circuit(circ)
+    start = time.time()
+    best_circ = None
+    best_cx_count = math.inf
+    for _ in range(20):
+        circ_out, _ = ct.to_cifford_circuit_arch_aware(
+            topo, include_swaps=True, choice_fn=choice_fn)
+        circ_out = circ_out.to_qiskit()
+        column = get_ops_count(circ_out)
+        if column["cx"] < best_cx_count:
+            best_cx_count = column["cx"]
+            best_circ = circ_out
+    act_time = time.time() - start
+    column = get_ops_count(best_circ) | {
+        "time": act_time, "depth": best_circ.depth()}
+
+    # assert verify_equality(circ, circ_out)
+    # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
 
@@ -361,11 +393,13 @@ def our_compilation_tableau(tab: Clifford, backend, num_qubits):
     else:
         topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_qiskit(tab)
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+    start = time.time()
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, include_swaps=True)
+    act_time = time.time() - start
     circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out)
     # assert verify_equality(tab.to_circuit(), apply_permutation(circ_out, perm))
-    print("Our: ", circ_out.count_ops())
+    # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
 
