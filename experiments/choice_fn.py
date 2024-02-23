@@ -17,8 +17,11 @@ def heat_chooser(*args, **kwargs):
             raise TypeError(str(type(v).__name__) + ' object is not callable')
         key = v
     iterable = list(iterable)
-    weights = list(map(lambda x: math.exp(-x), map(key, iterable)))
-    weights = [float(i)/sum(weights) for i in weights]
+    costs = list(map(key, iterable))
+    min_cost = min(costs)
+    weights = list(map(lambda x: math.exp(-x+min_cost), costs))
+    if sum(weights):
+        weights = [float(i)/sum(weights) for i in weights]
     return random.choices(iterable, weights=weights, k=1)[0]
 
 
