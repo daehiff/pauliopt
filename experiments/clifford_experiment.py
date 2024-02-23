@@ -476,8 +476,8 @@ def random_experiment_complete(backend_name="vigo"):
     print(df.groupby("method").mean())
 
 
-def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
-    backend, df_name = get_backend_and_df_name(backend_name)
+def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"):
+    backend, df_name = get_backend_and_df_name(backend_name, df_name=df_name)
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
@@ -486,82 +486,64 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
     print(df_name)
     print(num_qubits)
     df = pd.DataFrame(
-        columns=["n_rep", "num_qubits", "n_gadgets", "method", "h", "s", "cx"]
-    )
+        columns=["n_rep", "num_qubits", "n_gadgets", "method", "h", "s", "cx", "time", "depth"])
     for n_gadgets in range(1, nr_input_gates, nr_steps):
         print(n_gadgets)
-        for _ in range(20):
-            circ = random_hscx_circuit(nr_qubits=num_qubits, nr_gates=n_gadgets)
+        for _ in range(200):
+            circ = random_hscx_circuit(
+                nr_qubits=num_qubits, nr_gates=n_gadgets)
 
             ########################################
             # Our clifford circuit
             ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "ours",
-            } | our_compilation(circ, backend)
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "ours"} | \
+                our_compilation(circ, backend)
+            df.loc[len(df)] = column
+            df.to_csv(df_name)
+
+            ########################################
+            # Our clifford circuit
+            ########################################
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "ours_random"} | \
+                our_compilation(circ, backend, choice_fn=random_chooser)
+            df.loc[len(df)] = column
+            df.to_csv(df_name)
+
+            ########################################
+            # Our clifford circuit w/ temp
+            ########################################
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "ours_temp"} | \
+                our_compilation_heat(circ, backend, choice_fn=heat_chooser)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
             # ########################################
             # # Qiskit compilation
             # ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "Default transpile (qiskit)",
-            } | qiskit_compilation(circ, backend)
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "qiskit transpile"} | \
+                qiskit_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
             ########################################
             # Bravi et. al.
             ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "Bravyi et al. (qiskit)",
-            } | qiskit_tableau_compilation(circ, backend)
-            df.loc[len(df)] = column
-            df.to_csv(df_name)
-
-            ########################################
-            # Maslov et. al.
-            ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "Maslov et al. (qiskit)",
-            } | maslov_et_al_compilation(circ, backend)
-            df.loc[len(df)] = column
-            df.to_csv(df_name)
-
-            ########################################
-            # Duncan et. al.
-            ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "Duncan et al. (pyzx)",
-            } | duncan_et_al_synthesis(circ, backend)
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "Bravyi et al. (qiskit)"} | \
+                qiskit_tableau_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {
-                "n_rep": _,
-                "num_qubits": num_qubits,
-                "n_gadgets": n_gadgets,
-                "method": "Ewout van den Berg (stim)",
-            } | stim_compilation(circ, backend)
+            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "Ewout van den Berg (stim)"} | \
+                stim_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(df_name)
 
