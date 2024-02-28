@@ -1,5 +1,6 @@
 import warnings
 
+import networkx as nx
 from qiskit.qasm2 import dumps
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -217,6 +218,9 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
         # use_maxsat=True,
         dump_intermediate_results=True,
         include_destabilizers=True,
+        target_metric="depth",
+        # verbosity="info",
+        solver_parameters={"threads": 4},
     )
     print("done!")
     if backend == "complete":
@@ -240,6 +244,39 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
     return column
 
 
+def get_heatmap(circ: QuantumCircuit, percentages):
+    heatmaps = []
+    heatmap = np.zeros((circ.num_qubits, circ.num_qubits))
+
+    q_reg = circ.qregs[0]
+    nr_gates = len(circ)
+    gate_count = 0.0
+    next_percentage_idx = 0
+
+    for instruction in circ:
+        gate_count += 1
+        circ_percentage = gate_count / nr_gates
+        if (
+            next_percentage_idx < len(percentages)
+            and circ_percentage > percentages[next_percentage_idx]
+        ):
+            next_percentage_idx += 1
+            heatmaps.append(heatmap.copy())
+
+        if instruction.operation.name == "cx":
+            qubits = _get_qubits_qiskit(instruction.qubits, q_reg)
+            qubits = list(sorted(list(qubits)))
+
+            heatmap[qubits[0], qubits[1]] += 1
+            heatmap[qubits[1], qubits[0]] += 1
+
+    max_hm = max([np.max(hm) for hm in heatmaps])
+
+    heatmaps = [hm / max_hm for hm in heatmaps]
+
+    return heatmaps
+
+
 def our_compilation(circ: QuantumCircuit, backend):
     start = time.time()
     if backend == "complete":
@@ -254,6 +291,48 @@ def our_compilation(circ: QuantumCircuit, backend):
     column = get_ops_count(circ_out)
     # assert verify_equality(circ, circ_out)
     print("Our: ", circ_out.count_ops(), "Time: ", time.time() - start)
+    return column
+
+
+def assert_connectivity_predicate(circ: QuantumCircuit, topo: Topology):
+    qreg = circ.qregs[0]
+    G = topo.to_nx
+    for instruction in circ:
+        if instruction.operation.name == "cx":
+            qubits = _get_qubits_qiskit(instruction.qubits, qreg)
+            if not G.has_edge(qubits[0], qubits[1]):
+                return False
+
+    return True
+
+
+def maslov_et_al_compilation_tableau(tableau: Clifford, backend):
+    start = time.time()
+    circ_out = synth_clifford_depth_lnn(tableau)
+    if backend == "complete":
+        circ_out = transpile(
+            circ_out, routing_method="sabre", basis_gates=["s", "h", "cx"]
+        )
+    elif backend == "line":
+        circ_out = transpile(circ_out, basis_gates=["s", "h", "cx"])
+        # circ_out = transpile(
+        #     circ_out,
+        #     coupling_map=[[i, i + 1] for i in range(tableau.num_qubits - 1)],
+        #     routing_method="sabre",
+        #     basis_gates=["s", "h", "cx"],
+        # )
+        assert assert_connectivity_predicate(
+            circ_out, Topology.line(tableau.num_qubits)
+        )
+    else:
+        circ_out = transpile(
+            circ_out,
+            routing_method="sabre",
+            coupling_map=backend.coupling_map,
+            basis_gates=["cx", "h", "s"],
+        )
+    print("Masolv et. al: ", circ_out.count_ops(), "Time: ", time.time() - start)
+    column = get_ops_count(circ_out)
     return column
 
 
@@ -369,6 +448,31 @@ def our_compilation_tableau(tab: Clifford, backend, num_qubits):
     return column
 
 
+def apply_permutation(qc: QuantumCircuit, permutation: list):
+    register = qc.qregs[0]
+    qc_out = QuantumCircuit(register)
+    for instruction in qc:
+        op_qubits = [
+            register[permutation[register.index(q)]] for q in instruction.qubits
+        ]
+        qc_out.append(instruction.operation, op_qubits)
+    return qc_out
+
+
+def our_compilation_tableau_heatmap(tab: Clifford, backend, num_qubits, percentages):
+    if backend == "complete":
+        topo = Topology.complete(num_qubits)
+    elif backend == "line":
+        topo = Topology.line(num_qubits)
+    else:
+        topo = Topology.from_qiskit_backend(backend)
+    ct = CliffordTableau.from_qiskit(tab)
+    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+    circ_out = circ_out.to_qiskit()
+    circ_out = apply_permutation(circ_out, perm)
+    return get_heatmap(circ_out, percentages)
+
+
 def get_backend_and_df_name(backend_name, df_name="data/random"):
     if backend_name == "vigo":
         backend = FakeJSONBackend("ibm_vigo")
@@ -433,13 +537,126 @@ def random_experiment_complete(backend_name="vigo"):
         column = {
             "n_rep": _,
             "num_qubits": num_qubits,
-            "method": "optimal",
+            "method": "Peham et. al. (optimal)",
         } | optimal_compilation(clifford, backend)
+        df.loc[len(df)] = column
+        df.to_csv(df_name)
+
+        column = {
+            "n_rep": _,
+            "num_qubits": num_qubits,
+            "method": "Maslov et al. (qiskit)",
+        } | maslov_et_al_compilation_tableau(clifford, backend)
         df.loc[len(df)] = column
         df.to_csv(df_name)
     df.to_csv(df_name)
 
     print(df.groupby("method").mean())
+
+
+def plot_on_graph(matrix, eps=0.2):
+    G = nx.Graph()
+
+    # Add edges with weights
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
+            if matrix[i][j] > eps:
+                G.add_edge(i, j, weight=matrix[i][j])
+
+    # Position nodes using the spring layout
+    pos = nx.spring_layout(G)
+
+    # Extract weights and normalize them
+    weights = np.array([G[u][v]["weight"] for u, v in G.edges()])
+    norm = plt.Normalize(vmin=weights.min(), vmax=weights.max())
+    colors = plt.cm.viridis(norm(weights))
+
+    # Create a plot with specified figure size
+    plt.figure(figsize=(8, 6))
+    ax = plt.gca()
+
+    # Draw the network
+    edges = nx.draw_networkx_edges(G, pos, ax=ax, edge_color=colors, width=2)
+    nodes = nx.draw_networkx_nodes(
+        G,
+        pos,
+        ax=ax,
+        node_color="white",
+        edgecolors="black",
+        linewidths=2,
+        node_size=400,
+    )
+    nx.draw_networkx_labels(G, pos, ax=ax, font_color="black")
+
+    # Create a colorbar with the normalized weights
+    sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=norm)
+    sm.set_array([])
+    cbar = plt.colorbar(sm, ax=ax)
+    cbar.set_label("Edge Weight")
+
+    plt.show()
+
+
+def construct_heatmap(backend_name_constraint, backend_name_complete, percentages):
+    backend_constraint, _ = get_backend_and_df_name(backend_name_constraint)
+    backend_complete, _ = get_backend_and_df_name(backend_name_complete)
+    if backend_constraint not in ["complete", "line"]:
+        num_qubits = backend_constraint.configuration().num_qubits
+    else:
+        num_qubits = int(backend_name_constraint.split("_")[1])
+
+    heatmaps_constrain = []
+    heatmaps_complete = []
+
+    for _ in range(10):
+        print(_)
+        clifford = random_clifford_circuit(nr_qubits=num_qubits)
+        heatmaps_constrain.append(
+            our_compilation_tableau_heatmap(
+                clifford, backend_constraint, num_qubits, percentages
+            )
+        )
+        heatmaps_complete.append(
+            our_compilation_tableau_heatmap(
+                clifford, backend_complete, num_qubits, percentages
+            )
+        )
+    heatmap_our = np.mean(heatmaps_constrain, axis=0)
+    heatmap_complete = np.mean(heatmaps_complete, axis=0)
+
+    plot_circuit_heatmap(heatmap_our, percentages, backend_constraint, num_qubits)
+    plot_circuit_heatmap(heatmap_complete, percentages, backend_complete, num_qubits)
+
+
+def plot_circuit_heatmap(heatmaps, percentages, backend, num_qubits):
+    if backend == "complete":
+        topo = Topology.complete(num_qubits)
+    elif backend == "line":
+        topo = Topology.line(num_qubits)
+    else:
+        topo = Topology.from_qiskit_backend(backend)
+
+    G = topo.to_nx
+
+    print(heatmaps)
+    heatmaps = [heatmaps[i] for i in range(heatmaps.shape[0])]
+    vmin = min([heatmap.min() for heatmap in heatmaps])
+    vmax = max([heatmap.max() for heatmap in heatmaps])
+
+    fig, axes = plt.subplots(1, len(heatmaps), figsize=(15, 5))
+    for i, heatmap in enumerate(heatmaps):
+        for i_ in range(heatmap.shape[0]):
+            for j_ in range(heatmap.shape[0]):
+                if not G.has_edge(i_, j_):
+                    heatmap[i_, j_] = np.nan
+
+        masked_array = np.ma.array(heatmap, mask=np.isnan(heatmap))
+        im = axes[i].imshow(masked_array, cmap="viridis", vmin=vmin, vmax=vmax)
+        axes[i].set_title(f"{percentages[i]}")
+
+    # Create a colorbar for the whole figure
+    fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8)
+    plt.show()
 
 
 def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5):
@@ -1014,8 +1231,14 @@ if __name__ == "__main__":
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
 
-    #random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=4)
-    #random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
+    # construct_heatmap("quito", "complete_5", [0.0, 0.1, 0.3, 0.5, 0.9, 1.0])
+
+    # construct_heatmap("mumbai", "complete_27")
+    # construct_heatmap("guadalupe", "complete_16", [0.0, 0.3, 0.5, 0.9, 1.0])
+    # construct_heatmap("ithaca", "complete_65")
+
+    # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=4)
+    # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
 
     # random_experiment(backend_name="nairobi", nr_input_gates=300, nr_steps=20)
     # random_experiment(backend_name="complete_7", nr_input_gates=300, nr_steps=20)
@@ -1033,17 +1256,20 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
     # random_experiment_complete(backend_name="line_3")
+    # random_experiment_complete(backend_name="complete_3")
     # random_experiment_complete(backend_name="line_4")
-    # random_experiment_complete(backend_name="line_5")
+    # random_experiment_complete(backend_name="complete_4")
+    random_experiment_complete(backend_name="line_5")
+    random_experiment_complete(backend_name="quito")
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 
-    df = pd.read_csv(f"data/random_complete_5.csv")
-    df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
-    df_ = df_[df_["n_gadgets"] > 75]
-    v_line = np.mean(df_["cx"])
-
-    plot_experiment(name="random_quito", v_line_cx=v_line)
+    # df = pd.read_csv(f"data/random_complete_5.csv")
+    # df_ = df[df["method"] == "Bravyi et al. (qiskit)"]
+    # df_ = df_[df_["n_gadgets"] > 75]
+    # v_line = np.mean(df_["cx"])
+    #
+    # plot_experiment(name="random_quito", v_line_cx=v_line)
     # plot_experiment(name="random_complete_5", v_line_cx=v_line)
     #
     #

@@ -148,7 +148,7 @@ def check_matching_architecture(qc: QuantumCircuit, G):
             if not G.has_edge(ctrl, target):
                 return False
     return True
-
+    
 
 def route_circuit_tket(circuit: pytket.Circuit, topo: Topology, transform="naive"):
     if transform == "naive":
