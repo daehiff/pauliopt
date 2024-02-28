@@ -1,2 +1,2 @@
 ,n_rep,num_qubits,method,h,s,cx,depth
-0,0,4,ours,13,15,12,21
+0,0,5,ours,12,19,17,30

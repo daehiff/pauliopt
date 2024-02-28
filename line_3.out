@@ -1,0 +1,68 @@
+slurmstepd-kieselgur: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
+slurmstepd-kieselgur: error: Setting TMPDIR to /tmp
+3
+data/random_converged_line_3.csv
+Our:  OrderedDict([('cx', 5), ('s', 4), ('h', 3)])
+done!
+Optimal:  OrderedDict([('h', 21), ('cx', 7), ('s', 4)]) Time:  4.127786874771118
+Our:  OrderedDict([('s', 13), ('h', 5), ('cx', 2)])
+done!
+Optimal:  OrderedDict([('s', 9), ('h', 7), ('cx', 2)]) Time:  0.7195343971252441
+Our:  OrderedDict([('s', 10), ('h', 7), ('cx', 6)])
+done!
+Optimal:  OrderedDict([('h', 23), ('cx', 8), ('s', 5)]) Time:  26.781424522399902
+Our:  OrderedDict([('h', 7), ('cx', 6), ('s', 6)])
+done!
+Optimal:  OrderedDict([('h', 20), ('cx', 8), ('s', 6)]) Time:  12.855846166610718
+Our:  OrderedDict([('s', 10), ('h', 9), ('cx', 3)])
+done!
+Optimal:  OrderedDict([('h', 9), ('s', 4), ('cx', 3)]) Time:  5.883544445037842
+Our:  OrderedDict([('s', 14), ('h', 9), ('cx', 7)])
+done!
+Optimal:  OrderedDict([('h', 32), ('cx', 11), ('s', 8)]) Time:  10.977115154266357
+Our:  OrderedDict([('s', 8), ('cx', 5), ('h', 5)])
+done!
+Optimal:  OrderedDict([('h', 23), ('cx', 9), ('s', 4)]) Time:  0.8717870712280273
+Our:  OrderedDict([('s', 14), ('h', 6), ('cx', 5)])
+done!
+Optimal:  OrderedDict([('h', 16), ('cx', 5), ('s', 4)]) Time:  0.9703271389007568
+Our:  OrderedDict([('s', 12), ('h', 9), ('cx', 5)])
+done!
+Optimal:  OrderedDict([('h', 16), ('s', 8), ('cx', 7)]) Time:  5.738088607788086
+Our:  OrderedDict([('s', 14), ('h', 6), ('cx', 5)])
+done!
+Optimal:  OrderedDict([('h', 15), ('cx', 6), ('s', 2)]) Time:  1.0181884765625
+Our:  OrderedDict([('s', 11), ('h', 8), ('cx', 7)])
+done!
+Optimal:  OrderedDict([('h', 37), ('cx', 11), ('s', 7)]) Time:  18.94208264350891
+Our:  OrderedDict([('s', 12), ('h', 6), ('cx', 4)])
+done!
+Optimal:  OrderedDict([('s', 11), ('h', 5), ('cx', 2)]) Time:  15.237019777297974
+Our:  OrderedDict([('s', 17), ('h', 12), ('cx', 3)])
+done!
+Optimal:  OrderedDict([('h', 11), ('s', 6), ('cx', 3)]) Time:  14.12680459022522
+Our:  OrderedDict([('s', 11), ('h', 5), ('cx', 3)])
+done!
+Optimal:  OrderedDict([('h', 11), ('s', 6), ('cx', 2)]) Time:  0.9784705638885498
+Our:  OrderedDict([('s', 13), ('h', 10), ('cx', 5)])
+done!
+Optimal:  OrderedDict([('h', 20), ('cx', 8), ('s', 5)]) Time:  5.64261794090271
+Our:  OrderedDict([('s', 10), ('h', 6), ('cx', 6)])
+done!
+Optimal:  OrderedDict([('h', 23), ('cx', 6), ('s', 2)]) Time:  31.158132314682007
+Our:  OrderedDict([('s', 16), ('h', 7), ('cx', 4)])
+done!
+Optimal:  OrderedDict([('h', 20), ('s', 9), ('cx', 7)]) Time:  12.957620859146118
+Our:  OrderedDict([('s', 8), ('cx', 7), ('h', 3)])
+done!
+Optimal:  OrderedDict([('h', 13), ('s', 7), ('cx', 4)]) Time:  6.9598002433776855
+Our:  OrderedDict([('h', 5), ('cx', 3), ('s', 2)])
+done!
+Optimal:  OrderedDict([('h', 6), ('cx', 4), ('s', 4)]) Time:  1.237304925918579
+Our:  OrderedDict([('s', 10), ('h', 8), ('cx', 7)])
+done!
+Optimal:  OrderedDict([('h', 17), ('s', 7), ('cx', 5)]) Time:  10.459450960159302
+         n_rep  num_qubits      h      s   cx  depth
+method                                              
+optimal    9.5         3.0  17.25   5.90  5.9  19.25
+ours       9.5         3.0   6.80  10.75  4.9  14.65
