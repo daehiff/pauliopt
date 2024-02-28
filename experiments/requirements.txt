@@ -1,0 +1,11 @@
+qiskit==1.0.0
+mqt.qmap==2.5.0
+matplotlib==3.8.3
+seaborn==0.13.2
+stim==1.12.1
+networkx==3.2.1
+numpy==1.26.4
+pyzx==0.8.0
+#pytket-qiskit==0.48.0
+#pytket-pyzx==0.31.0
+#pytket==1.21.0
