@@ -27,6 +27,7 @@ from qiskit.synthesis import (
     synth_clifford_depth_lnn,
     synth_clifford_bm,
     synth_clifford_greedy,
+    synth_clifford_full,
 )
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
@@ -71,7 +72,8 @@ def get_ops_count(qc: QuantumCircuit):
         "h": 0,
         "cx": 0,
         "s": 0,
-        "depth": qc.depth(lambda inst: inst.operation.name == "cx"),
+        "cx_depth": qc.depth(lambda inst: inst.operation.name == "cx"),
+        "depth": qc.depth(),
     }
     ops = qc.count_ops()
     if "cx" in ops.keys():
@@ -163,6 +165,32 @@ def stim_compilation(circ: QuantumCircuit, backend):
     return column
 
 
+def qiskit_tableau_compilation_tableau(tableau: Clifford, backend):
+    start = time.time()
+    circ_out = tableau.to_circuit()  # synth_clifford_bm(tableau)
+    if backend == "complete":
+        circ_out = transpile(
+            circ_out, routing_method="sabre", basis_gates=["s", "h", "cx"]
+        )
+    elif backend == "line":
+        circ_out = transpile(
+            circ_out,
+            coupling_map=[[i, i + 1] for i in range(circ_out.num_qubits - 1)],
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx"],
+        )
+    else:
+        circ_out = transpile(
+            circ_out,
+            routing_method="sabre",
+            coupling_map=backend.coupling_map,
+            basis_gates=["cx", "h", "s"],
+        )
+    print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
+    column = get_ops_count(circ_out)
+    return column
+
+
 def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
     start = time.time()
     tableau = Clifford.from_circuit(circ)
@@ -215,16 +243,14 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
 
     circ, _ = qmap.synthesize_clifford(
         clifford,
-        # use_maxsat=True,
-        dump_intermediate_results=True,
+
         include_destabilizers=True,
         target_metric="depth",
         # verbosity="info",
-        solver_parameters={"threads": 4},
     )
     print("done!")
     if backend == "complete":
-        circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx"])
+        circ_out = transpile(circ, basis_gates=["s", "h", "cx"])
     elif backend == "line":
         circ_out = transpile(
             circ,
@@ -521,7 +547,7 @@ def random_experiment_complete(backend_name="vigo"):
     print(num_qubits)
     print(df_name)
     df = pd.DataFrame(
-        columns=["n_rep", "num_qubits", "method", "h", "s", "cx", "depth"]
+        columns=["n_rep", "num_qubits", "method", "h", "s", "cx", "depth", "cx_depth"]
     )
 
     for _ in range(20):
@@ -547,6 +573,14 @@ def random_experiment_complete(backend_name="vigo"):
             "num_qubits": num_qubits,
             "method": "Maslov et al. (qiskit)",
         } | maslov_et_al_compilation_tableau(clifford, backend)
+        df.loc[len(df)] = column
+        df.to_csv(df_name)
+
+        column = {
+            "n_rep": _,
+            "num_qubits": num_qubits,
+            "method": "Bravyi et al. (qiskit)",
+        } | qiskit_tableau_compilation_tableau(clifford, backend)
         df.loc[len(df)] = column
         df.to_csv(df_name)
     df.to_csv(df_name)
@@ -1257,10 +1291,11 @@ if __name__ == "__main__":
 
     # random_experiment_complete(backend_name="line_3")
     # random_experiment_complete(backend_name="complete_3")
-    # random_experiment_complete(backend_name="line_4")
-    # random_experiment_complete(backend_name="complete_4")
-    random_experiment_complete(backend_name="line_5")
-    random_experiment_complete(backend_name="quito")
+    random_experiment_complete(backend_name="line_4")
+    random_experiment_complete(backend_name="complete_4")
+    # random_experiment_complete(backend_name="complete_5")
+    # random_experiment_complete(backend_name="line_5")
+    # random_experiment_complete(backend_name="quito")
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 
