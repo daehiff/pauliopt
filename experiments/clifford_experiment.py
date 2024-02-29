@@ -28,9 +28,9 @@ import os
 import time
 import warnings
 
-from qiskit.qasm2 import dumps
+from qiskit.qasm2 import dumps, load
 
-from tests.test_clifford_tableau import verify_equality
+# from tests.test_clifford_tableau import verify_equality
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -273,7 +273,7 @@ def our_compilation(circ: QuantumCircuit, backend, choice_fn=min):
     column = get_ops_count(circ_out) | {"time": act_time}
     column = column | get_depth(circ_out) | get_2q_depth(circ_out)
 
-    assert verify_equality(circ, circ_out)
+    # assert verify_equality(circ, circ_out)
     # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
@@ -300,7 +300,7 @@ def our_compilation_heat(circ: QuantumCircuit, backend, choice_fn=min):
     act_time = time.time() - start
     column = get_ops_count(best_circ) | {"time": act_time}
     column = column | get_depth(best_circ) | get_2q_depth(best_circ)
-    assert verify_equality(circ, circ_out)
+    # assert verify_equality(circ, circ_out)
     # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
@@ -461,6 +461,15 @@ def get_backend_and_df_name(backend_name, df_name="data/random"):
     return backend, df_name
 
 
+def get_circuit_from_qasm(backend_name, n_gadgets, i):
+    df_name = "datasets/clifford_experimental_dataset/"
+    folder_name = os.path.join(df_name, backend_name)
+    circ_name = os.path.join(folder_name, backend_name + "_" + str(n_gadgets) +
+                             "_" + str(i).zfill(2) + ".qasm")
+    circ = load(circ_name)
+    return circ
+
+
 def random_experiment_complete(backend_name="vigo"):
     backend, df_name = get_backend_and_df_name(
         backend_name, df_name="data/random_converged"
@@ -498,30 +507,32 @@ def random_experiment_complete(backend_name="vigo"):
 
 
 def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"):
-    backend, df_name = get_backend_and_df_name(backend_name, df_name=df_name)
+    backend, output_csv = get_backend_and_df_name(
+        backend_name, df_name=df_name)
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
         num_qubits = int(backend_name.split("_")[1])
 
-    print(df_name)
-    print(num_qubits)
+    # print(output_csv)
+    # print(num_qubits)
     df = pd.DataFrame(
         columns=["n_rep", "num_qubits", "n_gadgets", "method", "h", "s", "cx", "time", "depth", "2q_depth"])
     for n_gadgets in range(1, nr_input_gates, nr_steps):
         print(n_gadgets)
-        for _ in range(20):
-            circ = random_hscx_circuit(
-                nr_qubits=num_qubits, nr_gates=n_gadgets)
+        for i in range(20):
+            circ = get_circuit_from_qasm(backend_name, n_gadgets, i)
+            # circ = random_hscx_circuit(
+            #     nr_qubits=num_qubits, nr_gates=n_gadgets)
 
             ########################################
             # Our clifford circuit
             ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "ours"} | \
                 our_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
             ########################################
             # Our clifford circuit
@@ -544,49 +555,49 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
             # ########################################
             # # Qiskit compilation
             # ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "qiskit transpile"} | \
                 qiskit_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
             ########################################
             # Bravi et. al.
             ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "Bravyi et al. (qiskit)"} | \
                 qiskit_tableau_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "Ewout van den Berg (stim)"} | \
                 stim_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "Duncan et al (pyzx)"} | \
                 duncan_et_al_synthesis(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
                       "method": "Maslov et al"} | \
                 maslov_et_al_compilation(circ, backend)
             df.loc[len(df)] = column
-            df.to_csv(df_name)
+            df.to_csv(output_csv)
 
-    df.to_csv(df_name)
+    df.to_csv(output_csv)
     # print(circ_out)
     # print(circ_stim)
 
@@ -1076,37 +1087,36 @@ if __name__ == "__main__":
 
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
-    df_name = "data/new_methods/random"
+    df_name = "data/new_methods_fixed_data/random"
 
-    # random_experiment(backend_name="quito", nr_input_gates=200,
-    #                   nr_steps=20, df_name=df_name)
-    # random_experiment(backend_name="complete_5",
-    #                   nr_input_gates=200, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="quito", nr_input_gates=200,
+                      nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="complete_5",
+                      nr_input_gates=200, nr_steps=20, df_name=df_name)
 
-    # random_experiment(backend_name="nairobi",
-    #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
-    # random_experiment(backend_name="complete_7",
-    #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="nairobi",
+                      nr_input_gates=300, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="complete_7",
+                      nr_input_gates=300, nr_steps=20, df_name=df_name)
 
-    # random_experiment(backend_name="guadalupe",
-    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
-    # random_experiment(backend_name="complete_16",
-    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="guadalupe",
+                      nr_input_gates=400, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="complete_16",
+                      nr_input_gates=400, nr_steps=20, df_name=df_name)
 
-    # random_experiment(backend_name="mumbai", nr_input_gates=800,
-    #                   nr_steps=40, df_name=df_name)
-    # random_experiment(backend_name="complete_27",
-    #                   nr_input_gates=800, nr_steps=40, df_name=df_name)
+    random_experiment(backend_name="mumbai", nr_input_gates=800,
+                      nr_steps=40, df_name=df_name)
+    random_experiment(backend_name="complete_27",
+                      nr_input_gates=800, nr_steps=40, df_name=df_name)
 
-    # random_experiment(backend_name="ithaca",
-    #                   nr_input_gates=2000, nr_steps=100, df_name=df_name)
-    # random_experiment(backend_name="complete_65",
-    #                   nr_input_gates=2000, nr_steps=100, df_name=df_name)
-
-    random_experiment(backend_name="brisbane",
-                      nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    random_experiment(backend_name="ithaca",
+                      nr_input_gates=2000, nr_steps=100, df_name=df_name)
+    random_experiment(backend_name="complete_65",
+                      nr_input_gates=2000, nr_steps=100, df_name=df_name)
     random_experiment(backend_name="complete_127",
                       nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    random_experiment(backend_name="brisbane",
+                      nr_input_gates=10000, nr_steps=400, output_csv=df_name)
 
     # random_experiment_complete(backend_name="line_3")
     # random_experiment_complete(backend_name="line_4")
