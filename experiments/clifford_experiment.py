@@ -2,6 +2,7 @@ import re
 import warnings
 
 import networkx as nx
+import scipy
 from qiskit.qasm2 import dumps
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -1274,47 +1275,6 @@ def read_out_converged_experiments(df_names, df_pref="data"):
         print("======")
 
 
-def gate_check():
-    import numpy as np
-    from scipy.linalg import expm
-
-    # Define the rotation matrices
-    def R_X(theta):
-        return np.array(
-            [
-                [np.cos(theta / 2), -1j * np.sin(theta / 2)],
-                [-1j * np.sin(theta / 2), np.cos(theta / 2)],
-            ]
-        )
-
-    def R_Z(phi):
-        return np.array([[np.exp(-1j * phi / 2), 0], [0, np.exp(1j * phi / 2)]])
-
-    # Pauli matrices
-    sigma_x = np.array([[0, 1], [1, 0]], dtype=complex)
-    sigma_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
-
-    # Parameters for the gate
-    theta = np.pi
-    phi = np.pi / 4
-    for theta in np.linspace(0.0, 2 * np.pi, 40):
-        for phi in np.linspace(0.0, 2 * np.pi, 40):
-            # Generator for the custom gate
-            generator = (
-                -1j * theta / 2 * (np.cos(phi) * sigma_x + np.sin(phi) * sigma_y)
-            )
-
-            # Expected unitary operation using matrix exponentiation
-            U_expected = expm(generator)
-
-            # Combined unitary from the sequence of rotations
-            U_combined = R_Z(phi) @ R_X(theta) @ R_Z(-phi)
-
-            assert np.allclose(U_expected, U_combined)
-
-    print("Works")
-
-
 def parse_single_qubit(command, qc: QuantumCircuit):
     pattern = r"^\s*qurotxy\s+QUBIT\[(\d+)\],\s*([\d.e+-]+),\s*([\d.e+-]+)\s*\(slice_idx=(\d+)\)\s*$"
     match = re.match(pattern, command)
@@ -1327,9 +1287,11 @@ def parse_single_qubit(command, qc: QuantumCircuit):
         qc.rz(phi, qubit)
         qc.rx(theta, qubit)
         qc.rz(-phi, qubit)
+        return True
+    return False
 
 
-def parse_two_qubit(command, qc: QuantumCircuit):
+def parse_crz(command, qc: QuantumCircuit):
     pattern = r"\s*qucphase\s+QUBIT\[(\d+)\],\s*QUBIT\[(\d+)\],\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s+\(slice_idx=(\d+)\)\s*"
     match = re.match(pattern, command)
     if match:
@@ -1340,6 +1302,54 @@ def parse_two_qubit(command, qc: QuantumCircuit):
         theta = float(theta)
 
         qc.crz(theta, qubit0, qubit1)
+        return True
+    return False
+
+
+def parse_qu_swap_alpha(command, qc: QuantumCircuit):
+    pattern = r"\s*quswapalp\s+QUBIT\[(\d+)\],\s*QUBIT\[(\d+)\],\s*([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*"
+    match = re.match(pattern, command)
+    if match:
+        qubit0, qubit1, theta = match.groups()
+
+        qubit0 = int(qubit0)
+        qubit1 = int(qubit1)
+        theta = float(theta)
+        qc.cx(1, 0)
+        qc.cry(theta, qubit0, qubit1)
+        qc.cx(1, 0)
+        return True
+    return False
+
+
+def parse_qu_rotz(command, qc: QuantumCircuit):
+    # TODO @keefe I haven't found this in
+    pass
+
+
+def contains_return(text):
+    pattern = r"^\s*return\s*$"
+    return bool(re.search(pattern, text))
+
+
+def is_header(line):
+    patterns = [
+        r"\.text",
+        r'\.file\s+"[^"]+"',
+        r"\.section\s+\S+",
+        r'\.globl\s+"_Z\d+[^"]*"',
+        r'\.type\s+"_Z\d+[^"]*",@function',
+        r'"\s*_Z\d+[^"]*":',
+        r"//",
+        r"\/\/",
+        r"\/\/\s+--\s+Begin\s+function",
+    ]
+
+    for pattern in patterns:
+        if re.search(pattern, line):
+            return True
+
+    return False
 
 
 def parse_circ_file(file_path, num_qubits):
@@ -1348,16 +1358,36 @@ def parse_circ_file(file_path, num_qubits):
 
     qc = QuantumCircuit(num_qubits)
     for line in lines:
-        parse_two_qubit(line, qc)
-        parse_single_qubit(line, qc)
+        able_to_parse = False
+        able_to_parse = able_to_parse or is_header(line)
+        able_to_parse = able_to_parse or parse_crz(line, qc)
+        able_to_parse = able_to_parse or parse_single_qubit(line, qc)
+        able_to_parse = able_to_parse or parse_qu_swap_alpha(line, qc)
+        able_to_parse = able_to_parse or contains_return(line)
+        if not able_to_parse:
+            raise Exception("Unknown to parse: ", line)
 
-    print(qc)
+        if contains_return(line):
+            return qc
+
+    raise Exception("EOF: missing return statement!")
+
+
+def test_ZZ():
+    theta = np.pi / 2.0
+    qc = QuantumCircuit(2)
+    qc.cx(1, 0)
+    qc.cry(theta, 0, 1)
+    qc.cx(1, 0)
+
+    print(qiskit.quantum_info.Operator.from_circuit(qc).data)
 
 
 if __name__ == "__main__":
+    test_ZZ()
     parse_circ_file(
         "/Users/davidwinderl/Documents/Workspaces/Workspace/pauliopt/experiments/input.circ",
-        5
+        27,
     )
     # gate_check()
     # run_clifford_real_hardware(backend_name="ibmq_quito")
