@@ -1,3 +1,4 @@
+import re
 import warnings
 
 import networkx as nx
@@ -23,12 +24,9 @@ from qiskit.providers.fake_provider import FakeBackend
 from qiskit.providers.models import BackendConfiguration, GateConfig
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
-from qiskit.synthesis import (
-    synth_clifford_depth_lnn,
-    synth_clifford_bm,
-    synth_clifford_greedy,
-    synth_clifford_full,
-)
+from qiskit.synthesis import synth_clifford_depth_lnn
+
+import qbraid
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.topologies import Topology
@@ -165,6 +163,10 @@ def stim_compilation(circ: QuantumCircuit, backend):
     return column
 
 
+def paykin_et_al_compilation(circ: QuantumCircuit, backend):
+    pass
+
+
 def qiskit_tableau_compilation_tableau(tableau: Clifford, backend):
     start = time.time()
     circ_out = tableau.to_circuit()  # synth_clifford_bm(tableau)
@@ -243,7 +245,6 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
 
     circ, _ = qmap.synthesize_clifford(
         clifford,
-
         include_destabilizers=True,
         target_metric="depth",
         # verbosity="info",
@@ -468,6 +469,7 @@ def our_compilation_tableau(tab: Clifford, backend, num_qubits):
     ct = CliffordTableau.from_qiskit(tab)
     circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
     circ_out = circ_out.to_qiskit()
+
     column = get_ops_count(circ_out)
     # assert verify_equality(tab.to_circuit(), apply_permutation(circ_out, perm))
     print("Our: ", circ_out.count_ops())
@@ -1258,7 +1260,106 @@ def get_complete_cx_count():
         print((df_.groupby("method").mean().round()["cx"] / bound_u).round(2))
 
 
+def read_out_converged_experiments(df_names, df_pref="data"):
+    for df_name in df_names:
+        print(df_name)
+
+        df_name = f"{df_pref}/random_converged_{df_name}.csv"
+
+        df = pd.read_csv(df_name)
+        print("Depth")
+        print(df.groupby("method").mean()["depth"])
+        print("CX")
+        print(df.groupby("method").mean()["cx"])
+        print("======")
+
+
+def gate_check():
+    import numpy as np
+    from scipy.linalg import expm
+
+    # Define the rotation matrices
+    def R_X(theta):
+        return np.array(
+            [
+                [np.cos(theta / 2), -1j * np.sin(theta / 2)],
+                [-1j * np.sin(theta / 2), np.cos(theta / 2)],
+            ]
+        )
+
+    def R_Z(phi):
+        return np.array([[np.exp(-1j * phi / 2), 0], [0, np.exp(1j * phi / 2)]])
+
+    # Pauli matrices
+    sigma_x = np.array([[0, 1], [1, 0]], dtype=complex)
+    sigma_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+
+    # Parameters for the gate
+    theta = np.pi
+    phi = np.pi / 4
+    for theta in np.linspace(0.0, 2 * np.pi, 40):
+        for phi in np.linspace(0.0, 2 * np.pi, 40):
+            # Generator for the custom gate
+            generator = (
+                -1j * theta / 2 * (np.cos(phi) * sigma_x + np.sin(phi) * sigma_y)
+            )
+
+            # Expected unitary operation using matrix exponentiation
+            U_expected = expm(generator)
+
+            # Combined unitary from the sequence of rotations
+            U_combined = R_Z(phi) @ R_X(theta) @ R_Z(-phi)
+
+            assert np.allclose(U_expected, U_combined)
+
+    print("Works")
+
+
+def parse_single_qubit(command, qc: QuantumCircuit):
+    pattern = r"^\s*qurotxy\s+QUBIT\[(\d+)\],\s*([\d.e+-]+),\s*([\d.e+-]+)\s*\(slice_idx=(\d+)\)\s*$"
+    match = re.match(pattern, command)
+
+    if match:
+        qubit, theta, phi, _ = match.groups()
+        qubit = int(qubit)
+        theta = float(theta)
+        phi = float(phi)
+        qc.rz(phi, qubit)
+        qc.rx(theta, qubit)
+        qc.rz(-phi, qubit)
+
+
+def parse_two_qubit(command, qc: QuantumCircuit):
+    pattern = r"\s*qucphase\s+QUBIT\[(\d+)\],\s*QUBIT\[(\d+)\],\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s+\(slice_idx=(\d+)\)\s*"
+    match = re.match(pattern, command)
+    if match:
+        qubit0, qubit1, theta, slice_idx = match.groups()
+
+        qubit0 = int(qubit0)
+        qubit1 = int(qubit1)
+        theta = float(theta)
+
+        qc.crz(theta, qubit0, qubit1)
+
+
+def parse_circ_file(file_path, num_qubits):
+    with open(file_path, "r") as f:
+        lines = [line.rstrip().lstrip() for line in f]
+
+    qc = QuantumCircuit(num_qubits)
+    for line in lines:
+        parse_two_qubit(line, qc)
+        parse_single_qubit(line, qc)
+
+    print(qc)
+
+
 if __name__ == "__main__":
+    parse_circ_file(
+        "/Users/davidwinderl/Documents/Workspaces/Workspace/pauliopt/experiments/input.circ",
+        5
+    )
+    # gate_check()
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
 
@@ -1291,11 +1392,22 @@ if __name__ == "__main__":
 
     # random_experiment_complete(backend_name="line_3")
     # random_experiment_complete(backend_name="complete_3")
-    #random_experiment_complete(backend_name="line_4")
-    #random_experiment_complete(backend_name="complete_4")
-    random_experiment_complete(backend_name="complete_5")
-    random_experiment_complete(backend_name="line_5")
-    random_experiment_complete(backend_name="quito")
+    # random_experiment_complete(backend_name="line_4")
+    # random_experiment_complete(backend_name="complete_4")
+    # random_experiment_complete(backend_name="complete_5")
+    # random_experiment_complete(backend_name="line_5")
+    # random_experiment_complete(backend_name="quito")
+    # read_out_converged_experiments(
+    #     [
+    #         # "line_3",
+    #         "line_4",
+    #         # "line_5",
+    #         # "quito",
+    #         # "complete_3",
+    #         "complete_4",
+    #         # "complete_5",
+    #     ]
+    # )
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 

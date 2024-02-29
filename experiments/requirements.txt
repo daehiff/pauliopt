@@ -6,6 +6,7 @@ stim==1.12.1
 networkx==3.2.1
 numpy==1.26.4
 pyzx==0.8.0
+qbraid==0.5.1
 #pytket-qiskit==0.48.0
 #pytket-pyzx==0.31.0
 #pytket==1.21.0
