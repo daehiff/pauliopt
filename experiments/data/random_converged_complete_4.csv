@@ -1,81 +1,81 @@
 ,n_rep,num_qubits,method,h,s,cx,depth,cx_depth
-0,0,4,ours,9,10,8,21,7
-1,0,4,Peham et. al. (optimal),9,11,7,14,5
-2,0,4,Maslov et al. (qiskit),6,43,36,48,25
-3,0,4,Bravyi et al. (qiskit),9,15,8,17,6
-4,1,4,ours,11,19,10,22,10
-5,1,4,Peham et. al. (optimal),8,12,7,13,5
-6,1,4,Maslov et al. (qiskit),12,58,40,49,27
-7,1,4,Bravyi et al. (qiskit),8,10,8,16,6
-8,2,4,ours,9,13,11,22,9
-9,2,4,Peham et. al. (optimal),7,14,7,14,5
-10,2,4,Maslov et al. (qiskit),7,37,34,46,24
-11,2,4,Bravyi et al. (qiskit),12,16,8,20,7
-12,3,4,ours,8,13,10,18,10
-13,3,4,Peham et. al. (optimal),8,20,7,14,6
-14,3,4,Maslov et al. (qiskit),8,39,38,50,28
-15,3,4,Bravyi et al. (qiskit),9,15,9,20,9
-16,4,4,ours,14,18,10,27,9
-17,4,4,Peham et. al. (optimal),3,10,8,10,6
-18,4,4,Maslov et al. (qiskit),5,41,33,43,24
-19,4,4,Bravyi et al. (qiskit),12,18,14,22,12
-20,5,4,ours,14,22,10,21,9
-21,5,4,Peham et. al. (optimal),6,11,8,9,5
-22,5,4,Maslov et al. (qiskit),6,46,40,49,29
-23,5,4,Bravyi et al. (qiskit),6,11,8,16,7
-24,6,4,ours,9,12,8,18,8
-25,6,4,Peham et. al. (optimal),8,18,7,14,4
-26,6,4,Maslov et al. (qiskit),10,51,37,52,25
-27,6,4,Bravyi et al. (qiskit),12,13,8,20,8
-28,7,4,ours,12,18,9,23,7
-29,7,4,Peham et. al. (optimal),6,14,8,12,7
-30,7,4,Maslov et al. (qiskit),6,39,39,47,27
-31,7,4,Bravyi et al. (qiskit),11,10,13,22,13
-32,8,4,ours,7,11,9,18,9
-33,8,4,Peham et. al. (optimal),8,12,5,12,4
-34,8,4,Maslov et al. (qiskit),8,31,33,41,22
-35,8,4,Bravyi et al. (qiskit),11,13,7,15,7
-36,9,4,ours,14,18,8,21,7
-37,9,4,Peham et. al. (optimal),5,17,8,13,6
-38,9,4,Maslov et al. (qiskit),9,57,37,56,26
-39,9,4,Bravyi et al. (qiskit),9,11,11,20,11
-40,10,4,ours,8,9,11,17,10
-41,10,4,Peham et. al. (optimal),9,16,7,14,5
-42,10,4,Maslov et al. (qiskit),9,42,38,49,27
-43,10,4,Bravyi et al. (qiskit),7,12,13,26,12
-44,11,4,ours,13,19,7,17,6
-45,11,4,Peham et. al. (optimal),8,14,7,13,6
-46,11,4,Maslov et al. (qiskit),8,52,32,47,22
-47,11,4,Bravyi et al. (qiskit),14,22,8,19,6
-48,12,4,ours,14,8,10,17,9
-49,12,4,Peham et. al. (optimal),8,11,9,14,6
-50,12,4,Maslov et al. (qiskit),8,34,37,44,26
-51,12,4,Bravyi et al. (qiskit),8,12,9,18,8
-52,13,4,ours,12,16,10,25,9
-53,13,4,Peham et. al. (optimal),8,22,8,17,7
-54,13,4,Maslov et al. (qiskit),7,27,36,46,26
-55,13,4,Bravyi et al. (qiskit),10,7,10,16,9
-56,14,4,ours,8,13,10,14,9
-57,14,4,Peham et. al. (optimal),3,15,8,13,7
-58,14,4,Maslov et al. (qiskit),7,48,37,53,27
-59,14,4,Bravyi et al. (qiskit),9,15,13,18,12
-60,15,4,ours,13,22,11,25,9
-61,15,4,Peham et. al. (optimal),5,17,8,13,5
-62,15,4,Maslov et al. (qiskit),6,42,37,50,26
-63,15,4,Bravyi et al. (qiskit),10,18,11,21,9
-64,16,4,ours,11,17,12,24,11
-65,16,4,Peham et. al. (optimal),7,11,5,10,4
-66,16,4,Maslov et al. (qiskit),9,40,38,45,25
-67,16,4,Bravyi et al. (qiskit),12,10,9,17,8
-68,17,4,ours,15,16,8,24,8
-69,17,4,Peham et. al. (optimal),5,14,9,13,6
-70,17,4,Maslov et al. (qiskit),9,40,34,47,24
-71,17,4,Bravyi et al. (qiskit),10,17,8,21,7
-72,18,4,ours,11,21,10,27,10
-73,18,4,Peham et. al. (optimal),11,14,8,17,6
-74,18,4,Maslov et al. (qiskit),9,47,37,53,27
-75,18,4,Bravyi et al. (qiskit),14,19,13,25,13
-76,19,4,ours,11,16,11,28,11
-77,19,4,Peham et. al. (optimal),6,15,7,13,4
-78,19,4,Maslov et al. (qiskit),8,36,35,46,25
-79,19,4,Bravyi et al. (qiskit),11,13,14,25,13
+0,0,4,ours,9,12,9,18,8
+1,0,4,Peham et. al. (optimal),9,16,8,15,5
+2,0,4,Maslov et al. (qiskit),7,34,37,45,27
+3,0,4,Bravyi et al. (qiskit),13,13,10,20,10
+4,1,4,ours,11,14,10,21,9
+5,1,4,Peham et. al. (optimal),6,16,8,13,6
+6,1,4,Maslov et al. (qiskit),6,35,33,47,24
+7,1,4,Bravyi et al. (qiskit),7,14,13,23,11
+8,2,4,ours,14,19,10,28,10
+9,2,4,Peham et. al. (optimal),4,15,7,12,5
+10,2,4,Maslov et al. (qiskit),12,54,40,53,27
+11,2,4,Bravyi et al. (qiskit),10,20,7,17,5
+12,3,4,ours,15,16,8,22,8
+13,3,4,Peham et. al. (optimal),6,13,6,10,4
+14,3,4,Maslov et al. (qiskit),13,47,40,49,28
+15,3,4,Bravyi et al. (qiskit),12,18,8,17,6
+16,4,4,ours,9,18,9,22,8
+17,4,4,Peham et. al. (optimal),9,10,7,12,6
+18,4,4,Maslov et al. (qiskit),9,49,39,58,28
+19,4,4,Bravyi et al. (qiskit),12,17,12,21,11
+20,5,4,ours,9,16,8,18,7
+21,5,4,Peham et. al. (optimal),9,13,7,14,5
+22,5,4,Maslov et al. (qiskit),6,34,35,44,26
+23,5,4,Bravyi et al. (qiskit),16,18,10,20,8
+24,6,4,ours,8,18,10,27,9
+25,6,4,Peham et. al. (optimal),9,21,5,13,4
+26,6,4,Maslov et al. (qiskit),10,46,36,51,26
+27,6,4,Bravyi et al. (qiskit),7,10,8,17,7
+28,7,4,ours,8,11,10,19,10
+29,7,4,Peham et. al. (optimal),11,12,7,14,4
+30,7,4,Maslov et al. (qiskit),8,36,38,46,27
+31,7,4,Bravyi et al. (qiskit),11,12,11,21,11
+32,8,4,ours,13,17,10,27,10
+33,8,4,Peham et. al. (optimal),11,18,7,14,6
+34,8,4,Maslov et al. (qiskit),10,37,40,46,29
+35,8,4,Bravyi et al. (qiskit),13,16,8,21,7
+36,9,4,ours,12,21,11,28,10
+37,9,4,Peham et. al. (optimal),6,8,9,11,6
+38,9,4,Maslov et al. (qiskit),10,59,33,53,23
+39,9,4,Bravyi et al. (qiskit),7,9,10,20,9
+40,10,4,ours,18,21,11,28,11
+41,10,4,Peham et. al. (optimal),4,7,9,10,6
+42,10,4,Maslov et al. (qiskit),6,44,38,47,26
+43,10,4,Bravyi et al. (qiskit),11,18,11,19,9
+44,11,4,ours,12,18,11,28,11
+45,11,4,Peham et. al. (optimal),6,11,7,12,4
+46,11,4,Maslov et al. (qiskit),8,45,38,49,28
+47,11,4,Bravyi et al. (qiskit),11,11,11,20,10
+48,12,4,ours,14,12,10,21,9
+49,12,4,Peham et. al. (optimal),3,15,8,13,5
+50,12,4,Maslov et al. (qiskit),11,42,35,47,26
+51,12,4,Bravyi et al. (qiskit),9,17,11,21,10
+52,13,4,ours,11,13,9,18,8
+53,13,4,Peham et. al. (optimal),4,3,9,7,5
+54,13,4,Maslov et al. (qiskit),8,44,38,52,26
+55,13,4,Bravyi et al. (qiskit),12,18,12,19,10
+56,14,4,ours,12,18,10,20,10
+57,14,4,Peham et. al. (optimal),6,21,7,13,5
+58,14,4,Maslov et al. (qiskit),9,42,40,48,28
+59,14,4,Bravyi et al. (qiskit),9,11,11,22,9
+60,15,4,ours,12,22,9,24,8
+61,15,4,Peham et. al. (optimal),9,16,8,14,5
+62,15,4,Maslov et al. (qiskit),7,49,32,44,23
+63,15,4,Bravyi et al. (qiskit),7,13,15,27,14
+64,16,4,ours,14,28,12,29,11
+65,16,4,Peham et. al. (optimal),8,15,8,16,6
+66,16,4,Maslov et al. (qiskit),10,37,33,45,25
+67,16,4,Bravyi et al. (qiskit),10,11,15,24,15
+68,17,4,ours,10,16,9,19,8
+69,17,4,Peham et. al. (optimal),4,11,9,10,6
+70,17,4,Maslov et al. (qiskit),12,47,37,48,26
+71,17,4,Bravyi et al. (qiskit),13,15,15,22,14
+72,18,4,ours,13,15,9,24,8
+73,18,4,Peham et. al. (optimal),6,10,7,9,5
+74,18,4,Maslov et al. (qiskit),5,44,37,47,24
+75,18,4,Bravyi et al. (qiskit),9,11,13,21,12
+76,19,4,ours,7,11,9,17,8
+77,19,4,Peham et. al. (optimal),8,16,8,13,6
+78,19,4,Maslov et al. (qiskit),7,35,35,47,24
+79,19,4,Bravyi et al. (qiskit),7,13,8,17,7

@@ -248,6 +248,8 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
         clifford,
         include_destabilizers=True,
         target_metric="depth",
+        linear_search=True,
+        use_maxsat=False
         # verbosity="info",
     )
     print("done!")
@@ -1384,11 +1386,6 @@ def test_ZZ():
 
 
 if __name__ == "__main__":
-    test_ZZ()
-    parse_circ_file(
-        "/Users/davidwinderl/Documents/Workspaces/Workspace/pauliopt/experiments/input.circ",
-        27,
-    )
     # gate_check()
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
@@ -1420,24 +1417,24 @@ if __name__ == "__main__":
     # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
     # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
-    # random_experiment_complete(backend_name="line_3")
-    # random_experiment_complete(backend_name="complete_3")
-    # random_experiment_complete(backend_name="line_4")
-    # random_experiment_complete(backend_name="complete_4")
+    #random_experiment_complete(backend_name="line_3")
+    #random_experiment_complete(backend_name="complete_3")
+    #random_experiment_complete(backend_name="line_4")
+    #random_experiment_complete(backend_name="complete_4")
     # random_experiment_complete(backend_name="complete_5")
     # random_experiment_complete(backend_name="line_5")
     # random_experiment_complete(backend_name="quito")
-    # read_out_converged_experiments(
-    #     [
-    #         # "line_3",
-    #         "line_4",
-    #         # "line_5",
-    #         # "quito",
-    #         # "complete_3",
-    #         "complete_4",
-    #         # "complete_5",
-    #     ]
-    # )
+    read_out_converged_experiments(
+        [
+            # "line_3",
+            "line_4",
+            # "line_5",
+            # "quito",
+            # "complete_3",
+            "complete_4",
+            # "complete_5",
+        ]
+    )
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 
