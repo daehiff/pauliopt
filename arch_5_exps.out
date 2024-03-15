@@ -1,0 +1,332 @@
+slurmstepd-haselgraben: error: Unable to create TMPDIR [/tmp/user/30910]: Permission denied
+slurmstepd-haselgraben: error: Setting TMPDIR to /tmp
+5
+data/random_converged_complete_5.csv
+Our:  OrderedDict([('s', 27), ('cx', 19), ('h', 16)])
+done!
+Optimal:  OrderedDict([('s', 18), ('cx', 12), ('h', 10)]) Time:  201.45156598091125
+Masolv et. al:  OrderedDict([('cx', 63), ('s', 57), ('h', 9)]) Time:  0.020624399185180664
+Qiskit Tableau:  OrderedDict([('cx', 20), ('h', 16), ('s', 15)]) Time:  0.020266294479370117
+Our:  OrderedDict([('s', 21), ('h', 18), ('cx', 17)])
+done!
+Optimal:  OrderedDict([('s', 14), ('cx', 11), ('h', 6)]) Time:  18.301310539245605
+Masolv et. al:  OrderedDict([('cx', 66), ('s', 58), ('h', 14)]) Time:  0.018868207931518555
+Qiskit Tableau:  OrderedDict([('s', 18), ('h', 17), ('cx', 17)]) Time:  0.024222612380981445
+Our:  OrderedDict([('s', 19), ('h', 15), ('cx', 11)])
+done!
+Optimal:  OrderedDict([('s', 14), ('cx', 12), ('h', 7)]) Time:  200.75716471672058
+Masolv et. al:  OrderedDict([('cx', 64), ('s', 55), ('h', 9)]) Time:  0.021363496780395508
+Qiskit Tableau:  OrderedDict([('s', 16), ('cx', 15), ('h', 8)]) Time:  0.019258737564086914
+Our:  OrderedDict([('s', 25), ('cx', 17), ('h', 16)])
+done!
+Optimal:  OrderedDict([('s', 19), ('cx', 13), ('h', 9)]) Time:  447.3588795661926
+Masolv et. al:  OrderedDict([('s', 62), ('cx', 57), ('h', 9)]) Time:  0.015161514282226562
+Qiskit Tableau:  OrderedDict([('s', 25), ('cx', 16), ('h', 15)]) Time:  0.020035982131958008
+Our:  OrderedDict([('s', 24), ('h', 22), ('cx', 18)])
+done!
+Optimal:  OrderedDict([('s', 13), ('h', 11), ('cx', 10)]) Time:  334.24120593070984
+Masolv et. al:  OrderedDict([('cx', 61), ('s', 59), ('h', 9)]) Time:  0.014280557632446289
+Qiskit Tableau:  OrderedDict([('s', 18), ('cx', 16), ('h', 12)]) Time:  0.019131898880004883
+Our:  OrderedDict([('s', 20), ('h', 16), ('cx', 14)])
+done!
+Optimal:  OrderedDict([('s', 15), ('cx', 13), ('h', 7)]) Time:  234.21006298065186
+Masolv et. al:  OrderedDict([('cx', 52), ('s', 51), ('h', 14)]) Time:  0.019042491912841797
+Qiskit Tableau:  OrderedDict([('s', 21), ('h', 18), ('cx', 15)]) Time:  0.021973848342895508
+Our:  OrderedDict([('s', 22), ('h', 18), ('cx', 14)])
+done!
+Optimal:  OrderedDict([('s', 14), ('h', 10), ('cx', 10)]) Time:  158.49077987670898
+Masolv et. al:  OrderedDict([('cx', 66), ('s', 59), ('h', 10)]) Time:  0.01644587516784668
+Qiskit Tableau:  OrderedDict([('s', 20), ('h', 16), ('cx', 16)]) Time:  0.020217180252075195
+Our:  OrderedDict([('s', 29), ('h', 24), ('cx', 18)])
+done!
+Optimal:  OrderedDict([('s', 19), ('cx', 10), ('h', 7)]) Time:  12.261850118637085
+Masolv et. al:  OrderedDict([('cx', 51), ('s', 47), ('h', 9)]) Time:  0.013395309448242188
+Qiskit Tableau:  OrderedDict([('s', 24), ('h', 17), ('cx', 15)]) Time:  0.019407987594604492
+Our:  OrderedDict([('s', 18), ('h', 17), ('cx', 16)])
+done!
+Optimal:  OrderedDict([('cx', 13), ('s', 10), ('h', 8)]) Time:  329.08302879333496
+Masolv et. al:  OrderedDict([('s', 68), ('cx', 59), ('h', 11)]) Time:  0.019162893295288086
+Qiskit Tableau:  OrderedDict([('s', 19), ('cx', 18), ('h', 13)]) Time:  0.020009994506835938
+Our:  OrderedDict([('s', 19), ('h', 16), ('cx', 14)])
+done!
+Optimal:  OrderedDict([('s', 23), ('cx', 12), ('h', 10)]) Time:  177.8645944595337
+Masolv et. al:  OrderedDict([('cx', 59), ('s', 57), ('h', 11)]) Time:  0.014052867889404297
+Qiskit Tableau:  OrderedDict([('s', 22), ('h', 15), ('cx', 14)]) Time:  0.019347667694091797
+Our:  OrderedDict([('s', 20), ('h', 19), ('cx', 18)])
+done!
+Optimal:  OrderedDict([('s', 20), ('h', 12), ('cx', 11)]) Time:  700.9821128845215
+Masolv et. al:  OrderedDict([('s', 81), ('cx', 59), ('h', 12)]) Time:  0.021702289581298828
+Qiskit Tableau:  OrderedDict([('s', 17), ('h', 15), ('cx', 15)]) Time:  0.01961064338684082
+Our:  OrderedDict([('h', 18), ('cx', 18), ('s', 12)])
+done!
+Optimal:  OrderedDict([('cx', 12), ('s', 10), ('h', 10)]) Time:  411.0924303531647
+Masolv et. al:  OrderedDict([('cx', 57), ('s', 40), ('h', 9)]) Time:  0.01750469207763672
+Qiskit Tableau:  OrderedDict([('s', 20), ('cx', 15), ('h', 13)]) Time:  0.02034139633178711
+Our:  OrderedDict([('s', 21), ('h', 14), ('cx', 12)])
+done!
+Optimal:  OrderedDict([('s', 16), ('cx', 10), ('h', 10)]) Time:  88.43702530860901
+Masolv et. al:  OrderedDict([('cx', 63), ('s', 63), ('h', 10)]) Time:  0.014659643173217773
+Qiskit Tableau:  OrderedDict([('s', 25), ('h', 15), ('cx', 13)]) Time:  0.01986551284790039
+Our:  OrderedDict([('s', 26), ('h', 21), ('cx', 15)])
+done!
+Optimal:  OrderedDict([('s', 11), ('cx', 11), ('h', 9)]) Time:  88.17215847969055
+Masolv et. al:  OrderedDict([('cx', 61), ('s', 54), ('h', 12)]) Time:  0.01608872413635254
+Qiskit Tableau:  OrderedDict([('s', 19), ('cx', 15), ('h', 14)]) Time:  0.019793033599853516
+Our:  OrderedDict([('cx', 14), ('s', 14), ('h', 13)])
+done!
+Optimal:  OrderedDict([('cx', 12), ('s', 11), ('h', 9)]) Time:  440.6258656978607
+Masolv et. al:  OrderedDict([('cx', 62), ('s', 57), ('h', 12)]) Time:  0.01459646224975586
+Qiskit Tableau:  OrderedDict([('s', 18), ('cx', 16), ('h', 14)]) Time:  0.01960587501525879
+Our:  OrderedDict([('s', 24), ('h', 15), ('cx', 13)])
+done!
+Optimal:  OrderedDict([('s', 16), ('cx', 13), ('h', 7)]) Time:  609.1821734905243
+Masolv et. al:  OrderedDict([('cx', 60), ('s', 56), ('h', 15)]) Time:  0.015951156616210938
+Qiskit Tableau:  OrderedDict([('s', 28), ('cx', 17), ('h', 15)]) Time:  0.019620180130004883
+Our:  OrderedDict([('s', 22), ('h', 16), ('cx', 14)])
+done!
+Optimal:  OrderedDict([('s', 23), ('cx', 12), ('h', 7)]) Time:  1852.7999107837677
+Masolv et. al:  OrderedDict([('s', 75), ('cx', 62), ('h', 9)]) Time:  0.01467752456665039
+Qiskit Tableau:  OrderedDict([('s', 21), ('cx', 17), ('h', 17)]) Time:  0.019635438919067383
+Our:  OrderedDict([('s', 27), ('h', 25), ('cx', 15)])
+done!
+Optimal:  OrderedDict([('s', 16), ('cx', 11), ('h', 11)]) Time:  411.93258023262024
+Masolv et. al:  OrderedDict([('s', 64), ('cx', 62), ('h', 15)]) Time:  0.015697002410888672
+Qiskit Tableau:  OrderedDict([('h', 19), ('s', 19), ('cx', 17)]) Time:  0.019596099853515625
+Our:  OrderedDict([('s', 23), ('cx', 18), ('h', 17)])
+done!
+Optimal:  OrderedDict([('s', 26), ('cx', 12), ('h', 10)]) Time:  306.7138338088989
+Masolv et. al:  OrderedDict([('s', 63), ('cx', 61), ('h', 10)]) Time:  0.014517068862915039
+Qiskit Tableau:  OrderedDict([('cx', 17), ('h', 11), ('s', 11)]) Time:  0.019189119338989258
+Our:  OrderedDict([('s', 28), ('h', 17), ('cx', 13)])
+done!
+Optimal:  OrderedDict([('s', 18), ('cx', 13), ('h', 11)]) Time:  339.07379817962646
+Masolv et. al:  OrderedDict([('s', 60), ('cx', 60), ('h', 13)]) Time:  0.014099836349487305
+Qiskit Tableau:  OrderedDict([('s', 21), ('h', 21), ('cx', 20)]) Time:  0.020123004913330078
+                         n_rep  num_qubits      h  ...     cx  depth  cx_depth
+method                                             ...                        
+Bravyi et al. (qiskit)     9.5         5.0  15.05  ...  16.20  25.80     13.65
+Maslov et al. (qiskit)     9.5         5.0  11.10  ...  60.25  58.55     32.80
+Peham et. al. (optimal)    9.5         5.0   9.05  ...  11.65  15.05      6.95
+ours                       9.5         5.0  17.65  ...  15.40  28.40     12.75
+
+[4 rows x 7 columns]
+5
+data/random_converged_line_5.csv
+Our:  OrderedDict([('cx', 18), ('s', 17), ('h', 10)])
+done!
+Optimal:  OrderedDict([('h', 51), ('cx', 26), ('s', 12)]) Time:  25.256903171539307
+Masolv et. al:  OrderedDict([('cx', 63), ('s', 55), ('h', 15)]) Time:  0.02022552490234375
+Qiskit Tableau:  OrderedDict([('h', 59), ('cx', 34), ('s', 20)]) Time:  0.02788853645324707
+Our:  OrderedDict([('s', 27), ('h', 22), ('cx', 22)])
+done!
+Optimal:  OrderedDict([('h', 51), ('cx', 30), ('s', 14)]) Time:  294.7249712944031
+Masolv et. al:  OrderedDict([('s', 62), ('cx', 58), ('h', 12)]) Time:  0.016589879989624023
+Qiskit Tableau:  OrderedDict([('h', 70), ('cx', 42), ('s', 17)]) Time:  0.029758691787719727
+Our:  OrderedDict([('s', 21), ('cx', 20), ('h', 18)])
+done!
+Optimal:  OrderedDict([('h', 53), ('cx', 31), ('s', 17)]) Time:  393.44480299949646
+Masolv et. al:  OrderedDict([('s', 79), ('cx', 60), ('h', 9)]) Time:  0.016569137573242188
+Qiskit Tableau:  OrderedDict([('h', 56), ('cx', 31), ('s', 18)]) Time:  0.026729822158813477
+Our:  OrderedDict([('s', 27), ('cx', 22), ('h', 20)])
+done!
+Optimal:  OrderedDict([('h', 48), ('cx', 34), ('s', 16)]) Time:  1048.4951756000519
+Masolv et. al:  OrderedDict([('s', 67), ('cx', 61), ('h', 14)]) Time:  0.015435934066772461
+Qiskit Tableau:  OrderedDict([('h', 60), ('cx', 36), ('s', 19)]) Time:  0.027064800262451172
+Our:  OrderedDict([('s', 19), ('cx', 16), ('h', 14)])
+done!
+Optimal:  OrderedDict([('h', 41), ('cx', 22), ('s', 21)]) Time:  377.0385811328888
+Masolv et. al:  OrderedDict([('cx', 64), ('s', 54), ('h', 11)]) Time:  0.020369529724121094
+Qiskit Tableau:  OrderedDict([('h', 67), ('cx', 35), ('s', 19)]) Time:  0.025255203247070312
+Our:  OrderedDict([('cx', 17), ('s', 13), ('h', 12)])
+done!
+Optimal:  OrderedDict([('h', 46), ('cx', 29), ('s', 18)]) Time:  191.24995470046997
+Masolv et. al:  OrderedDict([('s', 65), ('cx', 60), ('h', 13)]) Time:  0.01711130142211914
+Qiskit Tableau:  OrderedDict([('h', 53), ('cx', 34), ('s', 15)]) Time:  0.025064706802368164
+Our:  OrderedDict([('s', 25), ('cx', 20), ('h', 16)])
+done!
+Optimal:  OrderedDict([('h', 53), ('cx', 34), ('s', 13)]) Time:  1157.9458267688751
+Masolv et. al:  OrderedDict([('s', 59), ('cx', 59), ('h', 15)]) Time:  0.01663804054260254
+Qiskit Tableau:  OrderedDict([('h', 60), ('cx', 36), ('s', 13)]) Time:  0.02882099151611328
+Our:  OrderedDict([('s', 23), ('h', 18), ('cx', 18)])
+done!
+Optimal:  OrderedDict([('h', 40), ('cx', 22), ('s', 20)]) Time:  43.708540201187134
+Masolv et. al:  OrderedDict([('cx', 58), ('s', 50), ('h', 8)]) Time:  0.01954960823059082
+Qiskit Tableau:  OrderedDict([('h', 66), ('cx', 38), ('s', 12)]) Time:  0.02536177635192871
+Our:  OrderedDict([('cx', 18), ('s', 17), ('h', 12)])
+done!
+Optimal:  OrderedDict([('h', 52), ('cx', 32), ('s', 14)]) Time:  262.61406087875366
+Masolv et. al:  OrderedDict([('cx', 63), ('s', 56), ('h', 12)]) Time:  0.014857769012451172
+Qiskit Tableau:  OrderedDict([('h', 67), ('cx', 36), ('s', 20)]) Time:  0.02523326873779297
+Our:  OrderedDict([('s', 24), ('cx', 17), ('h', 17)])
+done!
+Optimal:  OrderedDict([('h', 33), ('s', 22), ('cx', 20)]) Time:  7.941025495529175
+Masolv et. al:  OrderedDict([('cx', 58), ('s', 54), ('h', 13)]) Time:  0.014867067337036133
+Qiskit Tableau:  OrderedDict([('h', 53), ('cx', 31), ('s', 12)]) Time:  0.02821063995361328
+Our:  OrderedDict([('s', 20), ('cx', 19), ('h', 14)])
+done!
+Optimal:  OrderedDict([('h', 51), ('cx', 36), ('s', 23)]) Time:  270.82529640197754
+Masolv et. al:  OrderedDict([('s', 62), ('cx', 59), ('h', 11)]) Time:  0.018509626388549805
+Qiskit Tableau:  OrderedDict([('h', 51), ('cx', 26), ('s', 17)]) Time:  0.030597686767578125
+Our:  OrderedDict([('s', 22), ('cx', 19), ('h', 12)])
+done!
+Optimal:  OrderedDict([('h', 53), ('cx', 33), ('s', 17)]) Time:  404.2998631000519
+Masolv et. al:  OrderedDict([('s', 67), ('cx', 64), ('h', 13)]) Time:  0.01551055908203125
+Qiskit Tableau:  OrderedDict([('h', 74), ('cx', 40), ('s', 21)]) Time:  0.025574922561645508
+Our:  OrderedDict([('cx', 18), ('s', 15), ('h', 15)])
+done!
+Optimal:  OrderedDict([('h', 59), ('cx', 38), ('s', 15)]) Time:  248.39492011070251
+Masolv et. al:  OrderedDict([('s', 74), ('cx', 55), ('h', 14)]) Time:  0.015215873718261719
+Qiskit Tableau:  OrderedDict([('h', 87), ('cx', 51), ('s', 19)]) Time:  0.027300596237182617
+Our:  OrderedDict([('s', 27), ('h', 19), ('cx', 19)])
+done!
+Optimal:  OrderedDict([('h', 43), ('cx', 31), ('s', 17)]) Time:  283.7405118942261
+Masolv et. al:  OrderedDict([('cx', 63), ('s', 60), ('h', 10)]) Time:  0.019846677780151367
+Qiskit Tableau:  OrderedDict([('h', 60), ('cx', 37), ('s', 11)]) Time:  0.029538631439208984
+Our:  OrderedDict([('s', 23), ('cx', 21), ('h', 20)])
+done!
+Optimal:  OrderedDict([('h', 45), ('cx', 28), ('s', 16)]) Time:  675.1927163600922
+Masolv et. al:  OrderedDict([('s', 60), ('cx', 59), ('h', 9)]) Time:  0.01504063606262207
+Qiskit Tableau:  OrderedDict([('h', 75), ('cx', 43), ('s', 18)]) Time:  0.0258181095123291
+Our:  OrderedDict([('s', 29), ('h', 19), ('cx', 12)])
+done!
+Optimal:  OrderedDict([('h', 30), ('cx', 23), ('s', 9)]) Time:  46.40673875808716
+Masolv et. al:  OrderedDict([('cx', 59), ('s', 53), ('h', 10)]) Time:  0.014625310897827148
+Qiskit Tableau:  OrderedDict([('h', 39), ('cx', 21), ('s', 14)]) Time:  0.02418231964111328
+Our:  OrderedDict([('s', 24), ('cx', 19), ('h', 12)])
+done!
+Optimal:  OrderedDict([('h', 56), ('cx', 33), ('s', 20)]) Time:  3452.5277009010315
+Masolv et. al:  OrderedDict([('s', 56), ('cx', 55), ('h', 11)]) Time:  0.019840240478515625
+Qiskit Tableau:  OrderedDict([('h', 83), ('cx', 44), ('s', 24)]) Time:  0.02696061134338379
+Our:  OrderedDict([('s', 28), ('h', 15), ('cx', 12)])
+done!
+Optimal:  OrderedDict([('h', 32), ('s', 21), ('cx', 19)]) Time:  39.53545546531677
+Masolv et. al:  OrderedDict([('cx', 59), ('s', 56), ('h', 14)]) Time:  0.0164334774017334
+Qiskit Tableau:  OrderedDict([('h', 46), ('cx', 23), ('s', 19)]) Time:  0.02482891082763672
+Our:  OrderedDict([('s', 24), ('cx', 20), ('h', 17)])
+done!
+Optimal:  OrderedDict([('h', 51), ('cx', 35), ('s', 15)]) Time:  211.43499946594238
+Masolv et. al:  OrderedDict([('cx', 57), ('s', 48), ('h', 8)]) Time:  0.01419377326965332
+Qiskit Tableau:  OrderedDict([('h', 52), ('cx', 28), ('s', 24)]) Time:  0.02721381187438965
+Our:  OrderedDict([('s', 21), ('cx', 20), ('h', 12)])
+done!
+Optimal:  OrderedDict([('h', 37), ('cx', 24), ('s', 17)]) Time:  27.241893768310547
+Masolv et. al:  OrderedDict([('cx', 61), ('s', 53), ('h', 8)]) Time:  0.0148468017578125
+Qiskit Tableau:  OrderedDict([('h', 44), ('cx', 26), ('s', 17)]) Time:  0.025567293167114258
+                         n_rep  num_qubits      h  ...     cx  depth  cx_depth
+method                                             ...                        
+Bravyi et al. (qiskit)     9.5         5.0  61.10  ...  34.60  65.50     28.90
+Maslov et al. (qiskit)     9.5         5.0  11.50  ...  59.75  58.05     32.55
+Peham et. al. (optimal)    9.5         5.0  46.25  ...  29.00  43.05     20.65
+ours                       9.5         5.0  15.70  ...  18.35  29.50     14.95
+
+[4 rows x 7 columns]
+5
+data/random_converged_quito.csv
+Our:  OrderedDict([('s', 25), ('cx', 19), ('h', 18)])
+done!
+Optimal:  OrderedDict([('cx', 26), ('s', 21), ('h', 11)]) Time:  321.7025671005249
+Masolv et. al:  OrderedDict([('cx', 77), ('s', 51), ('h', 11)]) Time:  0.018462657928466797
+Qiskit Tableau:  OrderedDict([('cx', 37), ('s', 18), ('h', 17)]) Time:  0.026520252227783203
+Our:  OrderedDict([('s', 26), ('cx', 21), ('h', 16)])
+done!
+Optimal:  OrderedDict([('s', 27), ('cx', 24), ('h', 11)]) Time:  421.77301359176636
+Masolv et. al:  OrderedDict([('cx', 84), ('s', 54), ('h', 11)]) Time:  0.022784948348999023
+Qiskit Tableau:  OrderedDict([('cx', 27), ('s', 18), ('h', 14)]) Time:  0.028781890869140625
+Our:  OrderedDict([('s', 23), ('cx', 21), ('h', 14)])
+done!
+Optimal:  OrderedDict([('cx', 27), ('s', 13), ('h', 10)]) Time:  586.370050907135
+Masolv et. al:  OrderedDict([('cx', 88), ('s', 61), ('h', 7)]) Time:  0.0203704833984375
+Qiskit Tableau:  OrderedDict([('cx', 35), ('s', 18), ('h', 13)]) Time:  0.022613048553466797
+Our:  OrderedDict([('s', 20), ('h', 18), ('cx', 15)])
+done!
+Optimal:  OrderedDict([('cx', 25), ('s', 19), ('h', 12)]) Time:  198.97975039482117
+Masolv et. al:  OrderedDict([('cx', 89), ('s', 50), ('h', 9)]) Time:  0.021996498107910156
+Qiskit Tableau:  OrderedDict([('cx', 26), ('s', 18), ('h', 15)]) Time:  0.021952390670776367
+Our:  OrderedDict([('s', 26), ('cx', 20), ('h', 19)])
+done!
+Optimal:  OrderedDict([('cx', 24), ('s', 17), ('h', 7)]) Time:  1107.9540131092072
+Masolv et. al:  OrderedDict([('cx', 85), ('s', 51), ('h', 11)]) Time:  0.02284836769104004
+Qiskit Tableau:  OrderedDict([('cx', 34), ('s', 22), ('h', 15)]) Time:  0.026230812072753906
+Our:  OrderedDict([('s', 24), ('h', 20), ('cx', 19)])
+done!
+Optimal:  OrderedDict([('cx', 27), ('s', 21), ('h', 11)]) Time:  433.64814949035645
+Masolv et. al:  OrderedDict([('cx', 94), ('s', 55), ('h', 11)]) Time:  0.020342588424682617
+Qiskit Tableau:  OrderedDict([('cx', 37), ('s', 24), ('h', 14)]) Time:  0.02286553382873535
+Our:  OrderedDict([('s', 24), ('h', 15), ('cx', 15)])
+done!
+Optimal:  OrderedDict([('s', 18), ('cx', 15), ('h', 9)]) Time:  50.584577798843384
+Masolv et. al:  OrderedDict([('cx', 88), ('s', 68), ('h', 10)]) Time:  0.02293992042541504
+Qiskit Tableau:  OrderedDict([('cx', 39), ('s', 13), ('h', 10)]) Time:  0.025865554809570312
+Our:  OrderedDict([('s', 22), ('cx', 18), ('h', 16)])
+done!
+Optimal:  OrderedDict([('s', 23), ('cx', 19), ('h', 8)]) Time:  553.8689932823181
+Masolv et. al:  OrderedDict([('cx', 93), ('s', 62), ('h', 14)]) Time:  0.0202639102935791
+Qiskit Tableau:  OrderedDict([('cx', 28), ('s', 18), ('h', 16)]) Time:  0.021973371505737305
+Our:  OrderedDict([('cx', 18), ('s', 17), ('h', 13)])
+done!
+Optimal:  OrderedDict([('cx', 30), ('s', 14), ('h', 7)]) Time:  693.1311764717102
+Masolv et. al:  OrderedDict([('cx', 88), ('s', 49), ('h', 9)]) Time:  0.021945953369140625
+Qiskit Tableau:  OrderedDict([('cx', 37), ('s', 23), ('h', 16)]) Time:  0.023401260375976562
+Our:  OrderedDict([('s', 29), ('cx', 22), ('h', 19)])
+done!
+Optimal:  OrderedDict([('cx', 30), ('s', 19), ('h', 12)]) Time:  1022.8331167697906
+Masolv et. al:  OrderedDict([('cx', 84), ('s', 72), ('h', 15)]) Time:  0.025478124618530273
+Qiskit Tableau:  OrderedDict([('cx', 36), ('s', 17), ('h', 14)]) Time:  0.025023460388183594
+Our:  OrderedDict([('h', 13), ('cx', 13), ('s', 12)])
+done!
+Optimal:  OrderedDict([('s', 22), ('cx', 20), ('h', 11)]) Time:  385.2519655227661
+Masolv et. al:  OrderedDict([('cx', 92), ('s', 56), ('h', 10)]) Time:  0.0193789005279541
+Qiskit Tableau:  OrderedDict([('cx', 29), ('s', 20), ('h', 16)]) Time:  0.023971080780029297
+Our:  OrderedDict([('s', 23), ('cx', 20), ('h', 17)])
+done!
+Optimal:  OrderedDict([('cx', 27), ('s', 10), ('h', 8)]) Time:  5.745208740234375
+Masolv et. al:  OrderedDict([('cx', 86), ('s', 57), ('h', 14)]) Time:  0.019599199295043945
+Qiskit Tableau:  OrderedDict([('cx', 26), ('s', 15), ('h', 12)]) Time:  0.025823593139648438
+Our:  OrderedDict([('cx', 20), ('h', 15), ('s', 14)])
+done!
+Optimal:  OrderedDict([('cx', 26), ('s', 16), ('h', 11)]) Time:  306.29179787635803
+Masolv et. al:  OrderedDict([('cx', 84), ('s', 54), ('h', 9)]) Time:  0.027267932891845703
+Qiskit Tableau:  OrderedDict([('cx', 39), ('h', 21), ('s', 20)]) Time:  0.023421525955200195
+Our:  OrderedDict([('s', 22), ('h', 20), ('cx', 17)])
+done!
+Optimal:  OrderedDict([('cx', 20), ('s', 19), ('h', 7)]) Time:  491.6144940853119
+Masolv et. al:  OrderedDict([('cx', 84), ('s', 61), ('h', 11)]) Time:  0.028255462646484375
+Qiskit Tableau:  OrderedDict([('cx', 41), ('s', 22), ('h', 10)]) Time:  0.026378631591796875
+Our:  OrderedDict([('cx', 19), ('s', 16), ('h', 10)])
+done!
+Optimal:  OrderedDict([('cx', 26), ('s', 12), ('h', 8)]) Time:  51.4120659828186
+Masolv et. al:  OrderedDict([('cx', 89), ('s', 46), ('h', 12)]) Time:  0.019223928451538086
+Qiskit Tableau:  OrderedDict([('cx', 23), ('s', 18), ('h', 11)]) Time:  0.022182703018188477
+Our:  OrderedDict([('cx', 18), ('s', 17), ('h', 11)])
+done!
+Optimal:  OrderedDict([('cx', 28), ('s', 6), ('h', 3)]) Time:  35.36188840866089
+Masolv et. al:  OrderedDict([('cx', 85), ('s', 35), ('h', 9)]) Time:  0.019937753677368164
+Qiskit Tableau:  OrderedDict([('cx', 24), ('s', 12), ('h', 9)]) Time:  0.0241239070892334
+Our:  OrderedDict([('s', 29), ('cx', 19), ('h', 19)])
+done!
+Optimal:  OrderedDict([('cx', 19), ('s', 11), ('h', 9)]) Time:  80.53922176361084
+Masolv et. al:  OrderedDict([('cx', 91), ('s', 57), ('h', 9)]) Time:  0.021174192428588867
+Qiskit Tableau:  OrderedDict([('cx', 27), ('s', 21), ('h', 15)]) Time:  0.025686264038085938
+Our:  OrderedDict([('cx', 20), ('s', 20), ('h', 14)])
+done!
+Optimal:  OrderedDict([('cx', 31), ('h', 10), ('s', 9)]) Time:  379.6566243171692
+Masolv et. al:  OrderedDict([('cx', 94), ('s', 44), ('h', 10)]) Time:  0.02242112159729004
+Qiskit Tableau:  OrderedDict([('cx', 34), ('s', 20), ('h', 12)]) Time:  0.023043394088745117
+Our:  OrderedDict([('s', 25), ('h', 21), ('cx', 19)])
+done!
+Optimal:  OrderedDict([('cx', 31), ('s', 15), ('h', 7)]) Time:  313.84151554107666
+Masolv et. al:  OrderedDict([('cx', 94), ('s', 61), ('h', 11)]) Time:  0.028208255767822266
+Qiskit Tableau:  OrderedDict([('cx', 30), ('s', 18), ('h', 14)]) Time:  0.023349523544311523
+Our:  OrderedDict([('s', 23), ('h', 21), ('cx', 15)])
+done!
+Optimal:  OrderedDict([('cx', 24), ('s', 13), ('h', 6)]) Time:  7.781412124633789
+Masolv et. al:  OrderedDict([('cx', 88), ('s', 65), ('h', 12)]) Time:  0.02111673355102539
+Qiskit Tableau:  OrderedDict([('cx', 24), ('s', 13), ('h', 11)]) Time:  0.025757312774658203
+                         n_rep  num_qubits      h  ...     cx   depth  cx_depth
+method                                             ...                         
+Bravyi et al. (qiskit)     9.5         5.0  13.75  ...  31.65   46.25     29.30
+Maslov et al. (qiskit)     9.5         5.0  10.75  ...  87.85  103.75     72.90
+Peham et. al. (optimal)    9.5         5.0   8.90  ...  24.95   29.00     20.25
+ours                       9.5         5.0  16.45  ...  18.40   30.35     16.35
+
+[4 rows x 7 columns]

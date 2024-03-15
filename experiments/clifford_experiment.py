@@ -27,7 +27,6 @@ from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.result import Result
 from qiskit.synthesis import synth_clifford_depth_lnn
 
-import qbraid
 
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.topologies import Topology
@@ -1421,20 +1420,20 @@ if __name__ == "__main__":
     #random_experiment_complete(backend_name="complete_3")
     #random_experiment_complete(backend_name="line_4")
     #random_experiment_complete(backend_name="complete_4")
-    # random_experiment_complete(backend_name="complete_5")
-    # random_experiment_complete(backend_name="line_5")
-    # random_experiment_complete(backend_name="quito")
-    read_out_converged_experiments(
-        [
+    random_experiment_complete(backend_name="complete_5")
+    random_experiment_complete(backend_name="line_5")
+    random_experiment_complete(backend_name="quito")
+    #read_out_converged_experiments(
+    #    [
             # "line_3",
-            "line_4",
+    #        "line_4",
             # "line_5",
             # "quito",
             # "complete_3",
-            "complete_4",
+    #        "complete_4",
             # "complete_5",
-        ]
-    )
+    #    ]
+    #)
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 
