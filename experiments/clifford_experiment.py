@@ -294,10 +294,12 @@ def get_heatmap(circ: QuantumCircuit, percentages):
 
         if instruction.operation.name == "cx":
             qubits = _get_qubits_qiskit(instruction.qubits, q_reg)
-            qubits = list(sorted(list(qubits)))
+            # qubits = list(sorted(list(qubits)))
 
             heatmap[qubits[0], qubits[1]] += 1
-            heatmap[qubits[1], qubits[0]] += 1
+            # heatmap[qubits[1], qubits[0]] += 1
+
+    heatmaps.append(heatmap.copy())
 
     max_hm = max([np.max(hm) for hm in heatmaps])
 
@@ -646,7 +648,7 @@ def construct_heatmap(backend_name_constraint, backend_name_complete, percentage
     heatmaps_constrain = []
     heatmaps_complete = []
 
-    for _ in range(10):
+    for _ in range(1):
         print(_)
         clifford = random_clifford_circuit(nr_qubits=num_qubits)
         heatmaps_constrain.append(
@@ -662,11 +664,25 @@ def construct_heatmap(backend_name_constraint, backend_name_complete, percentage
     heatmap_our = np.mean(heatmaps_constrain, axis=0)
     heatmap_complete = np.mean(heatmaps_complete, axis=0)
 
-    plot_circuit_heatmap(heatmap_our, percentages, backend_constraint, num_qubits)
-    plot_circuit_heatmap(heatmap_complete, percentages, backend_complete, num_qubits)
+    plot_circuit_heatmap(
+        heatmap_our,
+        percentages,
+        backend_constraint,
+        num_qubits,
+        backend_name_constraint,
+    )
+    plot_circuit_heatmap(
+        heatmap_complete,
+        percentages,
+        backend_complete,
+        num_qubits,
+        backend_name_complete,
+    )
 
 
-def plot_circuit_heatmap(heatmaps, percentages, backend, num_qubits):
+def plot_circuit_heatmap(
+    heatmaps, percentages, backend, num_qubits, backend_name, plt_name="data/heatmap"
+):
     if backend == "complete":
         topo = Topology.complete(num_qubits)
     elif backend == "line":
@@ -676,24 +692,60 @@ def plot_circuit_heatmap(heatmaps, percentages, backend, num_qubits):
 
     G = topo.to_nx
 
-    print(heatmaps)
+    print(heatmaps.shape)
     heatmaps = [heatmaps[i] for i in range(heatmaps.shape[0])]
     vmin = min([heatmap.min() for heatmap in heatmaps])
     vmax = max([heatmap.max() for heatmap in heatmaps])
 
-    fig, axes = plt.subplots(1, len(heatmaps), figsize=(15, 5))
-    for i, heatmap in enumerate(heatmaps):
+    if len(heatmaps) == 1:
+        heatmap = heatmaps[0]
         for i_ in range(heatmap.shape[0]):
             for j_ in range(heatmap.shape[0]):
                 if not G.has_edge(i_, j_):
                     heatmap[i_, j_] = np.nan
 
         masked_array = np.ma.array(heatmap, mask=np.isnan(heatmap))
-        im = axes[i].imshow(masked_array, cmap="viridis", vmin=vmin, vmax=vmax)
-        axes[i].set_title(f"{percentages[i]}")
+        im = plt.imshow(
+            masked_array,
+            cmap="viridis",
+            vmin=vmin,
+            vmax=vmax,
+            aspect=1,
+            extent=[0, masked_array.shape[1], 0, masked_array.shape[0]],
+        )
+        plt.xlabel("Control")
+        plt.ylabel("Target")
+        plt.colorbar(im, shrink=0.8)
+    else:
+        fig, axes = plt.subplots(
+            1, len(heatmaps), figsize=(5 * len(heatmaps), 5), constrained_layout=True
+        )
+        for i, heatmap in enumerate(heatmaps):
+            for i_ in range(heatmap.shape[0]):
+                for j_ in range(heatmap.shape[0]):
+                    if not G.has_edge(i_, j_):
+                        heatmap[i_, j_] = np.nan
 
+            masked_array = np.ma.array(heatmap, mask=np.isnan(heatmap))
+            im = axes[i].imshow(
+                masked_array,
+                cmap="viridis",
+                vmin=vmin,
+                vmax=vmax,
+                aspect=1,
+                extent=[0, masked_array.shape[1], 0, masked_array.shape[0]],
+            )
+            axes[i].set_title(f"{percentages[i]}")
+            axes[i].set_xlabel("Control")
+            axes[i].set_ylabel("Target")
+            if i == len(heatmaps) - 1:
+                fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8)
+
+    plt_name = f"{plt_name}_{backend_name}.pdf"
     # Create a colorbar for the whole figure
-    fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8)
+    # fig.tight_layout()
+    plt.savefig(plt_name)
+
     plt.show()
 
 
@@ -1262,18 +1314,32 @@ def get_complete_cx_count():
         print((df_.groupby("method").mean().round()["cx"] / bound_u).round(2))
 
 
-def read_out_converged_experiments(df_names, df_pref="data"):
-    for df_name in df_names:
+def read_out_converged_experiments(df_names, method, df_pref="data"):
+    depths = []
+    cx_count = []
+
+    for df_name, df_opt_name in df_names:
         print(df_name)
 
         df_name = f"{df_pref}/random_converged_{df_name}.csv"
+        df_opt_name = f"{df_pref}/random_converged_{df_opt_name}.csv"
 
         df = pd.read_csv(df_name)
-        print("Depth")
-        print(df.groupby("method").mean()["depth"])
-        print("CX")
-        print(df.groupby("method").mean()["cx"])
-        print("======")
+        df_opt = pd.read_csv(df_opt_name)
+        depths.append(
+            f"{df.groupby('method').mean()['depth'][method]:.2f} / "
+            f"{df_opt.groupby('method').mean()['depth'][method]:.2f}"
+        )
+        cx_count.append(
+            f"{df.groupby('method').mean()['cx'][method]:.2f} / "
+            f"{df_opt.groupby('method').mean()['cx'][method]:.2f}"
+        )
+
+    print("depths")
+    print("& ".join(depths))
+
+    print("cx")
+    print("& ".join(cx_count))
 
 
 def parse_single_qubit(command, qc: QuantumCircuit):
@@ -1392,11 +1458,9 @@ if __name__ == "__main__":
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
 
-    # construct_heatmap("quito", "complete_5", [0.0, 0.1, 0.3, 0.5, 0.9, 1.0])
-
-    # construct_heatmap("mumbai", "complete_27")
-    # construct_heatmap("guadalupe", "complete_16", [0.0, 0.3, 0.5, 0.9, 1.0])
-    # construct_heatmap("ithaca", "complete_65")
+    construct_heatmap("quito", "complete_5", [1.0])
+    construct_heatmap("guadalupe", "complete_16", [1.0])
+    construct_heatmap("ithaca", "complete_65", [1.0])
 
     # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=4)
     # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
@@ -1416,24 +1480,23 @@ if __name__ == "__main__":
     # random_experiment(backend_name="brisbane", nr_input_gates=10000, nr_steps=400)
     # random_experiment(backend_name="complete_127", nr_input_gates=10000, nr_steps=400)
 
-    #random_experiment_complete(backend_name="line_3")
-    #random_experiment_complete(backend_name="complete_3")
-    #random_experiment_complete(backend_name="line_4")
-    #random_experiment_complete(backend_name="complete_4")
-    random_experiment_complete(backend_name="complete_5")
-    random_experiment_complete(backend_name="line_5")
-    random_experiment_complete(backend_name="quito")
-    #read_out_converged_experiments(
-    #    [
-            # "line_3",
-    #        "line_4",
-            # "line_5",
-            # "quito",
-            # "complete_3",
-    #        "complete_4",
-            # "complete_5",
-    #    ]
-    #)
+    # random_experiment_complete(backend_name="line_3")
+    # random_experiment_complete(backend_name="complete_3")
+    # random_experiment_complete(backend_name="line_4")
+    # random_experiment_complete(backend_name="complete_4")
+    # random_experiment_complete(backend_name="complete_5")
+    # random_experiment_complete(backend_name="line_5")
+    # random_experiment_complete(backend_name="quito")
+
+    # read_out_converged_experiments(
+    #     [
+    #         ("line_3", "complete_3"),
+    #         ("line_4", "complete_4"),
+    #         ("line_5", "complete_5"),
+    #         ("quito", "complete_5"),
+    #     ],
+    #     "ours",
+    # )
     #
     # plot_experiment(name="random_line_3", v_line_cx=None)
 
