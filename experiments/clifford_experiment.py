@@ -1,3 +1,6 @@
+from qiskit import Aer, transpile
+from qiskit.quantum_info import Statevector
+import re
 from pytket.extensions.qiskit import qiskit_to_tk
 from choice_fn import heat_chooser, random_chooser
 import pyzx as zx
@@ -29,6 +32,7 @@ import time
 import warnings
 
 from qiskit.qasm2 import dumps, load
+from qiskit import Aer, transpile, execute
 
 # from tests.test_clifford_tableau import verify_equality
 
@@ -406,6 +410,123 @@ def duncan_et_al_synthesis(circ: QuantumCircuit, backend):
     return column
 
 
+def parse_qurotxy(command, qc: QuantumCircuit):
+    pattern = r"^\s*qurotxy\s+QUBIT\[(\d+)\],\s*([\d.e+-]+),\s*([\d.e+-]+)\s*\(slice_idx=(\d+)\)\s*$"
+    match = re.match(pattern, command)
+
+    if match:
+        qubit, theta, phi, _ = match.groups()
+        qubit = int(qubit)
+        theta = float(theta)
+        phi = float(phi)
+        qc.rz(phi, qubit)
+        qc.rx(theta, qubit)
+        qc.rz(-phi, qubit)
+        return True
+    return False
+
+
+def parse_qucphase(command, qc: QuantumCircuit):
+    pattern = r"\s*qucphase\s+QUBIT\[(\d+)\],\s*QUBIT\[(\d+)\],\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s+\(slice_idx=(\d+)\)\s*"
+    match = re.match(pattern, command)
+    if match:
+        qubit0, qubit1, theta, slice_idx = match.groups()
+
+        qubit0 = int(qubit0)
+        qubit1 = int(qubit1)
+        theta = float(theta)
+
+        qc.crz(theta, qubit0, qubit1)
+        return True
+    return False
+
+
+def parse_quswapalp(command, qc: QuantumCircuit):
+    pattern = r"\s*quswapalp\s+QUBIT\[(\d+)\],\s*QUBIT\[(\d+)\],\s*([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*"
+    match = re.match(pattern, command)
+    if match:
+        qubit0, qubit1, theta = match.groups()
+
+        qubit0 = int(qubit0)
+        qubit1 = int(qubit1)
+        theta = float(theta)
+        qc.cx(1, 0)
+        qc.cry(theta, qubit0, qubit1)
+        qc.cx(1, 0)
+        return True
+    return False
+
+
+def parse_qu_rotz(command, qc: QuantumCircuit):
+    # TODO @keefe I haven't found this in
+    pass
+
+
+def contains_return(text):
+    pattern = r"^\s*return\s*$"
+    return bool(re.search(pattern, text))
+
+
+def is_header(line):
+    patterns = [
+        r"\.text",
+        r'\.file\s+"[^"]+"',
+        r"\.section\s+\S+",
+        r'\.globl\s+"_Z\d+[^"]*"',
+        r'\.type\s+"_Z\d+[^"]*",@function',
+        r'"\s*_Z\d+[^"]*":',
+        r"//",
+        r"\/\/",
+        r"\/\/\s+--\s+Begin\s+function",
+    ]
+
+    for pattern in patterns:
+        if re.search(pattern, line):
+            return True
+
+    return False
+
+
+def parse_circ_file(file_path, num_qubits):
+    with open(file_path, "r") as f:
+        lines = [line.rstrip().lstrip() for line in f]
+
+    qc = QuantumCircuit(num_qubits)
+    for line in lines:
+        able_to_parse = False
+        able_to_parse = able_to_parse or is_header(line)
+        able_to_parse = able_to_parse or parse_qucphase(line, qc)
+        able_to_parse = able_to_parse or parse_qurotxy(line, qc)
+        able_to_parse = able_to_parse or parse_quswapalp(line, qc)
+        able_to_parse = able_to_parse or contains_return(line)
+        if not able_to_parse:
+            raise Exception("Unknown to parse: ", line)
+
+        if contains_return(line):
+            return qc
+
+    raise Exception("EOF: missing return statement!")
+
+
+def pcoast_compilation(circ: QuantumCircuit, backend):
+    if backend == "complete":
+        circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx", "rz"],)
+    elif backend == "line":
+        circ_out = transpile(
+            circ,
+            coupling_map=[[i, i + 1] for i in range(circ.num_qubits - 1)],
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx", "rz"],
+        )
+    else:
+        circ_out = transpile(circ, coupling_map=backend.coupling_map, basis_gates=["s", "h", "cx", "rz"],)
+
+    column = get_ops_count(circ_out) | {"time": 0}
+    column = column | get_depth(circ_out) | get_2q_depth(circ_out)
+
+    return column
+
+
 def our_compilation_tableau(tab: Clifford, backend, num_qubits):
     if backend == "complete":
         topo = Topology.complete(num_qubits)
@@ -464,7 +585,7 @@ def get_backend_and_df_name(backend_name, df_name="data/random"):
 def get_circuit_from_qasm(backend_name, n_gadgets, i):
     df_name = "datasets/clifford_experimental_dataset/"
     folder_name = os.path.join(df_name, backend_name)
-    circ_name = os.path.join(folder_name, backend_name + "_" + str(n_gadgets) +
+    circ_name = os.path.join(folder_name, backend_name + "_" + str(n_gadgets).zfill(4) +
                              "_" + str(i).zfill(2) + ".qasm")
     circ = load(circ_name)
     return circ
@@ -535,22 +656,33 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
             df.to_csv(output_csv)
 
             ########################################
-            # Our clifford circuit
+            # PCOAST
             ########################################
-            # column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-            #           "method": "ours_random"} | \
-            #     our_compilation(circ, backend, choice_fn=random_chooser)
-            # df.loc[len(df)] = column
-            # df.to_csv(df_name)
 
-            ########################################
-            # Our clifford circuit w/ temp
-            ########################################
-            # column = {"n_rep": _, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-            #           "method": "ours_temp"} | \
-            #     our_compilation_heat(circ, backend, choice_fn=heat_chooser)
-            # df.loc[len(df)] = column
-            # df.to_csv(df_name)
+            circ_name = "complete_" + str(num_qubits) + "_" + \
+                str(n_gadgets).zfill(4) + "_" + str(i).zfill(2) + ".qs"
+            pcoast_circuit = os.path.join(
+                "datasets/pcoast_data/", "complete_" + str(num_qubits) + "/" + circ_name)
+            pcoast_circuit = parse_circ_file(pcoast_circuit, num_qubits)
+
+            # if not Statevector.from_instruction(circ).equiv(
+            #     Statevector.from_instruction(pcoast_circuit)):
+            # print("Base :" + str(Statevector.from_instruction(circ)))
+            # print("PCoast :" + str(Statevector.from_instruction(pcoast_circuit)))
+            # print(circ_name)
+            # return
+
+            # from qiskit.quantum_info import Operator
+
+            # correct = 0
+            # if Operator(circ).equiv(Operator(pcoast_circuit)):  # True
+            #     correct += 1
+
+            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
+                      "method": "PCoast"} | \
+                pcoast_compilation(pcoast_circuit, backend)
+            df.loc[len(df)] = column
+            df.to_csv(df_name)
 
             # ########################################
             # # Qiskit compilation
@@ -596,10 +728,8 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
                 maslov_et_al_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
-
+    # print("Correct: " + str(correct))
     df.to_csv(output_csv)
-    # print(circ_out)
-    # print(circ_stim)
 
 
 def apply_permutation_measurements(counts: dict, perm: list):
@@ -1089,34 +1219,36 @@ if __name__ == "__main__":
     # analyze_real_hw(backend_name="ibm_nairobi")
     df_name = "data/new_methods_fixed_data/random"
 
-    random_experiment(backend_name="quito", nr_input_gates=200,
-                      nr_steps=20, df_name=df_name)
-    random_experiment(backend_name="complete_5",
-                      nr_input_gates=200, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="quito", nr_input_gates=200,
+    #                   nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="complete_5",
+    #                   nr_input_gates=200, nr_steps=20, df_name=df_name)
 
-    random_experiment(backend_name="nairobi",
-                      nr_input_gates=300, nr_steps=20, df_name=df_name)
-    random_experiment(backend_name="complete_7",
-                      nr_input_gates=300, nr_steps=20, df_name=df_name)
+    # parse_qurotxy()
+    # random_experiment(backend_name="nairobi",
+    #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="complete_7",
+    #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
 
-    random_experiment(backend_name="guadalupe",
-                      nr_input_gates=400, nr_steps=20, df_name=df_name)
-    random_experiment(backend_name="complete_16",
-                      nr_input_gates=400, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="guadalupe",
+    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="complete_16",
+    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
 
-    random_experiment(backend_name="mumbai", nr_input_gates=800,
-                      nr_steps=40, df_name=df_name)
-    random_experiment(backend_name="complete_27",
-                      nr_input_gates=800, nr_steps=40, df_name=df_name)
+    # random_experiment(backend_name="mumbai", nr_input_gates=800,
+    #                   nr_steps=40, df_name=df_name)
+    # random_experiment(backend_name="complete_27",
+    #                   nr_input_gates=800, nr_steps=40, df_name=df_name)
 
     random_experiment(backend_name="ithaca",
                       nr_input_gates=2000, nr_steps=100, df_name=df_name)
     random_experiment(backend_name="complete_65",
                       nr_input_gates=2000, nr_steps=100, df_name=df_name)
-    random_experiment(backend_name="complete_127",
-                      nr_input_gates=10000, nr_steps=400, df_name=df_name)
-    random_experiment(backend_name="brisbane",
-                      nr_input_gates=10000, nr_steps=400, output_csv=df_name)
+
+    # random_experiment(backend_name="brisbane",
+    #                   nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    # random_experiment(backend_name="complete_127",
+    #                   nr_input_gates=10000, nr_steps=400, df_name=df_name)
 
     # random_experiment_complete(backend_name="line_3")
     # random_experiment_complete(backend_name="line_4")
