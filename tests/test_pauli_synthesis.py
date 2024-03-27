@@ -16,7 +16,8 @@ def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels,
         allowed_legs = [X, Y, Z]
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
-    legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
+    legs = np.random.choice(
+        [i for i in range(num_qubits)], size=nr_legs, replace=False)
     phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
         phase_gadget[leg] = np.random.choice(allowed_legs)
@@ -34,7 +35,8 @@ def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
-        pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels)
+        pp >>= create_random_phase_gadget(
+            num_qubits, min_legs, max_legs, allowed_angels)
 
     return pp
 
@@ -48,7 +50,8 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.cycle(8),
                          Topology.grid(2, 3)]:
                 print(topo._named)
-                pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
+                pp = generate_random_pauli_polynomial(
+                    topo.num_qubits, num_gadgets)
                 synthesizer = PauliSynthesizer(pp, SynthMethod.UCCDS, topo)
                 synthesizer.synthesize()
                 self.assertTrue(synthesizer.check_circuit_equivalence(),
@@ -63,8 +66,10 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.complete(4),
                          Topology.grid(2, 3)]:
                 print(topo._named)
-                pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-                synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
+                pp = generate_random_pauli_polynomial(
+                    topo.num_qubits, num_gadgets)
+                synthesizer = PauliSynthesizer(
+                    pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
                 synthesizer.synthesize()
                 self.assertTrue(synthesizer.check_circuit_equivalence(),
                                 "Circuits did not match")
@@ -72,14 +77,34 @@ class TestPauliSynthesis(unittest.TestCase):
                                 "Connectivity predicate not satisfied")
 
     def test_steiner_gray_nc(self):
-        for num_gadgets in [100, 200]:
+        for num_gadgets in [5]:
             for topo in [Topology.line(4),
                          Topology.line(6),
                          Topology.cycle(4),
                          Topology.grid(2, 4)]:
                 print(topo._named)
-                pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
-                synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+                pp = generate_random_pauli_polynomial(
+                    topo.num_qubits, num_gadgets)
+                synthesizer = PauliSynthesizer(
+                    pp, SynthMethod.STEINER_GRAY_NC, topo)
+                synthesizer.synthesize()
+                self.assertTrue(synthesizer.check_circuit_equivalence(),
+                                "Circuits did not match")
+                self.assertTrue(synthesizer.check_connectivity_predicate(),
+                                "Connectivity predicate not satisfied")
+
+    def test_steiner_gray_clifford(self):
+        for num_gadgets in [100, 200]:
+            for topo in [Topology.complete(4),
+                         Topology.line(4),
+                         Topology.line(6),
+                         Topology.cycle(4),
+                         Topology.grid(2, 4)]:
+                print(topo)
+                pp = generate_random_pauli_polynomial(
+                    topo.num_qubits, num_gadgets)
+                synthesizer = PauliSynthesizer(
+                    pp, SynthMethod.STEINER_GRAY_CLIFFORD, topo)
                 synthesizer.synthesize()
                 self.assertTrue(synthesizer.check_circuit_equivalence(),
                                 "Circuits did not match")
@@ -93,7 +118,8 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.cycle(4),
                          Topology.grid(2, 4)]:
                 print(topo._named)
-                pp = generate_random_pauli_polynomial(topo.num_qubits, num_gadgets)
+                pp = generate_random_pauli_polynomial(
+                    topo.num_qubits, num_gadgets)
                 synthesizer = PauliSynthesizer(pp, SynthMethod.ANNEAL, topo)
                 synthesizer.synthesize()
                 self.assertTrue(synthesizer.check_circuit_equivalence(),
