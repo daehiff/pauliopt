@@ -103,7 +103,8 @@ class PauliPolynomial:
 
     def __repr__(self):
         if len(self.pauli_gadgets) > 0:
-            pad_len = max([len(str(gadget.angle)) for gadget in self.pauli_gadgets])
+            pad_len = max([len(str(gadget.angle))
+                          for gadget in self.pauli_gadgets])
         else:
             pad_len = 0
         return '\n'.join([self[i].to_string(pad_lenght=pad_len)
@@ -149,7 +150,8 @@ class PauliPolynomial:
 
         qc = QuantumCircuit(num_qubits)
         for gadget in self.pauli_gadgets:
-            qc.compose(gadget.to_qiskit(topology=topology, time=time), inplace=True)
+            qc.compose(gadget.to_qiskit(
+                topology=topology, time=time), inplace=True)
         qc.global_phase += self.global_phase
         return qc
 
@@ -197,14 +199,14 @@ class PauliPolynomial:
         return count
 
     def commutes(self, col1, col2):
-        gadet1 = self.pauli_gadgets[col1]
-        gadet2 = self.pauli_gadgets[col2]
-        return gadet1.commutes(gadet2)
+        gadget1 = self.pauli_gadgets[col1]
+        gadget2 = self.pauli_gadgets[col2]
+        return gadget1.commutes(gadget2)
 
     def mutual_legs(self, col1, col2):
-        gadet1 = self.pauli_gadgets[col1]
-        gadet2 = self.pauli_gadgets[col2]
-        return gadet1.mutual_legs(gadet2)
+        gadget1 = self.pauli_gadgets[col1]
+        gadget2 = self.pauli_gadgets[col2]
+        return gadget1.mutual_legs(gadget2)
 
     def to_svg(self, hscale: float = 1.0, vscale: float = 1.0, scale: float = 1.0,
                svg_code_only=False):
@@ -238,9 +240,9 @@ class PauliPolynomial:
         font_size = int(10)
 
         width = num_gadgets * (
-                square_width + margin_x + margin_angle_x + text_width) + margin_x
+            square_width + margin_x + margin_angle_x + text_width) + margin_x
         height = (num_qubits) * (square_height + margin_y) + (
-                square_height + margin_y + margin_angle_y)
+            square_height + margin_y + margin_angle_y)
 
         builder = SVGBuilder(width, height)
         builder = builder.add_diagonal_fill(x_color, z_color, y_color)
@@ -253,7 +255,8 @@ class PauliPolynomial:
             paulis = gadget.paulis
             y = margin_y
             text_coords = (square_width + margin_x + margin_angle_x + x, y)
-            text_left_lower_corder = (text_coords[0], text_coords[1] + square_height)
+            text_left_lower_corder = (
+                text_coords[0], text_coords[1] + square_height)
             for qubit in range(num_qubits):
                 if qubit == 0:
                     y += square_height + margin_y + margin_angle_y
@@ -269,11 +272,14 @@ class PauliPolynomial:
                 builder.line_bend(text_left_lower_corder, center_coords,
                                   degree=qubit * bend_degree)
                 if paulis[qubit] == X:
-                    builder.square((x, y), square_width, square_height, x_color)
+                    builder.square((x, y), square_width,
+                                   square_height, x_color)
                 elif paulis[qubit] == Y:
-                    builder.square((x, y), square_width, square_height, y_color)
+                    builder.square((x, y), square_width,
+                                   square_height, y_color)
                 elif paulis[qubit] == Z:
-                    builder.square((x, y), square_width, square_height, z_color)
+                    builder.square((x, y), square_width,
+                                   square_height, z_color)
 
             builder = builder.text_with_square(text_coords, text_width, square_height,
                                                str(gadget.angle))
@@ -294,7 +300,8 @@ class PauliPolynomial:
             # pylint: disable = import-outside-toplevel
             from IPython.core.display import SVG  # type: ignore
         except ModuleNotFoundError as e:
-            raise ModuleNotFoundError("You must install the 'IPython' library.") from e
+            raise ModuleNotFoundError(
+                "You must install the 'IPython' library.") from e
 
         return SVG(svg_code)
 
