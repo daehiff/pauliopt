@@ -2,6 +2,7 @@ from enum import Enum
 
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+from pauliopt.pauli.synth.steiner_gray_synth import pauli_polynomial_steiner_gray_clifford
 from pauliopt.pauli.utils import apply_permutation, verify_equality
 from pauliopt.topologies import Topology
 
@@ -13,6 +14,7 @@ class SynthMethod(Enum):
     ANNEAL = "anneal"
     DIVIDE_AND_CONQUER = "divide_and_conquer"
     STEINER_GRAY_NC = "steiner_gray_nc"
+    STEINER_GRAY_CLIFFORD = "steiner_gray_clifford"
     UCCDS = "uccds"
 
 
@@ -41,6 +43,10 @@ class PauliSynthesizer:
         elif method == SynthMethod.STEINER_GRAY_NC:
             circ_out, gadget_perm, perm = \
                 pauli_polynomial_steiner_gray_nc(pp, self.topology)
+            circ_out.apply_permutation(perm)
+        elif method == SynthMethod.STEINER_GRAY_CLIFFORD:
+            circ_out, gadget_perm, perm = \
+                pauli_polynomial_steiner_gray_clifford(pp, self.topology)
             circ_out.apply_permutation(perm)
         elif method == SynthMethod.UCCDS:
             circ_out, gadget_perm, perm = \
@@ -72,8 +78,8 @@ class PauliSynthesizer:
         pp_.pauli_gadgets = [self.pp[i].copy() for i in self.gadget_placement]
         circ = self.circ_out_qiskit.copy()
         circ = apply_permutation(circ, self.qubit_placement)
-        pp_circ = pp_.to_qiskit()
 
+        pp_circ = pp_.to_qiskit()
         return verify_equality(circ, pp_circ)
 
     def get_operator(self):
