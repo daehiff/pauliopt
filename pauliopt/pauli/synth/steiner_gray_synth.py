@@ -2,6 +2,7 @@ from typing import List, Tuple
 import networkx as nx
 
 from pauliopt.pauli.clifford_gates import CX, H, V
+from pauliopt.pauli.clifford_region import CliffordRegion
 from pauliopt.pauli.clifford_tableau import CliffordTableau, is_cutting
 from pauliopt.pauli.pauli_circuit import PauliCircuit, CX as CXPauli, H as HPauli, V as VPauli
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
@@ -230,19 +231,19 @@ def zy_partition_pauli_polynomial(pp: PauliPolynomial, row: int, columns_to_use:
     return col_i, col_z+col_y, col_x
 
 
-def propagate_circuit(pp: PauliPolynomial, circuit: PauliCircuit, sub_columns: List[int] = None):
+def propagate_circuit(pp: PauliPolynomial, circuit: CliffordRegion, sub_columns: List[int] = None):
     if sub_columns is None:
         sub_columns = list(range(pp.num_gadgets))
     for gate in reversed(circuit.gates):
-        if isinstance(gate, CXPauli):
-            clifford_gate = CX(gate.qubits[0], gate.qubits[1])
-        elif isinstance(gate, HPauli):
-            clifford_gate = H(gate.qubits[0])
-        elif isinstance(gate, VPauli):
-            clifford_gate = V(gate.qubits[0])
-        else:
-            raise ValueError("Invalid Gate")
-        pp.propagate(clifford_gate, sub_columns)
+        # if isinstance(gate, CXPauli):
+        #     clifford_gate = CX(gate.qubits[0], gate.qubits[1])
+        # elif isinstance(gate, HPauli):
+        #     clifford_gate = H(gate.qubits[0])
+        # elif isinstance(gate, VPauli):
+        #     clifford_gate = V(gate.qubits[0])
+        # else:
+        #     raise ValueError("Invalid Gate")
+        pp.propagate(gate, sub_columns)
 
 
 def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
@@ -253,7 +254,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
     def identity_recurse(columns_to_use, qubits_to_use):
         """ Determines row and row_next for recursion, removes all identity operators on both row and row_next"""
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_prop = PauliCircuit(pp.num_qubits)
+        qc_prop = CliffordRegion(pp.num_qubits)
         # always check to remove columns here, this should prevent some of the strange reintroduction of rotations
         qc_out += check_columns(columns_to_use)
         if not columns_to_use or not qubits_to_use:
@@ -341,7 +342,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         assert rec_type in [X, Y, Z]
         # no check columns because all entries are non_identity
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_prop = PauliCircuit(pp.num_qubits)
+        qc_prop = CliffordRegion(pp.num_qubits)
 
         if not columns_to_use or not qubits_to_use:
             return qc_out, qc_prop
@@ -405,16 +406,16 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             qc_prop = qc_prop_i + qc_prop
 
         if rec_type == X:
-            qc_prop.h(row)
+            qc_prop.append_gate(H(row))
         elif rec_type == Y:
-            qc_prop.v(row)
+            qc_prop.append_gate(V(row))
 
         return qc_out, qc_prop
 
     def simplify_two_pauli(columns_to_use, qubits_to_use, row, row_next,
                            rec_type_1, rec_type_2):
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_prop = PauliCircuit(pp.num_qubits)
+        qc_prop = CliffordRegion(pp.num_qubits)
         if not columns_to_use or not qubits_to_use:
             return qc_out, qc_prop
 
@@ -438,18 +439,18 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         qc_out += qc_iden
 
         qc_prop = qc_prop_iden + qc_prop
-        qc_prop.cx(row, row_next)
+        qc_prop.append_gate(CX(row, row_next))
 
         if rec_type_1 == X and rec_type_2 == Y:
-            qc_prop.h(row_next)
+            qc_prop.append_gate(H(row_next))
         elif rec_type_1 == X and rec_type_2 == Z:
-            qc_prop.v(row_next)
+            qc_prop.append_gate(V(row_next))
         return qc_out, qc_prop
 
     def simplify_one_pauli(columns_to_use, qubits_to_use, row, row_next,
                            rec_type):
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_prop = PauliCircuit(pp.num_qubits)
+        qc_prop = CliffordRegion(pp.num_qubits)
         if not columns_to_use or not qubits_to_use:
             return qc_out, qc_prop
 
@@ -473,19 +474,19 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         qc_out += qc_iden
         qc_prop = qc_prop_iden + qc_prop
 
-        qc_prop.cx(row, row_next)
+        qc_prop.append_gate(CX(row, row_next))
 
         if rec_type == X:
-            qc_prop.h(row_next)
+            qc_prop.append_gate(H(row_next))
         elif rec_type == Y:
-            qc_prop.v(row_next)
+            qc_prop.append_gate(V(row_next))
 
         return qc_out, qc_prop
 
     def swap_row(columns_to_use, row, row_next, pauli_type):
         """Converts `row,row_next` to `ZI` and converts it to `IZ`. Swaps `row` and `row_next` based on pauli_type, returns added gates for swapping and gates for propagation"""
         qc_out = PauliCircuit(pp.num_qubits)
-        qc_prop = PauliCircuit(pp.num_qubits)
+        qc_prop = CliffordRegion(pp.num_qubits)
         if not columns_to_use:
             return qc_out, qc_prop
         if pauli_type == X:
@@ -503,13 +504,13 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         pp.propagate(CX(row_next, row), columns_to_use)
         pp.propagate(CX(row, row_next), columns_to_use)
 
-        qc_prop.cx(row, row_next)
-        qc_prop.cx(row_next, row)
+        qc_prop.append_gate(CX(row, row_next))
+        qc_prop.append_gate(CX(row_next, row))
 
         if pauli_type == X:
-            qc_prop.h(row)
+            qc_prop.append_gate(H(row))
         elif pauli_type == Y:
-            qc_prop.v(row)
+            qc_prop.append_gate(V(row))
         elif pauli_type == Z:
             pass
 
@@ -547,6 +548,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
     circ_out += check_columns(columns_to_use)
     circ_recurse, circ_prop = identity_recurse(
         columns_to_use, list(range(pp.num_qubits)))
-
+    circ_prop, permutation = circ_prop.to_tableau().to_clifford_circuit_arch_aware(
+        topo, include_swaps=False)
     permutation = [permutation[i] for i in range(pp.num_qubits)]
     return circ_out+circ_recurse+circ_prop, perm_gadgets, permutation
