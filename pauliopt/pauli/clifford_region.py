@@ -12,6 +12,13 @@ class CliffordRegion:
         self.gates: [CliffordGate] = gates
         self.num_qubits = num_qubits
 
+    def compose(self, other: "CliffordRegion"):
+        self.gates += other.gates
+        return self
+
+    def __add__(self, other: "CliffordRegion"):
+        return self.compose(other)
+
     def append_gate(self, gate: CliffordGate):
         if isinstance(gate, SingleQubitGate) and gate.qubit >= self.num_qubits:
             raise Exception(
@@ -49,8 +56,8 @@ class CliffordRegion:
             if "include_swaps" not in kwargs:
                 kwargs["include_swaps"] = False
             ct = self.to_tableau()
-            return ct.to_cifford_circuit_arch_aware(topo,
-                                                    include_swaps=kwargs["include_swaps"])
+            return ct.to_clifford_circuit_arch_aware(topo,
+                                                     include_swaps=kwargs["include_swaps"])
         else:
             raise NotImplementedError(f"Method {method} not implemented")
 
@@ -58,7 +65,7 @@ class CliffordRegion:
                   include_swaps=False):
         if method == "ct_resynthesis":
             ct = self.to_tableau()
-            return ct.to_cifford_circuit_arch_aware(topology, include_swaps=include_swaps)
+            return ct.to_clifford_circuit_arch_aware(topology, include_swaps=include_swaps)
         elif method == "naive_apply":
             from qiskit import QuantumCircuit
             qc = QuantumCircuit(self.num_qubits)
