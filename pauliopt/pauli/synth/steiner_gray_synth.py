@@ -233,8 +233,7 @@ def zy_partition_pauli_polynomial(pp: PauliPolynomial, row: int, columns_to_use:
 def propagate_circuit(pp: PauliPolynomial, circuit: PauliCircuit, sub_columns: List[int] = None):
     if sub_columns is None:
         sub_columns = list(range(pp.num_gadgets))
-
-    for gate in circuit.gates:
+    for gate in reversed(circuit.gates):
         if isinstance(gate, CXPauli):
             clifford_gate = CX(gate.qubits[0], gate.qubits[1])
         elif isinstance(gate, HPauli):
@@ -250,7 +249,6 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
     perm_gadgets = []
     permutation = {k: k for k in range(pp.num_qubits)}
     G = topo.to_nx
-    print("Begin")
 
     def identity_recurse(columns_to_use, qubits_to_use):
         """ Determines row and row_next for recursion, removes all identity operators on both row and row_next"""
@@ -295,12 +293,13 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         # Add swapping gates to output and propagate gates
         # propagating qc_prop_swap jumbles paulis on `row`
         qc_out += qc_swap
+        propagate_circuit(pp, qc_prop_swap, col_rest_3)
+
         qc_prop = qc_prop_swap + qc_prop
 
         # find new identities on `row` in `col_rest` and
         col_i, col_rest_4 = identity_partition_pauli_polynomial(
             pp, row, col_rest_3)
-
         # immediately recurse removing `row`
         qc_i_re, qc_prop_i_re = identity_recurse(
             col_i, remaining_qubits)
@@ -321,6 +320,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             pp, row, col_rest_6)
         col_rest_8 = col_i_row+col_i_row_next+col_rest_7
         # basically only called for perfect conditions, otherwise getting rid of I's makes more sense
+
         qc_p, qc_prop_p = p_recurse(
             col_max, qubits_to_use, row, row_next, pauli_max
         )
@@ -328,6 +328,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         propagate_circuit(pp, qc_prop_p, col_rest_8)
         qc_prop = qc_prop_p + qc_prop
         # otherwise we continue removing identities
+
         qc_last, qc_prop_last = identity_recurse(
             col_rest_8, qubits_to_use)
         qc_out += qc_last
@@ -398,12 +399,10 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             propagate_circuit(pp, qc_prop_two, col_x)
             qc_prop = qc_prop_two + qc_prop
             # this may introduce identity to the circuit, so identity recurse here
-            print("Is this the problem?")
+
             qc_i, qc_prop_i = identity_recurse(col_x, qubits_to_use)
             qc_out += qc_i
             qc_prop = qc_prop_i + qc_prop
-
-        qc_out += check_columns(columns_to_use)
 
         if rec_type == X:
             qc_prop.h(row)
@@ -418,6 +417,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         qc_prop = PauliCircuit(pp.num_qubits)
         if not columns_to_use or not qubits_to_use:
             return qc_out, qc_prop
+
         if rec_type_1 == X and rec_type_2 == Y:
             qc_out.h(row_next)
             pp.propagate(H(row_next), columns_to_use)
@@ -427,6 +427,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
 
         qc_out.cx(row, row_next)
         pp.propagate(CX(row, row_next), columns_to_use)
+
         columns_to_use = [
             col for col in columns_to_use if pp[col][row_next] in [Z, Y]]
 
@@ -451,6 +452,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         qc_prop = PauliCircuit(pp.num_qubits)
         if not columns_to_use or not qubits_to_use:
             return qc_out, qc_prop
+
         if rec_type == X:
             qc_out.h(row_next)
             pp.propagate(H(row_next), columns_to_use)
@@ -514,6 +516,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         return qc_out, qc_prop
 
     def check_columns(columns_to_use):
+
         qc = PauliCircuit(pp.num_qubits)
         to_remove = []
         for col in columns_to_use:
