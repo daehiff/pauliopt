@@ -287,8 +287,16 @@ def synth_pp_pauliopt_steiner_nc(pp: PauliPolynomial, topo: Topology,
     return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
 
 
-def synth_pp_pauliopt_divide_concquer(pp: PauliPolynomial, topo: Topology,
-                                      prefix="pauliopt_divide_conquer"):
+def synth_pp_pauliopt_steiner_clifford(pp: PauliPolynomial, topo: Topology,
+                                       prefix="pauliopt_steiner_clifford"):
+    pp = simplify_pauli_polynomial(pp, allow_acs=True)
+    synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_CLIFFORD, topo)
+    synthesizer.synthesize()
+    return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
+
+
+def synth_pp_pauliopt_divide_conquer(pp: PauliPolynomial, topo: Topology,
+                                     prefix="pauliopt_divide_conquer"):
     synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
     synthesizer.synthesize()
     return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
@@ -404,39 +412,50 @@ def synth_ucc_evaluation():
 def random_pauli_polynomial_experiment():
     logger = get_logger("random_pauli_polynomial_experiment")
     df = pd.DataFrame()
-    for num_gadgets in [100, 200, 300, 500, 1000]:
+    for num_gadgets in [50, 100, 200, 300, 500, 1000]:
         logger.info(f"Num gadgets: {num_gadgets}")
-        for num_qubits in [6, 8]:
+        for num_qubits in [6, 8, 10, 15]:
             logger.info(f"Num qubits: {num_qubits}")
             for topo_name in ["complete", "line", "cycle", "grid"]:
                 topo = get_topo_kind(topo_name, num_qubits)
+                print(f"The TOPO: {topo}")
                 for _ in range(20):
-                    pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
+                    pp = create_random_pauli_polynomial(
+                        num_qubits, num_gadgets)
+                    # print(pp)
                     naive_data = synth_pp_naive(pp, topo, prefix="naive")
                     pp = simplify_pauli_polynomial(pp, allow_acs=True)
                     for synth in ["tket_uccs_set", "tket_uccs_pair",
                                   "pauliopt_steiner_nc", "pauliopt_ucc",
-                                  "pauliopt_divide_conquer"]:
+                                  "pauliopt_divide_conquer", "pauliopt_steiner_clifford"]:
                         col = {"method": synth, "n_qubits": num_qubits,
                                "gadgets": num_gadgets, "topo": topo_name} | naive_data
-
+                        print("Running synth method: " + synth)
                         if synth == "tket_uccs_set":
-                            col = col | synth_pp_tket_uccs_set(pp, topo, prefix="")
+                            col = col | synth_pp_tket_uccs_set(
+                                pp, topo, prefix="")
                         elif synth == "tket_uccs_pair":
-                            col = col | synth_pp_tket_uccs_pair(pp, topo, prefix="")
+                            col = col | synth_pp_tket_uccs_pair(
+                                pp, topo, prefix="")
                         elif synth == "pauliopt_steiner_nc":
-                            col = col | synth_pp_pauliopt_steiner_nc(pp, topo, prefix="")
+                            col = col | synth_pp_pauliopt_steiner_nc(
+                                pp, topo, prefix="")
+                        elif synth == "pauliopt_steiner_clifford":
+                            col = col | synth_pp_pauliopt_steiner_clifford(
+                                pp, topo, prefix="")
                         elif synth == "pauliopt_divide_conquer":
-                            col = col | synth_pp_pauliopt_divide_concquer(pp, topo,
-                                                                          prefix="")
+                            col = col | synth_pp_pauliopt_divide_conquer(pp, topo,
+                                                                         prefix="")
                         elif synth == "pauliopt_ucc":
-                            col = col | synth_pp_pauliopt_ucc(pp, topo, prefix="")
+                            col = col | synth_pp_pauliopt_ucc(
+                                pp, topo, prefix="")
                         else:
                             raise Exception("Unknown synthesis method")
 
                         df_col = pd.DataFrame(col, index=[0])
                         df = pd.concat([df, df_col], ignore_index=True)
-                        df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
+                        df.to_csv(
+                            "data/pauli/random/random_pauli_polynomial.csv")
 
     df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
 
