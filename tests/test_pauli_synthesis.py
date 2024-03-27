@@ -100,7 +100,6 @@ class TestPauliSynthesis(unittest.TestCase):
                          Topology.line(6),
                          Topology.cycle(4),
                          Topology.grid(2, 4)]:
-                print(topo)
                 pp = generate_random_pauli_polynomial(
                     topo.num_qubits, num_gadgets)
                 synthesizer = PauliSynthesizer(
