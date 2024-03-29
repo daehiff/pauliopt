@@ -3,6 +3,7 @@ import warnings
 
 import networkx as nx
 import scipy
+from matplotlib.lines import Line2D
 from qiskit.qasm2 import dumps
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -161,10 +162,6 @@ def stim_compilation(circ: QuantumCircuit, backend):
     print("Qiskit Tableau: ", circ_out.count_ops(), "Time: ", time.time() - start)
     column = get_ops_count(circ_out)
     return column
-
-
-def paykin_et_al_compilation(circ: QuantumCircuit, backend):
-    pass
 
 
 def qiskit_tableau_compilation_tableau(tableau: Clifford, backend):
@@ -505,37 +502,37 @@ def our_compilation_tableau_heatmap(tab: Clifford, backend, num_qubits, percenta
     return get_heatmap(circ_out, percentages)
 
 
-def get_backend_and_df_name(backend_name, df_name="data/random"):
+def get_backend_and_df_name(backend_name, df_name="data/random", file_type="csv"):
     if backend_name == "vigo":
         backend = FakeJSONBackend("ibm_vigo")
-        df_name = f"{df_name}_vigo.csv"
+        df_name = f"{df_name}_vigo.{file_type}"
     elif backend_name == "mumbai":
         backend = FakeJSONBackend("ibmq_mumbai")
-        df_name = f"{df_name}_mumbai.csv"
+        df_name = f"{df_name}_mumbai.{file_type}"
     elif backend_name == "guadalupe":
         backend = FakeJSONBackend("ibmq_guadalupe")
-        df_name = f"{df_name}_guadalupe.csv"
+        df_name = f"{df_name}_guadalupe.{file_type}"
     elif backend_name == "quito":
         backend = FakeJSONBackend("ibmq_quito")
-        df_name = f"{df_name}_quito.csv"
+        df_name = f"{df_name}_quito.{file_type}"
     elif backend_name == "nairobi":
         backend = FakeJSONBackend("ibm_nairobi")
-        df_name = f"{df_name}_nairobi.csv"
+        df_name = f"{df_name}_nairobi.{file_type}"
     elif backend_name == "ithaca":
         backend = FakeJSONBackend("ibm_ithaca")
-        df_name = f"{df_name}_ithaca.csv"
+        df_name = f"{df_name}_ithaca.{file_type}"
     elif backend_name == "seattle":
         backend = FakeJSONBackend("ibm_seattle")
-        df_name = f"{df_name}_seattle.csv"
+        df_name = f"{df_name}_seattle.{file_type}"
     elif backend_name == "brisbane":
         backend = FakeJSONBackend("ibm_brisbane")
-        df_name = f"{df_name}_brisbane.csv"
+        df_name = f"{df_name}_brisbane.{file_type}"
     elif "complete" in backend_name:
         backend = "complete"
-        df_name = f"{df_name}_{backend_name}.csv"
+        df_name = f"{df_name}_{backend_name}.{file_type}"
     elif "line" in backend_name:
         backend = "line"
-        df_name = f"{df_name}_{backend_name}.csv"
+        df_name = f"{df_name}_{backend_name}.{file_type}"
 
     else:
         raise ValueError(f"Unknown backend: {backend_name}")
@@ -592,49 +589,6 @@ def random_experiment_complete(backend_name="vigo"):
     df.to_csv(df_name)
 
     print(df.groupby("method").mean())
-
-
-def plot_on_graph(matrix, eps=0.2):
-    G = nx.Graph()
-
-    # Add edges with weights
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            if matrix[i][j] > eps:
-                G.add_edge(i, j, weight=matrix[i][j])
-
-    # Position nodes using the spring layout
-    pos = nx.spring_layout(G)
-
-    # Extract weights and normalize them
-    weights = np.array([G[u][v]["weight"] for u, v in G.edges()])
-    norm = plt.Normalize(vmin=weights.min(), vmax=weights.max())
-    colors = plt.cm.viridis(norm(weights))
-
-    # Create a plot with specified figure size
-    plt.figure(figsize=(8, 6))
-    ax = plt.gca()
-
-    # Draw the network
-    edges = nx.draw_networkx_edges(G, pos, ax=ax, edge_color=colors, width=2)
-    nodes = nx.draw_networkx_nodes(
-        G,
-        pos,
-        ax=ax,
-        node_color="white",
-        edgecolors="black",
-        linewidths=2,
-        node_size=400,
-    )
-    nx.draw_networkx_labels(G, pos, ax=ax, font_color="black")
-
-    # Create a colorbar with the normalized weights
-    sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=norm)
-    sm.set_array([])
-    cbar = plt.colorbar(sm, ax=ax)
-    cbar.set_label("Edge Weight")
-
-    plt.show()
 
 
 def construct_heatmap(backend_name_constraint, backend_name_complete, percentages):
@@ -1191,7 +1145,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
         values.append(value)
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
-    cat = ["ours"] * len(lables)
+    cat = ["proposed"] * len(lables)
     df_our = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
 
     lables = []
@@ -1201,7 +1155,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
         values.append(value)
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
-    cat = ["Bravyi et al. (qiskit)"] * len(lables)
+    cat = ["Bravyi and Maslov (Qiskit impl.)"] * len(lables)
     df_ibm = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
 
     lables = []
@@ -1212,7 +1166,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
 
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
-    cat = ["Ewout van den Berg (stim)"] * len(lables)
+    cat = ["van den Berg (Stim impl.)"] * len(lables)
     df_stim = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
     df = pd.concat([df_our, df_ibm, df_stim], ignore_index=True)
 
@@ -1450,17 +1404,40 @@ def test_ZZ():
     print(qiskit.quantum_info.Operator.from_circuit(qc).data)
 
 
+def export_connectives(backend_name="quito"):
+    backend, df_name = get_backend_and_df_name(
+        backend_name, df_name="data/backends/backend", file_type="json"
+    )
+
+    with open(df_name, "w") as f:
+        backend_json = {
+            "name": backend_name,
+            "edges": list(backend.configuration().coupling_map),
+        }
+        f.write(json.dumps(backend_json))
+
+
 if __name__ == "__main__":
+    for backend_name in [
+        "quito",
+        "nairobi",
+        "guadalupe",
+        "mumbai",
+        "ithaca",
+        "brisbane",
+    ]:
+        export_connectives(backend_name=backend_name)
     # gate_check()
+
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
 
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
 
-    construct_heatmap("quito", "complete_5", [1.0])
-    construct_heatmap("guadalupe", "complete_16", [1.0])
-    construct_heatmap("ithaca", "complete_65", [1.0])
+    # construct_heatmap("quito", "complete_5", [1.0])
+    # construct_heatmap("guadalupe", "complete_16", [1.0])
+    # construct_heatmap("ithaca", "complete_65", [1.0])
 
     # random_experiment(backend_name="quito", nr_input_gates=200, nr_steps=4)
     # random_experiment(backend_name="complete_5", nr_input_gates=200, nr_steps=20)
