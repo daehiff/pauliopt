@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from numbers import Number
 
+from qiskit.circuit.library import Permutation
+
 from pauliopt.utils import AngleExpr
 
 
@@ -28,6 +30,7 @@ class Barrier(Gate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import Barrier as Barrier_Qiskit
+
         return Barrier_Qiskit(self.num_qubits), None
 
     def inverse(self):
@@ -48,6 +51,7 @@ class H(SingleQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import HGate
+
         return HGate(), self.qubits
 
     def inverse(self):
@@ -63,6 +67,7 @@ class S(SingleQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import SGate
+
         return SGate(), self.qubits
 
     def inverse(self):
@@ -78,6 +83,7 @@ class Sdg(SingleQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import SdgGate
+
         return SdgGate(), self.qubits
 
     def inverse(self):
@@ -93,6 +99,7 @@ class V(SingleQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import SXGate
+
         return SXGate(), self.qubits
 
     def inverse(self):
@@ -108,6 +115,7 @@ class Vdg(SingleQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import SXdgGate
+
         return SXdgGate(), self.qubits
 
     def inverse(self):
@@ -131,7 +139,8 @@ class Rz(SingleQubitGate):
             angle = self.angle.to_qiskit
         else:
             raise TypeError(
-                f"Angle must either be float or AngleExpr, but got {type(self.angle)}")
+                f"Angle must either be float or AngleExpr, but got {type(self.angle)}"
+            )
         return RZGate(angle), self.qubits
 
     def inverse(self):
@@ -152,6 +161,7 @@ class CX(TwoQubitGate):
 
     def to_qiskit(self):
         from qiskit.circuit.library import CXGate
+
         return CXGate(), self.qubits
 
     def inverse(self):
@@ -162,10 +172,10 @@ class CX(TwoQubitGate):
 
 
 class PauliCircuit:
-
     def __init__(self, num_qubits):
         self.global_phase = 0
         self.num_qubits = num_qubits
+        self.final_permutation = None
         self.gates = []
 
     def compose(self, other: "PauliCircuit"):
@@ -221,6 +231,7 @@ class PauliCircuit:
 
     def to_qiskit(self):
         from qiskit import QuantumCircuit
+
         qc = QuantumCircuit(self.num_qubits)
         qc.global_phase = self.global_phase
         for gate in self.gates:
@@ -230,6 +241,9 @@ class PauliCircuit:
             else:
                 qiskit_gate, qubits = gate.to_qiskit()
                 qc.append(qiskit_gate, qubits)
+
+        if self.final_permutation is not None:
+            qc.compose(Permutation(self.num_qubits, self.final_permutation), inplace=True)
         return qc
 
     def inverse(self):
