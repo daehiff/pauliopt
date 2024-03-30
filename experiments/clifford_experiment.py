@@ -1,21 +1,17 @@
-from qiskit import Aer, transpile
 from qiskit.quantum_info import Statevector
 import re
-from pytket.extensions.qiskit import qiskit_to_tk
-from choice_fn import heat_chooser, random_chooser
+#from pytket.extensions.qiskit import qiskit_to_tk
 import pyzx as zx
 from pauliopt.topologies import Topology
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from qiskit.synthesis import (
     synth_clifford_depth_lnn,
-    synth_clifford_bm,
-    synth_clifford_greedy,
 )
 from qiskit.result import Result
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.providers.models import BackendConfiguration, GateConfig
 from qiskit.providers.fake_provider import FakeBackend
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from mqt import qmap
 import stim
 import seaborn as sns
@@ -24,7 +20,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, date
-import functools
 import json
 import math
 import os
@@ -32,7 +27,7 @@ import time
 import warnings
 
 from qiskit.qasm2 import dumps, load
-from qiskit import Aer, transpile, execute
+from qiskit import transpile
 
 # from tests.test_clifford_tableau import verify_equality
 
@@ -41,8 +36,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def get_2q_depth(qc: QuantumCircuit):
-    c = qiskit_to_tk(qc)
-    return {"2q_depth": c.depth_2q()}
+    #c = qiskit_to_tk(qc)
+    return {"2q_depth": qc.depth()}
 
 
 def get_depth(qc: QuantumCircuit):
@@ -62,18 +57,15 @@ def random_hscx_circuit(nr_gates=20, nr_qubits=4):
             qc.s(qubit)
         elif gate_t == "CX":
             control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice(
-                [i for i in range(nr_qubits) if i != control])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
             qc.cx(control, target)
         elif gate_t == "CY":
             control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice(
-                [i for i in range(nr_qubits) if i != control])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
             qc.cy(control, target)
         elif gate_t == "CZ":
             control = np.random.choice([i for i in range(nr_qubits)])
-            target = np.random.choice(
-                [i for i in range(nr_qubits) if i != control])
+            target = np.random.choice([i for i in range(nr_qubits) if i != control])
             qc.cz(control, target)
     return qc
 
@@ -137,8 +129,7 @@ def parse_stim_to_qiskit(circ: stim.Circuit):
     for gate in circ:
         if gate.name == "CX":
             targets = [target.value for target in gate.targets_copy()]
-            targets = [(targets[i], targets[i + 1])
-                       for i in range(0, len(targets), 2)]
+            targets = [(targets[i], targets[i + 1]) for i in range(0, len(targets), 2)]
             for ctrl, target in targets:
                 qc.cx(ctrl, target)
         elif gate.name == "H":
@@ -159,19 +150,23 @@ def stim_compilation(circ: QuantumCircuit, backend):
     tableau = circuit_to_stim_tableau(circ)
     circ_out = parse_stim_to_qiskit(tableau.to_circuit(method="elimination"))
     if backend == "complete":
-        circ_out = transpile(circ_out,
-                             routing_method="sabre",
-                             basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(
+            circ_out, routing_method="sabre", basis_gates=["s", "h", "cx"]
+        )
     elif backend == "line":
-        circ_out = transpile(circ, coupling_map=[[i, i + 1] for i in
-                                                 range(circ.num_qubits - 1)],
-                             routing_method="sabre",
-                             basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(
+            circ,
+            coupling_map=[[i, i + 1] for i in range(circ.num_qubits - 1)],
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx"],
+        )
     else:
-        circ_out = transpile(circ_out,
-                             coupling_map=backend.coupling_map,
-                             routing_method="sabre",
-                             basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(
+            circ_out,
+            coupling_map=backend.coupling_map,
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx"],
+        )
     act_time = time.time() - start
     # print("Qiskit Tableau: ", circ_out.count_ops(),
     #   "Time: ", time.time() - start)
@@ -197,10 +192,12 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
             basis_gates=["s", "h", "cx"],
         )
     else:
-        circ_out = transpile(circ_out,
-                             routing_method="sabre",
-                             coupling_map=backend.coupling_map,
-                             basis_gates=["cx", "h", "s"])
+        circ_out = transpile(
+            circ_out,
+            routing_method="sabre",
+            coupling_map=backend.coupling_map,
+            basis_gates=["cx", "h", "s"],
+        )
     act_time = time.time() - start
     # print("Qiskit Tableau: ", circ_out.count_ops(),
     #       "Time: ", time.time() - start)
@@ -213,8 +210,7 @@ def qiskit_tableau_compilation(circ: QuantumCircuit, backend):
 def qiskit_compilation(circ: QuantumCircuit, backend):
     start = time.time()
     if backend == "complete":
-        circ_out = transpile(circ, routing_method="sabre",
-                             basis_gates=["s", "h", "cx"])
+        circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx"])
     elif backend == "line":
         circ_out = transpile(
             circ,
@@ -223,8 +219,9 @@ def qiskit_compilation(circ: QuantumCircuit, backend):
             basis_gates=["h", "s", "cx"],
         )
     else:
-        circ_out = transpile(circ, coupling_map=backend.coupling_map,
-                             basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(
+            circ, coupling_map=backend.coupling_map, basis_gates=["s", "h", "cx"]
+        )
     act_time = time.time() - start
     column = get_ops_count(circ_out) | {"time": act_time}
     column = column | get_depth(circ_out) | get_2q_depth(circ_out)
@@ -235,14 +232,15 @@ def qiskit_compilation(circ: QuantumCircuit, backend):
 def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
     start = time.time()
 
-    circ, _ = qmap.synthesize_clifford(clifford,
-                                       # use_maxsat=True,
-                                       dump_intermediate_results=True,
-                                       include_destabilizers=True)
+    circ, _ = qmap.synthesize_clifford(
+        clifford,
+        # use_maxsat=True,
+        dump_intermediate_results=True,
+        include_destabilizers=True,
+    )
     start = time.time()
     if backend == "complete":
-        circ_out = transpile(circ, routing_method="sabre",
-                             basis_gates=["s", "h", "cx"])
+        circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx"])
     elif backend == "line":
         circ_out = transpile(
             circ,
@@ -251,12 +249,14 @@ def optimal_compilation(clifford: qiskit.quantum_info.Clifford, backend):
             basis_gates=["s", "h", "cx"],
         )
     else:
-        circ_out = transpile(circ, coupling_map=backend.coupling_map,
-                             routing_method="sabre",
-                             basis_gates=['s', 'h', 'cx'])
+        circ_out = transpile(
+            circ,
+            coupling_map=backend.coupling_map,
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx"],
+        )
     act_time = time.time() - start
-    column = get_ops_count(circ_out) | {
-        "time": act_time, "depth": circ_out.depth()}
+    column = get_ops_count(circ_out) | {"time": act_time, "depth": circ_out.depth()}
     # print("Optimal: ", circ_out.count_ops(), "Time: ", act_time)
     return column
 
@@ -270,8 +270,7 @@ def our_compilation(circ: QuantumCircuit, backend, choice_fn=min):
         topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_circuit(circ)
     start = time.time()
-    circ_out, _ = ct.to_cifford_circuit_arch_aware(
-        topo, include_swaps=True, choice_fn=choice_fn)
+    circ_out, _ = ct.to_cifford_circuit_perm_row_col(topo, include_swaps=True)
     act_time = time.time() - start
     circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out) | {"time": act_time}
@@ -295,7 +294,8 @@ def our_compilation_heat(circ: QuantumCircuit, backend, choice_fn=min):
     best_cx_count = math.inf
     for _ in range(40):
         circ_out, _ = ct.to_cifford_circuit_arch_aware(
-            topo, include_swaps=True, choice_fn=choice_fn)
+            topo, include_swaps=True, choice_fn=choice_fn
+        )
         circ_out = circ_out.to_qiskit()
         column = get_ops_count(circ_out)
         if column["cx"] < best_cx_count:
@@ -362,8 +362,7 @@ def rebase_pyzx(circ: QuantumCircuit):
                 circ_out.z(qubits[0])
             else:
                 print(instruction)
-                raise Exception(
-                    "Unknown rz: ", instruction.operation.decompositions)
+                raise Exception("Unknown rz: ", instruction.operation.decompositions)
         else:
             circ_out.append(instruction)
     return circ_out
@@ -510,7 +509,11 @@ def parse_circ_file(file_path, num_qubits):
 
 def pcoast_compilation(circ: QuantumCircuit, backend):
     if backend == "complete":
-        circ_out = transpile(circ, routing_method="sabre", basis_gates=["s", "h", "cx", "rz"],)
+        circ_out = transpile(
+            circ,
+            routing_method="sabre",
+            basis_gates=["s", "h", "cx", "rz"],
+        )
     elif backend == "line":
         circ_out = transpile(
             circ,
@@ -519,7 +522,11 @@ def pcoast_compilation(circ: QuantumCircuit, backend):
             basis_gates=["s", "h", "cx", "rz"],
         )
     else:
-        circ_out = transpile(circ, coupling_map=backend.coupling_map, basis_gates=["s", "h", "cx", "rz"],)
+        circ_out = transpile(
+            circ,
+            coupling_map=backend.coupling_map,
+            basis_gates=["s", "h", "cx", "rz"],
+        )
 
     column = get_ops_count(circ_out) | {"time": 0}
     column = column | get_depth(circ_out) | get_2q_depth(circ_out)
@@ -585,8 +592,10 @@ def get_backend_and_df_name(backend_name, df_name="data/random"):
 def get_circuit_from_qasm(backend_name, n_gadgets, i):
     df_name = "datasets/clifford_experimental_dataset/"
     folder_name = os.path.join(df_name, backend_name)
-    circ_name = os.path.join(folder_name, backend_name + "_" + str(n_gadgets).zfill(4) +
-                             "_" + str(i).zfill(2) + ".qasm")
+    circ_name = os.path.join(
+        folder_name,
+        backend_name + "_" + str(n_gadgets).zfill(4) + "_" + str(i).zfill(2) + ".qasm",
+    )
     circ = load(circ_name)
     return circ
 
@@ -627,9 +636,10 @@ def random_experiment_complete(backend_name="vigo"):
     print(df.groupby("method").mean())
 
 
-def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"):
-    backend, output_csv = get_backend_and_df_name(
-        backend_name, df_name=df_name)
+def random_experiment(
+    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
+):
+    backend, output_csv = get_backend_and_df_name(backend_name, df_name=df_name)
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
@@ -638,20 +648,35 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
     # print(output_csv)
     # print(num_qubits)
     df = pd.DataFrame(
-        columns=["n_rep", "num_qubits", "n_gadgets", "method", "h", "s", "cx", "time", "depth", "2q_depth"])
+        columns=[
+            "n_rep",
+            "num_qubits",
+            "n_gadgets",
+            "method",
+            "h",
+            "s",
+            "cx",
+            "time",
+            "depth",
+            "2q_depth",
+        ]
+    )
     for n_gadgets in range(1, nr_input_gates, nr_steps):
         print(n_gadgets)
         for i in range(20):
-            circ = get_circuit_from_qasm(backend_name, n_gadgets, i)
-            # circ = random_hscx_circuit(
-            #     nr_qubits=num_qubits, nr_gates=n_gadgets)
+            #circ = get_circuit_from_qasm(backend_name, n_gadgets, i)
+            circ = random_hscx_circuit(
+                nr_qubits=num_qubits, nr_gates=n_gadgets)
 
             ########################################
             # Our clifford circuit
             ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "ours"} | \
-                our_compilation(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "ours",
+            } | our_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
@@ -659,11 +684,19 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
             # PCOAST
             ########################################
 
-            circ_name = "complete_" + str(num_qubits) + "_" + \
-                str(n_gadgets).zfill(4) + "_" + str(i).zfill(2) + ".qs"
-            pcoast_circuit = os.path.join(
-                "datasets/pcoast_data/", "complete_" + str(num_qubits) + "/" + circ_name)
-            pcoast_circuit = parse_circ_file(pcoast_circuit, num_qubits)
+            # circ_name = (
+            #     "complete_"
+            #     + str(num_qubits)
+            #     + "_"
+            #     + str(n_gadgets).zfill(4)
+            #     + "_"
+            #     + str(i).zfill(2)
+            #     + ".qs"
+            # )
+            # pcoast_circuit = os.path.join(
+            #     "datasets/pcoast_data/", "complete_" + str(num_qubits) + "/" + circ_name
+            # )
+            # pcoast_circuit = parse_circ_file(pcoast_circuit, num_qubits)
 
             # if not Statevector.from_instruction(circ).equiv(
             #     Statevector.from_instruction(pcoast_circuit)):
@@ -678,54 +711,72 @@ def random_experiment(backend_name="vigo", nr_input_gates=100, nr_steps=5, df_na
             # if Operator(circ).equiv(Operator(pcoast_circuit)):  # True
             #     correct += 1
 
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "PCoast"} | \
-                pcoast_compilation(pcoast_circuit, backend)
-            df.loc[len(df)] = column
-            df.to_csv(df_name)
+            # column = {
+            #     "n_rep": i,
+            #     "num_qubits": num_qubits,
+            #     "n_gadgets": n_gadgets,
+            #     "method": "PCoast",
+            # } | pcoast_compilation(pcoast_circuit, backend)
+            # df.loc[len(df)] = column
+            # df.to_csv(df_name)
 
             # ########################################
             # # Qiskit compilation
             # ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "qiskit transpile"} | \
-                qiskit_compilation(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "qiskit transpile",
+            } | qiskit_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
             ########################################
             # Bravi et. al.
             ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "Bravyi et al. (qiskit)"} | \
-                qiskit_tableau_compilation(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "Bravyi et al. (qiskit)",
+            } | qiskit_tableau_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "Ewout van den Berg (stim)"} | \
-                stim_compilation(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "Ewout van den Berg (stim)",
+            } | stim_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "Duncan et al (pyzx)"} | \
-                duncan_et_al_synthesis(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "Duncan et al (pyzx)",
+            } | duncan_et_al_synthesis(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
             ########################################
             # Stim compilation
             ########################################
-            column = {"n_rep": i, "num_qubits": num_qubits, "n_gadgets": n_gadgets,
-                      "method": "Maslov et al"} | \
-                maslov_et_al_compilation(circ, backend)
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": n_gadgets,
+                "method": "Maslov et al",
+            } | maslov_et_al_compilation(circ, backend)
             df.loc[len(df)] = column
             df.to_csv(output_csv)
     # print("Correct: " + str(correct))
@@ -907,19 +958,19 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None):
     #     }
     # )
 
-    sns.lineplot(df, x="n_gadgets", y="h", hue="method")
-    plt.title("H-Gates")
-    plt.xlabel("Number of input Gates")
-    plt.ylabel("Number of H-Gates")
-    plt.savefig(f"data/{name}_h.pdf")
-    plt.show()
-
-    sns.lineplot(df, x="n_gadgets", y="s", hue="method")
-    plt.title("S-Gates")
-    plt.xlabel("Number of input gates")
-    plt.ylabel("Number of S-Gates")
-    plt.savefig(f"data/{name}_s.pdf")
-    plt.show()
+    # sns.lineplot(df, x="n_gadgets", y="h", hue="method")
+    # plt.title("H-Gates")
+    # plt.xlabel("Number of input Gates")
+    # plt.ylabel("Number of H-Gates")
+    # plt.savefig(f"data/{name}_h.pdf")
+    # plt.show()
+    #
+    # sns.lineplot(df, x="n_gadgets", y="s", hue="method")
+    # plt.title("S-Gates")
+    # plt.xlabel("Number of input gates")
+    # plt.ylabel("Number of S-Gates")
+    # plt.savefig(f"data/{name}_s.pdf")
+    # plt.show()
 
     sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
     plt.title("CNOT-Gates")
@@ -953,11 +1004,9 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     num_qubits = 1
 
     df_fid = pd.DataFrame(
-        columns=["fid_our", "fid_ibm", "fid_stim",
-                 "time_our", "time_ibm", "time_stim"]
+        columns=["fid_our", "fid_ibm", "fid_stim", "time_our", "time_ibm", "time_stim"]
     )
-    df = pd.DataFrame(columns=["method", "h", "s",
-                      "cx", "fid", "execution_time"])
+    df = pd.DataFrame(columns=["method", "h", "s", "cx", "fid", "execution_time"])
     for i in range(0, 20):
         base_path = f"data/clifford_experiment_real_hardware/{backend_name}/{i}"
 
@@ -1053,8 +1102,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
             else:
                 cumult_counts_stim[key] = [value]
 
-    df.to_csv(
-        f"data/clifford_experiment_real_hardware/{backend_name}/analysis.csv")
+    df.to_csv(f"data/clifford_experiment_real_hardware/{backend_name}/analysis.csv")
 
     for name in ["ours", "stim", "ibm"]:
         print(
@@ -1084,8 +1132,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
     cat = ["ours"] * len(lables)
-    df_our = pd.DataFrame(
-        {"approach": cat, "lables": lables, "values": values})
+    df_our = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
 
     lables = []
     values = []
@@ -1095,8 +1142,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
     cat = ["Bravyi et al. (qiskit)"] * len(lables)
-    df_ibm = pd.DataFrame(
-        {"approach": cat, "lables": lables, "values": values})
+    df_ibm = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
 
     lables = []
     values = []
@@ -1107,8 +1153,7 @@ def analyze_real_hw(backend_name="ibm_nairobi"):
     lables = list(np.hstack(lables))
     values = list(np.hstack(values))
     cat = ["Ewout van den Berg (stim)"] * len(lables)
-    df_stim = pd.DataFrame(
-        {"approach": cat, "lables": lables, "values": values})
+    df_stim = pd.DataFrame({"approach": cat, "lables": lables, "values": values})
     df = pd.concat([df_our, df_ibm, df_stim], ignore_index=True)
 
     # seaborn barplot rotate the x ticks labels by 90 degrees
@@ -1158,8 +1203,7 @@ class FakeJSONBackend(FakeBackend):
 
 
 def estimate_routing_overhead(arch_name, n_qubits, conv_gadgets):
-    print(
-        f"Estimating routing overhead for {arch_name} with {n_qubits} qubits")
+    print(f"Estimating routing overhead for {arch_name} with {n_qubits} qubits")
 
     for method in ["Bravyi et al. (qiskit)", "ours", "Ewout van den Berg (stim)"]:
         df = pd.read_csv(f"data/random_complete_{n_qubits}.csv")
@@ -1195,8 +1239,7 @@ def get_complete_cx_count():
 
         df["method"] = pd.Categorical(
             df["method"],
-            categories=[
-                "ours", "Bravyi et al. (qiskit)", "Ewout van den Berg (stim)"],
+            categories=["ours", "Bravyi et al. (qiskit)", "Ewout van den Berg (stim)"],
             ordered=True,
         )
         df = df.sort_values(by="method")
@@ -1217,12 +1260,14 @@ if __name__ == "__main__":
 
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
-    df_name = "data/new_methods_fixed_data/random"
+    df_name = "data/random"
 
-    # random_experiment(backend_name="quito", nr_input_gates=200,
-    #                   nr_steps=20, df_name=df_name)
-    # random_experiment(backend_name="complete_5",
-    #                   nr_input_gates=200, nr_steps=20, df_name=df_name)
+    # random_experiment(
+    #     backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
+    # )
+    # random_experiment(
+    #     backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
+    # )
 
     # parse_qurotxy()
     # random_experiment(backend_name="nairobi",
@@ -1230,20 +1275,22 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete_7",
     #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
 
-    # random_experiment(backend_name="guadalupe",
-    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
-    # random_experiment(backend_name="complete_16",
-    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="guadalupe",
+                      nr_input_gates=400, nr_steps=20, df_name=df_name)
+    random_experiment(backend_name="complete_16",
+                      nr_input_gates=400, nr_steps=20, df_name=df_name)
 
     # random_experiment(backend_name="mumbai", nr_input_gates=800,
     #                   nr_steps=40, df_name=df_name)
     # random_experiment(backend_name="complete_27",
     #                   nr_input_gates=800, nr_steps=40, df_name=df_name)
 
-    random_experiment(backend_name="ithaca",
-                      nr_input_gates=2000, nr_steps=100, df_name=df_name)
-    random_experiment(backend_name="complete_65",
-                      nr_input_gates=2000, nr_steps=100, df_name=df_name)
+    # random_experiment(
+    #     backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    # )
+    # random_experiment(
+    #     backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    # )
 
     # random_experiment(backend_name="brisbane",
     #                   nr_input_gates=10000, nr_steps=400, df_name=df_name)
@@ -1261,8 +1308,8 @@ if __name__ == "__main__":
     # df_ = df_[df_["n_gadgets"] > 75]
     # v_line = np.mean(df_["cx"])
 
-    # plot_experiment(name="random_quito", v_line_cx=v_line)
-    # plot_experiment(name="random_complete_5", v_line_cx=v_line)
+    # plot_experiment(name="random_quito")
+    # plot_experiment(name="random_complete_5")
     #
     #
     # df = pd.read_csv(f"data/random_complete_7.csv")

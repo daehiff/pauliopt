@@ -219,7 +219,7 @@ def test_tableau_1002(n_qubits=6):
     circ_bravi = QuantumCircuit.from_qasm_file("test.qasm")
     # exit(0)
     ct = CliffordTableau.from_circuit(circ_bravi)
-    circ_out, perm = ct.to_cifford_circuit_perm_row_col(topo, include_swaps=False)
+    circ_out, perm = ct.to_cifford_circuit_perm_row_col(topo, include_swaps=True)
     circ_out = circ_out.to_qiskit()
     assert (
         qi.Operator.from_circuit(circ_out).equiv(qi.Operator.from_circuit(circ_bravi))

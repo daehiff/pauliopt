@@ -1,21 +1,25 @@
 from enum import Enum
 
-PAULI_DICT = {('X', 'X'): (1, 'I'),
-              ('X', 'Y'): (1j, 'Z'),
-              ('X', 'Z'): (-1j, 'Y'),
-              ('X', 'I'): (1, 'X'),
-              ('Y', 'X'): (-1j, 'Z'),
-              ('Y', 'Y'): (1, 'I'),
-              ('Y', 'Z'): (1j, 'X'),
-              ('Y', 'I'): (1, 'Y'),
-              ('Z', 'X'): (1j, 'Y'),
-              ('Z', 'Y'): (-1j, 'X'),
-              ('Z', 'Z'): (1, 'I'),
-              ('Z', 'I'): (1, 'Z'),
-              ('I', 'X'): (1, 'X'),
-              ('I', 'Y'): (1, 'Y'),
-              ('I', 'Z'): (1, 'Z'),
-              ('I', 'I'): (1, 'I')}
+from qiskit import QuantumCircuit
+
+PAULI_DICT = {
+    ("X", "X"): (1, "I"),
+    ("X", "Y"): (1j, "Z"),
+    ("X", "Z"): (-1j, "Y"),
+    ("X", "I"): (1, "X"),
+    ("Y", "X"): (-1j, "Z"),
+    ("Y", "Y"): (1, "I"),
+    ("Y", "Z"): (1j, "X"),
+    ("Y", "I"): (1, "Y"),
+    ("Z", "X"): (1j, "Y"),
+    ("Z", "Y"): (-1j, "X"),
+    ("Z", "Z"): (1, "I"),
+    ("Z", "I"): (1, "Z"),
+    ("I", "X"): (1, "X"),
+    ("I", "Y"): (1, "Y"),
+    ("I", "Z"): (1, "Z"),
+    ("I", "I"): (1, "I"),
+}
 
 
 class Pauli(Enum):
@@ -72,27 +76,14 @@ Y = Pauli.Y
 Z = Pauli.Z
 
 
-def apply_permutation(qc: "qiskit.QuantumCircuit", permutation: list):
-    """
-    Applies a permutation to the qubits of a quantum circuit
-
-    Args:
-        qc (qiskit.QuantumCircuit): Quantum circuit to apply the permutation to
-        permutation (list): List of integers representing the permutation to apply
-    """
-    try:
-        from qiskit import QuantumCircuit
-    except ImportError:
-        raise ImportError("This function requires qiskit to be installed")
-
-    if len(qc.qregs) != 1:
-        raise ValueError("Quantum circuit must have exactly one quantum register")
+def apply_permutation(qc: QuantumCircuit, permutation: list):
     register = qc.qregs[0]
     qc_out = QuantumCircuit(register)
     for instruction in qc:
-        op_qubits = [register[permutation[register.index(q)]] for q in instruction.qubits]
-        instruction.qubits = tuple(op_qubits)
-        qc_out.append(instruction, instruction.qubits)
+        op_qubits = [
+            register[permutation[register.index(q)]] for q in instruction.qubits
+        ]
+        qc_out.append(instruction.operation, op_qubits)
     return qc_out
 
 
@@ -101,5 +92,4 @@ def verify_equality(qc_in, qc_out):
         from qiskit.quantum_info import Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
-    return Operator.from_circuit(qc_in) \
-        .equiv(Operator.from_circuit(qc_out))
+    return Operator.from_circuit(qc_in).equiv(Operator.from_circuit(qc_out))

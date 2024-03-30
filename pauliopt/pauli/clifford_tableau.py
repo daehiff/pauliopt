@@ -76,7 +76,12 @@ def traversal_sum(pivot, traversal, remaining: "CliffordTableau"):
 
 
 def pick_col(
-    G, remaining: "CliffordTableau", possible_swaps, include_swaps, choice_fn=min
+    G,
+    remaining: "CliffordTableau",
+    possible_swaps,
+    include_swaps,
+    pivot_row,
+    choice_fn=min,
 ):
     scores = []
     has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
@@ -85,14 +90,14 @@ def pick_col(
             include_swaps and has_cutting_swappable and col in possible_swaps
         ):
             row_x = [
-                nx.shortest_path_length(G, source=col, target=row)
-                for row in G.nodes
-                if remaining.x_out(col, row) != 0
+                nx.shortest_path_length(G, source=col, target=other_col)
+                for other_col in G.nodes
+                if remaining.x_out(pivot_row, other_col) != 0
             ]
             row_z = [
-                nx.shortest_path_length(G, source=col, target=row)
-                for row in G.nodes
-                if remaining.z_out(col, row) != 0
+                nx.shortest_path_length(G, source=col, target=other_col)
+                for other_col in G.nodes
+                if remaining.z_out(pivot_row, other_col) != 0
             ]
             dist_x = sum(row_x)
             dist_z = sum(row_z)
@@ -101,21 +106,11 @@ def pick_col(
     return choice_fn(scores, key=lambda x: x[1])[0]
 
 
-def pick_row(
-    G, remaining: "CliffordTableau", remaining_rows, selected_col, choice_fn=min
-):
+def pick_row(G, remaining: "CliffordTableau", remaining_rows, choice_fn=min):
     scores = []
     for row in remaining_rows:
-        row_x = [
-            nx.shortest_path_length(G, source=selected_col, target=col)
-            for col in G.nodes
-            if remaining.x_out(row, col) != 0
-        ]
-        row_z = [
-            nx.shortest_path_length(G, source=selected_col, target=col)
-            for col in G.nodes
-            if remaining.z_out(row, col) != 0
-        ]
+        row_x = [1 for col in G.nodes if remaining.x_out(row, col) != 0]
+        row_z = [1 for col in G.nodes if remaining.z_out(row, col) != 0]
         dist_x = sum(row_x)
         dist_z = sum(row_z)
         scores.append((row, dist_x + dist_z))
@@ -713,11 +708,11 @@ class CliffordTableau:
         tableau = CliffordTableau(n_qubits=circ.num_qubits)
         for op in circ:
             if op.operation.name == "h":
-                tableau.append_h(op.qubits[0].index)
+                tableau.append_h(op.qubits[0]._index)
             elif op.operation.name == "s":
-                tableau.append_s(op.qubits[0].index)
+                tableau.append_s(op.qubits[0]._index)
             elif op.operation.name == "cx":
-                tableau.append_cnot(op.qubits[0].index, op.qubits[1].index)
+                tableau.append_cnot(op.qubits[0]._index, op.qubits[1]._index)
             else:
                 raise TypeError(
                     f"Unrecongnized Gate type: {op.operation.name} for Clifford Tableaus"
@@ -815,8 +810,10 @@ class CliffordTableau:
                 raise Exception("Unknown Gate")
 
         while G.nodes:
-            pivot_col = pick_col(G, remaining, swappable_nodes, include_swaps)
-            pivot_row = pick_row(G, remaining, remaining_rows, pivot_col)
+            pivot_row = pick_row(G, remaining, remaining_rows)
+            pivot_col = pick_col(
+                G, remaining, swappable_nodes, include_swaps, pivot_row
+            )
             if is_cutting(pivot_col, G) and include_swaps:
                 non_cutting_vectices = [
                     (
