@@ -1,11 +1,9 @@
-from pauliopt.pauli.clifford_gates import CliffordType, \
-    generate_two_qubit_clifford
 from pauliopt.pauli.clifford_tableau import CliffordTableau
-from pauliopt.pauli.pauli_circuit import PauliCircuit, TwoQubitGate, CX
-from pauliopt.pauli.clifford_gates import CX as CX_Clifford
+from pauliopt.pauli.pauli_circuit import PauliCircuit, CliffordType
 
 from pauliopt.pauli.pauli_gadget import PauliGadget
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
+from pauliopt.pauli.synth.anneal import generate_two_qubit_clifford
 from pauliopt.pauli.utils import X, Y, Z, I
 from pauliopt.topologies import Topology
 
@@ -16,8 +14,9 @@ UNDESIRABLE_NEIGHBORS = [(X, I), (Y, I), (Z, I)]
 def compute_effect(pp, gate, topology, leg_cache=None):
     pp_ = pp.copy()
     pp_.propagate(gate)
-    return pp_.two_qubit_count(topology, leg_cache=leg_cache) - \
-           pp.two_qubit_count(topology, leg_cache=leg_cache)
+    return pp_.two_qubit_count(topology, leg_cache=leg_cache) - pp.two_qubit_count(
+        topology, leg_cache=leg_cache
+    )
 
 
 def get_best_gate(pp, c, t, gate_set, topology, leg_cache=None):
@@ -31,6 +30,7 @@ def get_best_gate(pp, c, t, gate_set, topology, leg_cache=None):
 
 def compute_global_permutation(pp: PauliPolynomial, topology: Topology):
     import networkx as nx
+
     G_match = nx.Graph()
     for e1 in range(pp.num_qubits):
         for e2 in range(pp.num_qubits):
@@ -45,26 +45,32 @@ def compute_global_permutation(pp: PauliPolynomial, topology: Topology):
                     p1 = gadget.paulis[e1]
                     p2 = gadget.paulis[e2]
                     if (p1, p2) in DESIRED_NEIGHBORS or (p2, p1) in DESIRED_NEIGHBORS:
-                        G_match[e1][e2]['weight'] += topology.dist(e1, e2)
+                        G_match[e1][e2]["weight"] += topology.dist(e1, e2)
                     elif (p1, p2) in UNDESIRABLE_NEIGHBORS or (
-                            p2, p1) in UNDESIRABLE_NEIGHBORS:
-                        G_match[e1][e2]['weight'] -= topology.dist(e1, e2)
+                        p2,
+                        p1,
+                    ) in UNDESIRABLE_NEIGHBORS:
+                        G_match[e1][e2]["weight"] -= topology.dist(e1, e2)
     return dict(nx.maximal_matching(G_match))
 
 
-def optimize_pauli_polynomial(c_l: CliffordTableau, pp: PauliPolynomial,
-                              c_r: CliffordTableau, topology: Topology,
-                              gate_set=None, leg_cache=None):
+def optimize_pauli_polynomial(
+    c_l: CliffordTableau,
+    pp: PauliPolynomial,
+    c_r: CliffordTableau,
+    topology: Topology,
+    gate_set=None,
+    leg_cache=None,
+):
     if gate_set is None:
-        gate_set = [CliffordType.CX,
-                    CliffordType.CY,
-                    CliffordType.CZ]
+        gate_set = [CliffordType.CX, CliffordType.CY, CliffordType.CZ]
 
     for c in range(pp.num_qubits):
         for t in range(pp.num_qubits):
             if c != t:
-                gate, effect = get_best_gate(pp, c, t, gate_set, topology,
-                                             leg_cache=leg_cache)
+                gate, effect = get_best_gate(
+                    pp, c, t, gate_set, topology, leg_cache=leg_cache
+                )
                 dist = topology.dist(c, t)
                 if effect + 2 * dist <= 0:
                     pp = pp.propagate(gate)
@@ -75,8 +81,9 @@ def optimize_pauli_polynomial(c_l: CliffordTableau, pp: PauliPolynomial,
 
 
 def compare(pp: PauliPolynomial, prev, now, next):
-    return pp.commutes(now, next) and \
-           (pp.mutual_legs(prev, now) < pp.mutual_legs(prev, next))
+    return pp.commutes(now, next) and (
+        pp.mutual_legs(prev, now) < pp.mutual_legs(prev, next)
+    )
 
 
 def sort_pauli_polynomial(pp: PauliPolynomial):
@@ -85,8 +92,9 @@ def sort_pauli_polynomial(pp: PauliPolynomial):
         prev_col_idx = col_idx - 1
         col_idx_ = col_idx
         new_col_idx = col_idx
-        while new_col_idx < pp.num_gadgets and compare(pp, prev_col_idx,
-                                                       col_idx_, new_col_idx):
+        while new_col_idx < pp.num_gadgets and compare(
+            pp, prev_col_idx, col_idx_, new_col_idx
+        ):
             pp.swap_gadgets(col_idx_, new_col_idx)
             prev_col_idx = col_idx_
             col_idx_ = new_col_idx
@@ -99,10 +107,10 @@ def split_pauli_polynomial(pp: PauliPolynomial):
     pp_left = PauliPolynomial(pp.num_qubits)
     pp_right = PauliPolynomial(pp.num_qubits)
 
-    for gadget in pp.pauli_gadgets[:pp.num_gadgets // 2]:
+    for gadget in pp.pauli_gadgets[: pp.num_gadgets // 2]:
         pp_left >>= gadget
 
-    for gadget in pp.pauli_gadgets[pp.num_gadgets // 2:]:
+    for gadget in pp.pauli_gadgets[pp.num_gadgets // 2 :]:
         pp_right >>= gadget
 
     return pp_left, pp_right
@@ -128,7 +136,9 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
         if isinstance(region, PauliPolynomial):
             circ_out += region.to_circuit(topology=topology)
         else:
-            circ, _ = region.to_cifford_circuit_arch_aware(topology, include_swaps=False)
+            circ, _ = region.to_cifford_circuit_arch_aware(
+                topology, include_swaps=False
+            )
             circ_out += circ
 
     perm = list(range(pp.num_qubits))
@@ -137,19 +147,27 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
     return circ_out, gadget_perm, perm
 
 
-def synth_divide_and_conquer_(c_l: CliffordTableau, pp: PauliPolynomial,
-                              c_r: CliffordTableau, topology: Topology,
-                              leg_cache=None):
-    c_l, pp, c_r = optimize_pauli_polynomial(c_l, pp, c_r, topology, leg_cache=leg_cache)
+def synth_divide_and_conquer_(
+    c_l: CliffordTableau,
+    pp: PauliPolynomial,
+    c_r: CliffordTableau,
+    topology: Topology,
+    leg_cache=None,
+):
+    c_l, pp, c_r = optimize_pauli_polynomial(
+        c_l, pp, c_r, topology, leg_cache=leg_cache
+    )
     if pp.num_gadgets <= 2:
         return [c_l, pp, c_r]
 
     c_center = CliffordTableau(pp.num_qubits)
     pp = sort_pauli_polynomial(pp)
     pp_left, pp_right = split_pauli_polynomial(pp)
-    regions_left = synth_divide_and_conquer_(c_l, pp_left, c_center, topology,
-                                             leg_cache=leg_cache)
-    regions_right = synth_divide_and_conquer_(c_center, pp_right, c_r, topology,
-                                              leg_cache=leg_cache)
+    regions_left = synth_divide_and_conquer_(
+        c_l, pp_left, c_center, topology, leg_cache=leg_cache
+    )
+    regions_right = synth_divide_and_conquer_(
+        c_center, pp_right, c_r, topology, leg_cache=leg_cache
+    )
 
     return regions_left[:-1] + [c_center] + regions_right[1:]

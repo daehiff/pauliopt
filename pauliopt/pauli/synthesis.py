@@ -2,12 +2,18 @@ from enum import Enum
 
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
-from pauliopt.pauli.synth.steiner_gray_synth import pauli_polynomial_steiner_gray_clifford
+from pauliopt.pauli.synth.steiner_gray_synth import (
+    pauli_polynomial_steiner_gray_clifford,
+)
 from pauliopt.pauli.utils import apply_permutation, verify_equality
 from pauliopt.topologies import Topology
 
-from pauliopt.pauli.synth import anneal, divide_and_conquer, \
-    pauli_polynomial_steiner_gray_nc, uccds
+from pauliopt.pauli.synth import (
+    anneal,
+    divide_and_conquer,
+    pauli_polynomial_steiner_gray_nc,
+    uccds,
+)
 
 
 class SynthMethod(Enum):
@@ -35,22 +41,21 @@ class PauliSynthesizer:
         method = self.method
         pp = self.pp.copy()
         if method == SynthMethod.ANNEAL:
-            circ_out, gadget_perm, perm = \
-                anneal(pp, self.topology)
+            circ_out, gadget_perm, perm = anneal(pp, self.topology)
         elif method == SynthMethod.DIVIDE_AND_CONQUER:
-            circ_out, gadget_perm, perm = \
-                divide_and_conquer(pp, self.topology)
+            circ_out, gadget_perm, perm = divide_and_conquer(pp, self.topology)
         elif method == SynthMethod.STEINER_GRAY_NC:
-            circ_out, gadget_perm, perm = \
-                pauli_polynomial_steiner_gray_nc(pp, self.topology)
+            circ_out, gadget_perm, perm = pauli_polynomial_steiner_gray_nc(
+                pp, self.topology
+            )
             circ_out.apply_permutation(perm)
         elif method == SynthMethod.STEINER_GRAY_CLIFFORD:
-            circ_out, gadget_perm, perm = \
-                pauli_polynomial_steiner_gray_clifford(pp, self.topology)
+            circ_out, gadget_perm, perm = pauli_polynomial_steiner_gray_clifford(
+                pp, self.topology
+            )
             circ_out.apply_permutation(perm)
         elif method == SynthMethod.UCCDS:
-            circ_out, gadget_perm, perm = \
-                uccds(pp, self.topology)
+            circ_out, gadget_perm, perm = uccds(pp, self.topology)
             circ_out.apply_permutation(perm)
         else:
             raise ValueError("Unknown method: {}".format(method))

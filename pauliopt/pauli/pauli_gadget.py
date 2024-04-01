@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List, Collection, Callable, Dict
+from typing import List
 
 import networkx as nx
 import numpy as np
@@ -43,7 +43,8 @@ def find_minimal_cx_assignment(column: np.array, arch: Topology, q0=None):
         incident[snd].add((snd, fst))
     if q0 is None:
         q0 = np.argmax(
-            column)  # Assume that 0 is always the first qubit aka first non zero
+            column
+        )  # Assume that 0 is always the first qubit aka first non zero
     visited = set()
     queue = deque([q0])
     cnot_ladder = []
@@ -96,7 +97,7 @@ class PauliGadget:
         return PauliGadget(self.angle, self.paulis.copy())
 
     def decompose(self, q0):
-        from pauliopt.pauli.clifford_gates import H, V, CX
+        from pauliopt.pauli.pauli_circuit import H, V, CX
 
         cliffords = []
         column = np.asarray(self.paulis)
@@ -130,8 +131,9 @@ class PauliGadget:
         if col_id in leg_cache.keys():
             return leg_cache[col_id]
         else:
-            cnot_amount = 2 * len(find_minimal_cx_assignment(np.asarray(col_binary),
-                                                             topology)[0])
+            cnot_amount = 2 * len(
+                find_minimal_cx_assignment(np.asarray(col_binary), topology)[0]
+            )
             leg_cache[col_id] = cnot_amount
         return cnot_amount
 
@@ -139,7 +141,8 @@ class PauliGadget:
         if len(self.paulis) != len(other.paulis):
             raise Exception(
                 f"Paulis must be of equal length to have mutual legs. But are {len(self.paulis)}, "
-                f"{len(other.paulis)}")
+                f"{len(other.paulis)}"
+            )
 
         match_count = 0
         for p_1, p_2 in zip(self.paulis, other.paulis):
@@ -157,7 +160,8 @@ class PauliGadget:
         if len(self.paulis) != len(other.paulis):
             raise Exception(
                 f"Paulis must be of equal length to commute. But are {len(self.paulis)}, "
-                f"{len(other.paulis)}")
+                f"{len(other.paulis)}"
+            )
 
         mismatchcount = 0
         for p_1, p_2 in zip(self.paulis, other.paulis):
@@ -191,12 +195,12 @@ class PauliGadget:
                 raise Exception(f"unknown column type: {column[pauli_idx]}")
 
         if len(cnot_ladder) > 0:
-            for (pauli_idx, target) in reversed(cnot_ladder):
+            for pauli_idx, target in reversed(cnot_ladder):
                 circ.cx(pauli_idx, target)
 
             circ.rz(self.angle * time, q0)
 
-            for (pauli_idx, target) in cnot_ladder:
+            for pauli_idx, target in cnot_ladder:
                 circ.cx(pauli_idx, target)
         else:
             target = np.argmax(column_binary)

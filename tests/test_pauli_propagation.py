@@ -10,9 +10,7 @@ from pytket.extensions.qiskit.qiskit_convert import tk_to_qiskit, qiskit_to_tk
 from pytket._tket.pauli import Pauli
 from qiskit import QuantumCircuit
 
-from pauliopt.pauli.clifford_gates import CX, CY, CZ, H, S, V, generate_random_clifford, \
-    CliffordType, CliffordGate, \
-    ControlGate, SingleQubitGate, clifford_to_qiskit
+from pauliopt.pauli.pauli_circuit import CliffordType, generate_random_clifford
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial, simplify_pauli_polynomial
 from pauliopt.pauli.utils import X, Y, Z, I
@@ -20,12 +18,7 @@ from pauliopt.pauli.utils import X, Y, Z, I
 from pauliopt.topologies import Topology
 from pauliopt.utils import pi
 
-PAULI_TO_TKET = {
-    X: Pauli.X,
-    Y: Pauli.Y,
-    Z: Pauli.Z,
-    I: Pauli.I
-}
+PAULI_TO_TKET = {X: Pauli.X, Y: Pauli.Y, Z: Pauli.Z, I: Pauli.I}
 
 
 def tket_to_qiskit(circuit: pytket.Circuit) -> QuantumCircuit:
@@ -36,9 +29,12 @@ def pauli_poly_to_tket(pp: PauliPolynomial):
     circuit = pytket.Circuit(pp.num_qubits)
     for gadget in pp.pauli_gadgets:
         circuit.add_pauliexpbox(
-            PauliExpBox([PAULI_TO_TKET[p] for p in gadget.paulis],
-                        gadget.angle.to_qiskit / np.pi),
-            list(range(pp.num_qubits)))
+            PauliExpBox(
+                [PAULI_TO_TKET[p] for p in gadget.paulis],
+                gadget.angle.to_qiskit / np.pi,
+            ),
+            list(range(pp.num_qubits)),
+        )
     Transform.DecomposeBoxes().apply(circuit)
     return tket_to_qiskit(circuit)
 
@@ -54,8 +50,7 @@ def verify_equality(qc_in, qc_out):
         from qiskit.quantum_info import Operator
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
-    return Operator.from_circuit(qc_in) \
-        .equiv(Operator.from_circuit(qc_out))
+    return Operator.from_circuit(qc_in).equiv(Operator.from_circuit(qc_out))
 
 
 def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
@@ -68,19 +63,32 @@ def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels):
     return PPhase(angle) @ phase_gadget
 
 
-def generate_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs=None,
-                                     max_legs=None, allowed_angels=None):
+def generate_random_pauli_polynomial(
+    num_qubits: int, num_gadgets: int, min_legs=None, max_legs=None, allowed_angels=None
+):
     if min_legs is None:
         min_legs = 1
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64,
-                          pi / 128, pi / 256]
+        allowed_angels = [
+            2 * pi,
+            pi,
+            pi / 2,
+            pi / 4,
+            pi / 8,
+            pi / 16,
+            pi / 32,
+            pi / 64,
+            pi / 128,
+            pi / 256,
+        ]
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
-        pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels)
+        pp >>= create_random_phase_gadget(
+            num_qubits, min_legs, max_legs, allowed_angels
+        )
 
     return pp
 
@@ -97,7 +105,10 @@ def check_matching_architecture(qc: QuantumCircuit, G: nx.Graph):
     for gate in qc:
         if gate.operation.num_qubits == 2:
             ctrl, target = gate.qubits
-            ctrl, target = ctrl._index, target._index  # TODO refactor this to a non deprecated way
+            ctrl, target = (
+                ctrl._index,
+                target._index,
+            )  # TODO refactor this to a non deprecated way
             if not G.has_edge(ctrl, target):
                 return False
     return True
@@ -129,13 +140,19 @@ class TestPauliConversion(unittest.TestCase):
                 topology = topo_creation(pp.num_qubits)
                 tket_pp = pauli_poly_to_tket(pp)
                 our_synth = pp.to_qiskit(topology)
-                self.assertTrue(verify_equality(tket_pp, our_synth),
-                                "The resulting Quantum Circuits were not equivalent")
-                self.assertTrue(check_matching_architecture(our_synth, topology.to_nx),
-                                "The Pauli Polynomial did not match the architecture")
-                self.assertEqual(our_synth.count_ops()["cx"],
-                                 pp.two_qubit_count(topology),
-                                 "Two qubit count needs to be equivalent to to two qubit count of the circuit")
+                self.assertTrue(
+                    verify_equality(tket_pp, our_synth),
+                    "The resulting Quantum Circuits were not equivalent",
+                )
+                self.assertTrue(
+                    check_matching_architecture(our_synth, topology.to_nx),
+                    "The Pauli Polynomial did not match the architecture",
+                )
+                self.assertEqual(
+                    our_synth.count_ops()["cx"],
+                    pp.two_qubit_count(topology),
+                    "Two qubit count needs to be equivalent to to two qubit count of the circuit",
+                )
 
     def test_gate_propagation(self):
         """
@@ -144,17 +161,30 @@ class TestPauliConversion(unittest.TestCase):
         for num_qubits in [2, 3, 4]:
             pp = generate_all_combination_pauli_polynomial(n_qubits=num_qubits)
             inital_qc = pp.to_qiskit()
-            for gate_class in [CliffordType.CX, CliffordType.CY, CliffordType.CZ,
-                               CliffordType.H, CliffordType.S, CliffordType.V]:
+            for gate_class in [
+                CliffordType.CX,
+                CliffordType.CY,
+                CliffordType.CZ,
+                CliffordType.H,
+                CliffordType.S,
+                CliffordType.V,
+                CliffordType.Sdg,
+                CliffordType.Vdg,
+            ]:
                 gate = generate_random_clifford(gate_class, num_qubits)
-                print(gate_class)
+                print(gate_class, gate)
                 pp_ = pp.copy().propagate(gate)
                 qc = QuantumCircuit(num_qubits)
-                qc.compose(clifford_to_qiskit(gate).inverse(), inplace=True)
+                gate_qiskit, qubits = gate.to_qiskit()
+                qc_gate = QuantumCircuit(pp.num_qubits)
+                qc_gate.append(gate_qiskit, qubits)
+                qc.compose(qc_gate.inverse(), inplace=True)
                 qc.compose(pp_.to_qiskit(), inplace=True)
-                qc.compose(clifford_to_qiskit(gate), inplace=True)
-                self.assertTrue(verify_equality(inital_qc, qc),
-                                "The resulting Quantum Circuits were not equivalent")
+                qc.compose(qc_gate, inplace=True)
+                self.assertTrue(
+                    verify_equality(inital_qc, qc),
+                    "The resulting Quantum Circuits were not equivalent",
+                )
 
     def test_pauli_polynomial_simplification(self):
         """
@@ -168,8 +198,10 @@ class TestPauliConversion(unittest.TestCase):
 
                 qc_pp = pp.to_qiskit()
                 qc_pp_simplified = pp_simplified.to_qiskit()
-                self.assertTrue(verify_equality(qc_pp, qc_pp_simplified),
-                                "The resulting Quantum Circuits were not equivalent")
+                self.assertTrue(
+                    verify_equality(qc_pp, qc_pp_simplified),
+                    "The resulting Quantum Circuits were not equivalent",
+                )
 
     def test_pauli_construction(self):
         num_qubits = 4
@@ -181,5 +213,7 @@ class TestPauliConversion(unittest.TestCase):
         print(tket_pp)
         print(our_synth)
 
-        self.assertTrue(verify_equality(tket_pp, our_synth),
-                        "The resulting Quantum Circuits were not equivalent")
+        self.assertTrue(
+            verify_equality(tket_pp, our_synth),
+            "The resulting Quantum Circuits were not equivalent",
+        )

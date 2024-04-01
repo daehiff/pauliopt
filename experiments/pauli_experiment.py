@@ -1,11 +1,10 @@
+import logging
 import os
 import pickle
 import shutil
-from functools import partial
 from numbers import Number
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pytket
 import qiskit.quantum_info
@@ -19,22 +18,14 @@ from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
 from pytket.extensions.qiskit import tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
 from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
-from qiskit import QuantumCircuit, execute
-from qiskit.providers import Options
-from qiskit.providers.fake_provider import FakeGuadalupe
-from qiskit.quantum_info import process_fidelity, hellinger_fidelity
-from qiskit.visualization import plot_histogram
-from qiskit_aer import QasmSimulator, StatevectorSimulator, Aer
-from qiskit_aer.noise import NoiseModel
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import process_fidelity
 from sympy.core.symbol import Symbol
 
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
-import logging
-
-import pennylane as qml
 
 
 def get_logger(name):
@@ -749,8 +740,8 @@ def sanatize_uccsd_molecules():
 
 if __name__ == '__main__':
     # fidelity_experiment_trotterisation()
-    plot_fidelity()
+    # plot_fidelity()
     # random_pauli_polynomial_experiment()
     # plot_random_pauli_polynomial_experiment()
-    # synth_ucc_evaluation()
+    synth_ucc_evaluation()
     # sanatize_uccsd_molecules()

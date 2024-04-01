@@ -1,17 +1,12 @@
-import json
-import re
-from fractions import Fraction
-from operator import itemgetter
-
-from pauliopt.pauli.clifford_gates import CliffordGate
-from pauliopt.pauli.pauli_circuit import PauliCircuit
-from pauliopt.pauli.pauli_gadget import PauliGadget
-
-from pauliopt.topologies import Topology
 import math
-from pauliopt.pauli.utils import X, Y, Z, I, Pauli
-from pauliopt.utils import SVGBuilder, Angle, pi
+
 import numpy as np
+
+from pauliopt.pauli.pauli_circuit import PauliCircuit, CliffordGate
+from pauliopt.pauli.pauli_gadget import PauliGadget
+from pauliopt.pauli.utils import X, Y, Z, I
+from pauliopt.topologies import Topology
+from pauliopt.utils import SVGBuilder
 
 LATEX_HEADER = """\documentclass[preview]{standalone}
 
@@ -92,7 +87,8 @@ class PauliPolynomial:
     def __irshift__(self, gadget: PauliGadget):
         if not len(gadget) == self.num_qubits:
             raise Exception(
-                f"Pauli Polynomial has {self.num_qubits}, but Pauli gadget has: {len(gadget)}")
+                f"Pauli Polynomial has {self.num_qubits}, but Pauli gadget has: {len(gadget)}"
+            )
         self.append_pauli_gadget(gadget)
         return self
 
@@ -103,12 +99,12 @@ class PauliPolynomial:
 
     def __repr__(self):
         if len(self.pauli_gadgets) > 0:
-            pad_len = max([len(str(gadget.angle))
-                          for gadget in self.pauli_gadgets])
+            pad_len = max([len(str(gadget.angle)) for gadget in self.pauli_gadgets])
         else:
             pad_len = 0
-        return '\n'.join([self[i].to_string(pad_lenght=pad_len)
-                          for i in range(self.num_gadgets)])
+        return "\n".join(
+            [self[i].to_string(pad_lenght=pad_len) for i in range(self.num_gadgets)]
+        )
 
     def __len__(self):
         return len(self.pauli_gadgets)
@@ -150,8 +146,7 @@ class PauliPolynomial:
 
         qc = QuantumCircuit(num_qubits)
         for gadget in self.pauli_gadgets:
-            qc.compose(gadget.to_qiskit(
-                topology=topology, time=time), inplace=True)
+            qc.compose(gadget.to_qiskit(topology=topology, time=time), inplace=True)
         qc.global_phase += self.global_phase
         return qc
 
@@ -208,8 +203,13 @@ class PauliPolynomial:
         gadget2 = self.pauli_gadgets[col2]
         return gadget1.mutual_legs(gadget2)
 
-    def to_svg(self, hscale: float = 1.0, vscale: float = 1.0, scale: float = 1.0,
-               svg_code_only=False):
+    def to_svg(
+        self,
+        hscale: float = 1.0,
+        vscale: float = 1.0,
+        scale: float = 1.0,
+        svg_code_only=False,
+    ):
         vscale *= scale
         hscale *= scale
 
@@ -239,10 +239,13 @@ class PauliPolynomial:
 
         font_size = int(10)
 
-        width = num_gadgets * (
-            square_width + margin_x + margin_angle_x + text_width) + margin_x
+        width = (
+            num_gadgets * (square_width + margin_x + margin_angle_x + text_width)
+            + margin_x
+        )
         height = (num_qubits) * (square_height + margin_y) + (
-            square_height + margin_y + margin_angle_y)
+            square_height + margin_y + margin_angle_y
+        )
 
         builder = SVGBuilder(width, height)
         builder = builder.add_diagonal_fill(x_color, z_color, y_color)
@@ -255,8 +258,7 @@ class PauliPolynomial:
             paulis = gadget.paulis
             y = margin_y
             text_coords = (square_width + margin_x + margin_angle_x + x, y)
-            text_left_lower_corder = (
-                text_coords[0], text_coords[1] + square_height)
+            text_left_lower_corder = (text_coords[0], text_coords[1] + square_height)
             for qubit in range(num_qubits):
                 if qubit == 0:
                     y += square_height + margin_y + margin_angle_y
@@ -266,23 +268,23 @@ class PauliPolynomial:
                 if paulis[qubit] == I:
                     continue
 
-                builder.line((prev_x[qubit], y + square_height // 2),
-                             (x, y + square_height // 2))
+                builder.line(
+                    (prev_x[qubit], y + square_height // 2), (x, y + square_height // 2)
+                )
                 prev_x[qubit] = x + square_width
-                builder.line_bend(text_left_lower_corder, center_coords,
-                                  degree=qubit * bend_degree)
+                builder.line_bend(
+                    text_left_lower_corder, center_coords, degree=qubit * bend_degree
+                )
                 if paulis[qubit] == X:
-                    builder.square((x, y), square_width,
-                                   square_height, x_color)
+                    builder.square((x, y), square_width, square_height, x_color)
                 elif paulis[qubit] == Y:
-                    builder.square((x, y), square_width,
-                                   square_height, y_color)
+                    builder.square((x, y), square_width, square_height, y_color)
                 elif paulis[qubit] == Z:
-                    builder.square((x, y), square_width,
-                                   square_height, z_color)
+                    builder.square((x, y), square_width, square_height, z_color)
 
-            builder = builder.text_with_square(text_coords, text_width, square_height,
-                                               str(gadget.angle))
+            builder = builder.text_with_square(
+                text_coords, text_width, square_height, str(gadget.angle)
+            )
             x += square_width + margin_x + text_width + margin_angle_x
         y = margin_y
         for qubit in range(num_qubits):
@@ -290,8 +292,9 @@ class PauliPolynomial:
                 y += square_height + margin_y + margin_angle_y
             else:
                 y += square_height + margin_y
-            builder.line((prev_x[qubit], y + square_height // 2),
-                         (width, y + square_height // 2))
+            builder.line(
+                (prev_x[qubit], y + square_height // 2), (width, y + square_height // 2)
+            )
         svg_code = repr(builder)
 
         if svg_code_only:
@@ -300,15 +303,14 @@ class PauliPolynomial:
             # pylint: disable = import-outside-toplevel
             from IPython.core.display import SVG  # type: ignore
         except ModuleNotFoundError as e:
-            raise ModuleNotFoundError(
-                "You must install the 'IPython' library.") from e
+            raise ModuleNotFoundError("You must install the 'IPython' library.") from e
 
         return SVG(svg_code)
 
     def _repr_svg_(self):
         """
-            Magic method for IPython/Jupyter pretty-printing.
-            See https://ipython.readthedocs.io/en/stable/api/generated/IPython.display.html
+        Magic method for IPython/Jupyter pretty-printing.
+        See https://ipython.readthedocs.io/en/stable/api/generated/IPython.display.html
         """
         return self.to_svg(svg_code_only=True)
 
@@ -320,32 +322,40 @@ class PauliPolynomial:
         angle_line = "\zxNone{} \t\t&"
 
         angle_pad_max = max(
-            [len(str(gadget.angle.repr_latex)) for gadget in self.pauli_gadgets])
+            [len(str(gadget.angle.repr_latex)) for gadget in self.pauli_gadgets]
+        )
         lines = {q: "\\zxNone{} \\rar \t&" for q in range(self.num_qubits)}
         for gadget in self.pauli_gadgets:
             assert isinstance(gadget, PauliGadget)
-            pad_ = ''.join([' ' for _ in range(self.num_qubits + 26)])
-            pad_angle = "".join([' ' for _ in range(angle_pad_max -
-                                                    len(str(gadget.angle.repr_latex)))])
-            angle_line += f" \\zxNone{{}}  {pad_}&" \
-                          f" |[pauliPhase]| {gadget.angle.repr_latex} {pad_angle}&" \
-                          f" \\zxNone{{}}      &"
+            pad_ = "".join([" " for _ in range(self.num_qubits + 26)])
+            pad_angle = "".join(
+                [" " for _ in range(angle_pad_max - len(str(gadget.angle.repr_latex)))]
+            )
+            angle_line += (
+                f" \\zxNone{{}}  {pad_}&"
+                f" |[pauliPhase]| {gadget.angle.repr_latex} {pad_angle}&"
+                f" \\zxNone{{}}      &"
+            )
             paulis = gadget.paulis
             for q in range(self.num_qubits):
-                us = ''.join(['u' for _ in range(q)])
+                us = "".join(["u" for _ in range(q)])
 
-                pad_angle = "".join([' ' for _ in range(angle_pad_max)])
+                pad_angle = "".join([" " for _ in range(angle_pad_max)])
                 if paulis[q] != I:
-                    pad_ = ''.join([' ' for _ in range(self.num_qubits - q)])
-                    lines[q] += f" |[pauli{paulis[q].value}]| " \
-                                f"\\ar[ruu{us}, bend right] \\rar {pad_}&" \
-                                f" \\zxNone{{}} \\rar {pad_angle} &" \
-                                f" \\zxNone{{}} \\rar &"
+                    pad_ = "".join([" " for _ in range(self.num_qubits - q)])
+                    lines[q] += (
+                        f" |[pauli{paulis[q].value}]| "
+                        f"\\ar[ruu{us}, bend right] \\rar {pad_}&"
+                        f" \\zxNone{{}} \\rar {pad_angle} &"
+                        f" \\zxNone{{}} \\rar &"
+                    )
                 else:
-                    pad_ = ''.join([' ' for _ in range(self.num_qubits + 22)])
-                    lines[q] += f" \\zxNone{{}} \\rar {pad_}& " \
-                                f"\\zxNone{{}} \\rar {pad_angle} & " \
-                                f"\\zxNone{{}} \\rar &"
+                    pad_ = "".join([" " for _ in range(self.num_qubits + 22)])
+                    lines[q] += (
+                        f" \\zxNone{{}} \\rar {pad_}& "
+                        f"\\zxNone{{}} \\rar {pad_angle} & "
+                        f"\\zxNone{{}} \\rar &"
+                    )
         out_str += angle_line + "\\\\ \n"
         out_str += "\\\\ \n"
         for q in range(self.num_qubits):
@@ -358,8 +368,10 @@ class PauliPolynomial:
         return out_str
 
     def swap_gadgets(self, col1, col2):
-        self.pauli_gadgets[col1], self.pauli_gadgets[col2] = \
-            self.pauli_gadgets[col2], self.pauli_gadgets[col1]
+        self.pauli_gadgets[col1], self.pauli_gadgets[col2] = (
+            self.pauli_gadgets[col2],
+            self.pauli_gadgets[col1],
+        )
 
     def swap_rows(self, row1, row2):
         for l in range(self.num_gadgets):
@@ -372,13 +384,12 @@ class PauliPolynomial:
 
 
 def remove_collapsed_pauli_gadgets(remaining_poly):
-    return list(
-        filter(lambda x: x.angle != 2 * np.pi and x.angle != 0, remaining_poly))
+    return list(filter(lambda x: x.angle != 2 * np.pi and x.angle != 0, remaining_poly))
 
 
 def find_matching_parity_right(idx, remaining_poly):
     gadget = remaining_poly[idx]
-    for idx_right, gadget_right in enumerate(remaining_poly[idx + 1:]):
+    for idx_right, gadget_right in enumerate(remaining_poly[idx + 1 :]):
         if all([p_1 == p_2 for p_1, p_2 in zip(gadget.paulis, gadget_right.paulis)]):
             return idx + idx_right + 1
     return None
@@ -413,8 +424,7 @@ def simplify_pauli_polynomial(pp: PauliPolynomial, allow_acs=False):
     converged = False
     while not converged:
         remaining_poly = remove_collapsed_pauli_gadgets(remaining_poly)
-        converged = propagate_phase_gadgets(remaining_poly,
-                                            allow_acs=allow_acs)
+        converged = propagate_phase_gadgets(remaining_poly, allow_acs=allow_acs)
 
     pp_ = PauliPolynomial(pp.num_qubits)
     for gadget in remaining_poly:

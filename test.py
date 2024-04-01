@@ -1,7 +1,11 @@
 import warnings
 
+import qiskit
 from qiskit import transpile, QuantumCircuit
+from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import random_clifford, Clifford
+
+from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 import numpy as np
@@ -221,11 +225,25 @@ def test_tableau_1002(n_qubits=6):
     ct = CliffordTableau.from_circuit(circ_bravi)
     circ_out, perm = ct.to_cifford_circuit_perm_row_col(topo, include_swaps=True)
     circ_out = circ_out.to_qiskit()
-    assert (
-        qi.Operator.from_circuit(circ_out).equiv(qi.Operator.from_circuit(circ_bravi))
+    assert qi.Operator.from_circuit(circ_out).equiv(
+        qi.Operator.from_circuit(circ_bravi)
     )
+
+
+
+
+
+def test_steiner_gray_pauli(n_qubits=4, n_gadgets=100):
+    topo = Topology.line(n_qubits)
+
+    pp = generate_random_pauli_polynomial(n_qubits, n_gadgets)
+    pp = simplify_pauli_polynomial(pp, allow_acs=True)
+    synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+    synthesizer.synthesize()
 
 
 if __name__ == "__main__":
     for _ in range(1000):
         test_tableau_1002(6)
+
+

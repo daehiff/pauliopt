@@ -93,3 +93,4 @@ def verify_equality(qc_in, qc_out):
     except:
         raise Exception("Please install qiskit to compare to quantum circuits")
     return Operator.from_circuit(qc_in).equiv(Operator.from_circuit(qc_out))
+

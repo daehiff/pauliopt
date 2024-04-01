@@ -1,9 +1,8 @@
 import networkx as nx
 
-from pauliopt.pauli.clifford_gates import CX
-from pauliopt.pauli.clifford_gates import H, V
+
 from pauliopt.pauli.clifford_tableau import is_cutting
-from pauliopt.pauli.pauli_circuit import PauliCircuit
+from pauliopt.pauli.pauli_circuit import PauliCircuit, CX, H, V
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
 from pauliopt.topologies import Topology
@@ -19,14 +18,16 @@ def pick_row(pp: PauliPolynomial, columns_to_use, qubits_to_use):
         # score = np.mean([i_score, x_score, y_score, z_score])
         # score = max([i_score, x_score, y_score, z_score]) - \
         #         min([i_score, x_score, y_score, z_score])
-        score = max([i_score, x_score, y_score, z_score]) - \
-                min([i_score, x_score, y_score, z_score])
+        score = max([i_score, x_score, y_score, z_score]) - min(
+            [i_score, x_score, y_score, z_score]
+        )
         qubit_scores.append((q, score))
     return max(qubit_scores, key=lambda x: x[1])[0]
 
 
-def update_gadget_single_column(pp: PauliPolynomial, qc: PauliCircuit, q: int,
-                                p: Pauli, columns_to_use):
+def update_gadget_single_column(
+    pp: PauliPolynomial, qc: PauliCircuit, q: int, p: Pauli, columns_to_use
+):
     if p == X:
         gate = H(q)
         pp.propagate(gate, columns_to_use)
@@ -52,8 +53,9 @@ def find_common_paulis(q, pp: PauliPolynomial, columns_to_use):
     return None
 
 
-def update_single_qubits(pp: PauliPolynomial, c: PauliCircuit,
-                         qubits: list, columns_to_use):
+def update_single_qubits(
+    pp: PauliPolynomial, c: PauliCircuit, qubits: list, columns_to_use
+):
     change = False
     for q in qubits:
         p = find_common_paulis(q, pp, columns_to_use)
@@ -102,12 +104,17 @@ def filter_identity_qubits(pp: PauliPolynomial, qubits, columns_to_use):
     return non_identity_qubits
 
 
-def update_pair_qubits(pp: PauliPolynomial, c: PauliCircuit, topology,
-                       qubits, columns_to_use):
+def update_pair_qubits(
+    pp: PauliPolynomial, c: PauliCircuit, topology, qubits, columns_to_use
+):
     non_visited_qubits = [q for q in qubits]
     non_visited_qubits = filter_identity_qubits(pp, non_visited_qubits, columns_to_use)
-    qubit_pairs = pick_best_pair(pp, topology.to_nx.subgraph(non_visited_qubits),
-                                 columns_to_use, non_visited_qubits)
+    qubit_pairs = pick_best_pair(
+        pp,
+        topology.to_nx.subgraph(non_visited_qubits),
+        columns_to_use,
+        non_visited_qubits,
+    )
     (p1, p2), (q_1, q_2) = qubit_pairs
     non_visited_qubits.remove(q_1)
     non_visited_qubits.remove(q_2)
@@ -153,8 +160,9 @@ def partition_pauli_polynomial_(pp: PauliPolynomial, row: int, columns_to_use: l
         cols.append((Y, Z, col_y + col_z, X, col_x, len(col_y) + len(col_z)))
 
     if cols:
-        type_two_1, type_two_2, cols_2, type_col1, col1, _ \
-            = max(cols, key=lambda x: x[-1])
+        type_two_1, type_two_2, cols_2, type_col1, col1, _ = max(
+            cols, key=lambda x: x[-1]
+        )
     else:
         raise Exception("Invalid State")
     return col_i, type_two_1, type_two_2, cols_2, type_col1, col1
@@ -199,8 +207,9 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
 
         row_next = pick_row(pp, columns_to_use, neighbours)
 
-        pp_i, t_pp2_1, tpp2_2, pp2, t_p1, pp1 = \
-            partition_pauli_polynomial_(pp, row_next, columns_to_use)
+        pp_i, t_pp2_1, tpp2_2, pp2, t_p1, pp1 = partition_pauli_polynomial_(
+            pp, row_next, columns_to_use
+        )
 
         remaining_qubits = [q for q in qubits_to_use if q != row_next]
         if not is_cutting(row_next, G_):
@@ -208,8 +217,9 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         else:
             qc_i = check_identity(pp_i, qubits_to_use, row, row_next, rec_type)
 
-        qc_two = simplify_twp_p(pp2, qubits_to_use, row, rec_type, row_next,
-                                t_pp2_1, tpp2_2)
+        qc_two = simplify_twp_p(
+            pp2, qubits_to_use, row, rec_type, row_next, t_pp2_1, tpp2_2
+        )
         qc_one = simplify_one_p(pp1, qubits_to_use, row, rec_type, row_next, t_p1)
 
         qc_out = PauliCircuit(pp.num_qubits)
@@ -223,7 +233,6 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         to_remove = []
         for col in columns_to_use:
             if pp[col].num_legs() == 1:
-
                 row = [q for q in range(pp.num_qubits) if pp[col][q] != I][0]
                 col_type = pp[col][row]
 
@@ -270,8 +279,15 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.v(row)
         return qc
 
-    def simplify_twp_p(columns_to_use, qubits_to_use, row, rec_type, row_next,
-                       rec_type_next_1, rec_type_next_2):
+    def simplify_twp_p(
+        columns_to_use,
+        qubits_to_use,
+        row,
+        rec_type,
+        row_next,
+        rec_type_next_1,
+        rec_type_next_2,
+    ):
         qc = PauliCircuit(pp.num_qubits)
         if len(columns_to_use) == 0:
             return qc
@@ -316,8 +332,9 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.v(row_next)
         return qc
 
-    def simplify_one_p(columns_to_use, qubits_to_use, row, rec_type, row_next,
-                       rec_type_next):
+    def simplify_one_p(
+        columns_to_use, qubits_to_use, row, rec_type, row_next, rec_type_next
+    ):
         qc = PauliCircuit(pp.num_qubits)
         if len(columns_to_use) == 0:
             return qc

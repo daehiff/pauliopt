@@ -1,7 +1,6 @@
 import networkx as nx
 
-from pauliopt.pauli.clifford_gates import CX
-from pauliopt.pauli.clifford_gates import H, V
+from pauliopt.pauli.pauli_circuit import CX, H, V
 from pauliopt.pauli.clifford_region import CliffordRegion
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_gadget import PauliGadget
@@ -171,7 +170,9 @@ def find_common_paulis(q, pp: PauliPolynomial):
     return None
 
 
-def update_gadget_single_column(pp: PauliPolynomial, c: CliffordRegion, q: int, p: Pauli):
+def update_gadget_single_column(
+    pp: PauliPolynomial, c: CliffordRegion, q: int, p: Pauli
+):
     if p == X:
         gate = H(q)
         pp.propagate(gate)
@@ -250,8 +251,11 @@ def is_in_qubits(gadget: PauliGadget, qubits: list):
 
 
 def update_greedy(pp: PauliPolynomial, c: CliffordRegion, qubits: list):
-    all_legs = [(l, pp[l].num_legs()) for l in range(pp.num_gadgets)
-                if is_in_qubits(pp[l], qubits)]
+    all_legs = [
+        (l, pp[l].num_legs())
+        for l in range(pp.num_gadgets)
+        if is_in_qubits(pp[l], qubits)
+    ]
     l = min(all_legs, key=lambda x: x[1])[0]
     q0 = [q for q in qubits if pp[l][q] != I][0]
     decomposition, _ = pp.pauli_gadgets[l].decompose(q0=q0)
@@ -316,13 +320,15 @@ def uccds(pp: PauliPolynomial, topo: Topology):
         pp_sub = PauliPolynomial(pp.num_qubits)
         pp_sub.pauli_gadgets = [pp.pauli_gadgets[l].copy() for l in region]
         pp_sub, c_diag = diagonalize_pauli_polynomial(pp_sub, topo)
-        c_circ, _ = c_diag.to_circuit("ct_resynthesis", topology=topo,
-                                      include_swaps=False)
+        c_circ, _ = c_diag.to_circuit(
+            "ct_resynthesis", topology=topo, include_swaps=False
+        )
         if not is_z_phase_poly(pp_sub):
             raise Exception("Not a Z-phase polynomial")
 
-        sub_circ, sub_gadget_perm, rem_cliff = \
-            pauli_polynomial_steiner_gray_synth(pp_sub, topo)
+        sub_circ, sub_gadget_perm, rem_cliff = pauli_polynomial_steiner_gray_synth(
+            pp_sub, topo
+        )
 
         for gate in reversed(c_diag.gates):
             global_cliffords.prepend_gate(gate)
@@ -336,9 +342,9 @@ def uccds(pp: PauliPolynomial, topo: Topology):
         qc += sub_circ
         gadget_order += [region[i] for i in sub_gadget_perm]
 
-    global_clifford_circ, _ = global_cliffords.to_circuit("ct_resynthesis",
-                                                          topology=topo,
-                                                          include_swaps=False)
+    global_clifford_circ, _ = global_cliffords.to_circuit(
+        "ct_resynthesis", topology=topo, include_swaps=False
+    )
     qc += global_clifford_circ
     perm = list(range(pp.num_qubits))
     return qc, gadget_order, perm

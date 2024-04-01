@@ -6,7 +6,7 @@ import stim
 from qiskit import QuantumCircuit
 import networkx as nx
 
-from pauliopt.pauli.clifford_gates import H, S, V, CX, CY, CZ
+from pauliopt.pauli.pauli_circuit import H, S, V, CX, CY, CZ
 from pauliopt.pauli.clifford_tableau import CliffordTableau
 from pauliopt.pauli.utils import apply_permutation
 from pauliopt.topologies import Topology
@@ -194,7 +194,7 @@ class TestCliffordTableau(unittest.TestCase):
                 )
 
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out, perm = ct.to_clifford_circuit_arch_aware_qiskit(topo)
+                circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
                 circ_out = circ_out.to_qiskit()
                 self.assertTrue(
                     verify_equality(circ, circ_out),

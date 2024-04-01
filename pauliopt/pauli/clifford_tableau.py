@@ -9,13 +9,15 @@ import stim
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Clifford
 
-from pauliopt.pauli.clifford_gates import (
+
+from pauliopt.pauli.pauli_circuit import (
+    PauliCircuit,
     CliffordGate,
     CliffordType,
     SingleQubitGate,
-    ControlGate,
+    TwoQubitClifford,
+    SingleQubitClifford,
 )
-from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.topologies import Topology
 
 
@@ -98,6 +100,36 @@ def pick_col(
                 nx.shortest_path_length(G, source=col, target=other_col)
                 for other_col in G.nodes
                 if remaining.z_out(pivot_row, other_col) != 0
+            ]
+            dist_x = sum(row_x)
+            dist_z = sum(row_z)
+            scores.append((col, dist_x + dist_z))
+
+    return choice_fn(scores, key=lambda x: x[1])[0]
+
+
+def pick_pivot(
+    G,
+    remaining: "CliffordTableau",
+    possible_swaps,
+    include_swaps,
+    choice_fn=min,
+):
+    scores = []
+    has_cutting_swappable = any([not is_cutting(i, G) for i in possible_swaps])
+    for col in G.nodes:
+        if not is_cutting(col, G) or (
+            include_swaps and has_cutting_swappable and col in possible_swaps
+        ):
+            row_x = [
+                nx.shortest_path_length(G, source=col, target=other_col)
+                for other_col in G.nodes
+                if remaining.x_out(col, other_col) != 0
+            ]
+            row_z = [
+                nx.shortest_path_length(G, source=col, target=other_col)
+                for other_col in G.nodes
+                if remaining.z_out(col, other_col) != 0
             ]
             dist_x = sum(row_x)
             dist_z = sum(row_z)
@@ -609,33 +641,29 @@ class CliffordTableau:
         return lookup
 
     def prepend_gate(self, gate: CliffordGate):
-        if gate.c_type == CliffordType.H:
-            assert isinstance(gate, SingleQubitGate)
+        if gate.clifford_type == CliffordType.H:
+            assert isinstance(gate, SingleQubitClifford)
             self.prepend_h(gate.qubit)
-        elif gate.c_type == CliffordType.S:
-            assert isinstance(gate, SingleQubitGate)
+        elif gate.clifford_type == CliffordType.S:
+            assert isinstance(gate, SingleQubitClifford)
             self.prepend_s(gate.qubit)
-        elif gate.c_type == CliffordType.V:
-            assert isinstance(gate, SingleQubitGate)
+        elif gate.clifford_type == CliffordType.V:
+            assert isinstance(gate, SingleQubitClifford)
             self.prepend_h(gate.qubit)
             self.prepend_s(gate.qubit)
             self.prepend_h(gate.qubit)
-        elif gate.c_type == CliffordType.CX:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.CX:
+            assert isinstance(gate, TwoQubitClifford)
             self.prepend_cnot(gate.control, gate.target)
-        elif gate.c_type == CliffordType.CY:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.CY:
+            assert isinstance(gate, TwoQubitClifford)
             self.prepend_s(gate.target)
             self.prepend_cnot(gate.control, gate.target)
             self.prepend_s(gate.target)
             self.prepend_s(gate.target)
             self.prepend_s(gate.target)
-        elif gate.c_type == CliffordType.CXH:
-            assert isinstance(gate, ControlGate)
-            self.prepend_h(gate.control)
-            self.prepend_cnot(gate.control, gate.target)
-        elif gate.c_type == CliffordType.CZ:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.CZ:
+            assert isinstance(gate, TwoQubitClifford)
             self.prepend_h(gate.target)
             self.prepend_cnot(gate.control, gate.target)
             self.prepend_h(gate.target)
@@ -643,36 +671,45 @@ class CliffordTableau:
             raise ValueError("Invalid Clifford gate type")
 
     def append_gate(self, gate: CliffordGate):
-        if gate.c_type == CliffordType.H:
-            assert isinstance(gate, SingleQubitGate)
+        if gate.clifford_type == CliffordType.H:
+            assert isinstance(gate, SingleQubitClifford)
             self.append_h(gate.qubit)
-        elif gate.c_type == CliffordType.S:
-            assert isinstance(gate, SingleQubitGate)
+        elif gate.clifford_type == CliffordType.S:
+            assert isinstance(gate, SingleQubitClifford)
             self.append_s(gate.qubit)
-        elif gate.c_type == CliffordType.V:
-            assert isinstance(gate, SingleQubitGate)
+        elif gate.clifford_type == CliffordType.Sdg:
+            assert isinstance(gate, SingleQubitClifford)
+            self.append_s(gate.qubit)
+            self.append_s(gate.qubit)
+            self.append_s(gate.qubit)
+        elif gate.clifford_type == CliffordType.V:
+            assert isinstance(gate, SingleQubitClifford)
             self.append_h(gate.qubit)
             self.append_s(gate.qubit)
             self.append_h(gate.qubit)
-        elif gate.c_type == CliffordType.CX:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.Vdg:
+            assert isinstance(gate, SingleQubitClifford)
+            self.append_h(gate.qubit)
+            self.append_s(gate.qubit)
+            self.append_s(gate.qubit)
+            self.append_s(gate.qubit)
+            self.append_h(gate.qubit)
+        elif gate.clifford_type == CliffordType.CX:
+            assert isinstance(gate, TwoQubitClifford)
             self.append_cnot(gate.control, gate.target)
-        elif gate.c_type == CliffordType.CY:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.CY:
+            assert isinstance(gate, TwoQubitClifford)
             self.append_s(gate.target)
             self.append_s(gate.target)
             self.append_s(gate.target)
             self.append_cnot(gate.control, gate.target)
             self.append_s(gate.target)
-        elif gate.c_type == CliffordType.CXH:
-            assert isinstance(gate, ControlGate)
-            self.append_cnot(gate.control, gate.target)
-            self.append_h(gate.control)
-        elif gate.c_type == CliffordType.CZ:
-            assert isinstance(gate, ControlGate)
+        elif gate.clifford_type == CliffordType.CZ:
+            assert isinstance(gate, TwoQubitClifford)
             self.append_h(gate.target)
             self.append_cnot(gate.control, gate.target)
             self.append_h(gate.target)
+
         else:
             raise TypeError(
                 f"Unrecongnized Gate type: {type(gate)} for Clifford Tableaus"
@@ -866,8 +903,7 @@ class CliffordTableau:
                 apply("S", (final_permutation[col],))
                 apply("S", (final_permutation[col],))
 
-        print(remaining.print_zx())
-        print(remaining.signs)
+
         permutation = [permutation[i] for i in range(self.n_qubits)]
 
         return qc, permutation
@@ -902,7 +938,7 @@ class CliffordTableau:
                 raise Exception("Unknown Gate")
 
         while G.nodes:
-            pivot_col = pick_col(G, remaining, swappable_nodes, include_swaps)
+            pivot_col = pick_pivot(G, remaining, swappable_nodes, include_swaps)
 
             if is_cutting(pivot_col, G) and include_swaps:
                 non_cutting_vectices = [

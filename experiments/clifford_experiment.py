@@ -1275,10 +1275,10 @@ if __name__ == "__main__":
     # random_experiment(backend_name="complete_7",
     #                   nr_input_gates=300, nr_steps=20, df_name=df_name)
 
-    random_experiment(backend_name="guadalupe",
-                      nr_input_gates=400, nr_steps=20, df_name=df_name)
-    random_experiment(backend_name="complete_16",
-                      nr_input_gates=400, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="guadalupe",
+    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
+    # random_experiment(backend_name="complete_16",
+    #                   nr_input_gates=400, nr_steps=20, df_name=df_name)
 
     # random_experiment(backend_name="mumbai", nr_input_gates=800,
     #                   nr_steps=40, df_name=df_name)

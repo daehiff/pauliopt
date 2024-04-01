@@ -1,15 +1,11 @@
-from typing import List, Tuple
+from typing import List
+
 import networkx as nx
 
-from pauliopt.pauli.clifford_gates import CX, H, V
 from pauliopt.pauli.clifford_region import CliffordRegion
-from pauliopt.pauli.clifford_tableau import CliffordTableau, is_cutting
-from pauliopt.pauli.pauli_circuit import (
-    PauliCircuit,
-    CX as CXPauli,
-    H as HPauli,
-    V as VPauli,
-)
+from pauliopt.pauli.clifford_tableau import is_cutting
+from pauliopt.pauli.pauli_circuit import CX, H, V
+from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
 from pauliopt.topologies import Topology
@@ -562,8 +558,11 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
     circ_recurse, circ_prop = identity_recurse(
         columns_to_use, list(range(pp.num_qubits))
     )
-    circ_prop, permutation = circ_prop.to_tableau().to_clifford_circuit_arch_aware(
+    circ_prop, permutation = circ_prop.to_tableau().to_cifford_circuit_perm_row_col(
         topo, include_swaps=False
     )
+
+    circ_out = circ_out + circ_recurse + circ_prop
+    circ_out.final_permutation = circ_prop.final_permutation
     permutation = [permutation[i] for i in range(pp.num_qubits)]
-    return circ_out + circ_recurse + circ_prop, perm_gadgets, permutation
+    return circ_out, perm_gadgets, permutation
