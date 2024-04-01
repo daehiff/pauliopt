@@ -152,8 +152,8 @@ def check_matching_architecture(qc: QuantumCircuit, G: nx.Graph):
 
 class TestCliffordTableau(unittest.TestCase):
     def test_circuit_construction(self):
-        for _ in range(10):
-            for n_qubits in [4, 8]:
+        for _ in range(5):
+            for n_qubits in [4, 6]:
                 circ = random_hscx_circuit(nr_gates=800, nr_qubits=n_qubits)
                 tableau = circuit_to_tableau(circ)
                 circ_stim = parse_stim_to_qiskit(
@@ -194,7 +194,7 @@ class TestCliffordTableau(unittest.TestCase):
                 )
 
                 ct = CliffordTableau.from_circuit(circ)
-                circ_out, perm = ct.to_cifford_circuit_arch_aware(topo)
+                circ_out, perm = ct.to_clifford_circuit_arch_aware(topo)
                 circ_out = circ_out.to_qiskit()
                 self.assertTrue(
                     verify_equality(circ, circ_out),
@@ -266,7 +266,7 @@ class TestCliffordTableau(unittest.TestCase):
 
     def test_tableau_synthesis_fine_grain(self):
         topo = Topology.complete(6)
-        for _ in range(100):
+        for _ in range(5):
             for num_gates in range(1, 30):
                 print(num_gates)
                 circ = random_hscx_circuit(

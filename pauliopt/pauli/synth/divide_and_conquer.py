@@ -136,7 +136,7 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
         if isinstance(region, PauliPolynomial):
             circ_out += region.to_circuit(topology=topology)
         else:
-            circ, _ = region.to_cifford_circuit_arch_aware(
+            circ, _ = region.to_clifford_circuit_arch_aware(
                 topology, include_swaps=False
             )
             circ_out += circ

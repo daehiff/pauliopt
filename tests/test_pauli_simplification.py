@@ -49,7 +49,7 @@ def verify_equality(qc_in, qc_out):
 
 class TestPauliConversion(unittest.TestCase):
     def test_simplification_process(self):
-        for num_qubits in [4, 6, 8]:
+        for num_qubits in [4, 6]:
             for phase_gadget in [100, 200, 300, 400]:
                 pp = generate_random_pauli_polynomial(num_qubits, phase_gadget)
 

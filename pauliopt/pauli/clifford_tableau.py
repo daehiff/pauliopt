@@ -903,12 +903,13 @@ class CliffordTableau:
                 apply("S", (final_permutation[col],))
                 apply("S", (final_permutation[col],))
 
-
         permutation = [permutation[i] for i in range(self.n_qubits)]
 
         return qc, permutation
 
-    def to_cifford_circuit_arch_aware(self, topo: Topology, include_swaps: bool = True):
+    def to_clifford_circuit_arch_aware(
+        self, topo: Topology, include_swaps: bool = True
+    ):
         qc = PauliCircuit(self.n_qubits)
 
         remaining = self.inverse()
@@ -995,13 +996,12 @@ class CliffordTableau:
 
         permutation = [permutation[i] for i in range(self.n_qubits)]
 
-        print(remaining)
         return qc, permutation
 
     def to_clifford_circuit_arch_aware_qiskit(
         self, topo: Topology, include_swaps: bool = True
     ):
-        circ, perm = self.to_cifford_circuit_arch_aware(topo, include_swaps)
+        circ, perm = self.to_clifford_circuit_arch_aware(topo, include_swaps)
         return circ.to_qiskit(), perm
 
     def _optimal_synth(self, topo: Topology, order):

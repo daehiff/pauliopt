@@ -66,7 +66,7 @@ class CliffordRegion:
             if "include_swaps" not in kwargs:
                 kwargs["include_swaps"] = False
             ct = self.to_tableau()
-            return ct.to_cifford_circuit_arch_aware(
+            return ct.to_clifford_circuit_arch_aware(
                 topo, include_swaps=kwargs["include_swaps"]
             )
         elif method == "ct_resynthesis_perm_row_col":
