@@ -88,7 +88,7 @@ class CliffordRegion:
     ):
         if method == "ct_resynthesis":
             ct = self.to_tableau()
-            return ct.to_cifford_circuit_arch_aware(
+            return ct.to_clifford_circuit_arch_aware(
                 topology, include_swaps=include_swaps
             )
         elif method == "naive_apply":
