@@ -293,7 +293,7 @@ def our_compilation_heat(circ: QuantumCircuit, backend, choice_fn=min):
     best_circ = None
     best_cx_count = math.inf
     for _ in range(40):
-        circ_out, _ = ct.to_cifford_circuit_arch_aware(
+        circ_out, _ = ct.to_clifford_circuit_arch_aware(
             topo, include_swaps=True, choice_fn=choice_fn
         )
         circ_out = circ_out.to_qiskit()
@@ -543,7 +543,7 @@ def our_compilation_tableau(tab: Clifford, backend, num_qubits):
         topo = Topology.from_qiskit_backend(backend)
     ct = CliffordTableau.from_qiskit(tab)
     start = time.time()
-    circ_out, perm = ct.to_cifford_circuit_arch_aware(topo, include_swaps=True)
+    circ_out, perm = ct.to_clifford_circuit_arch_aware(topo, include_swaps=True)
     act_time = time.time() - start
     circ_out = circ_out.to_qiskit()
     column = get_ops_count(circ_out)

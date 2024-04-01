@@ -60,7 +60,7 @@ def anneal(pp: PauliPolynomial, topology, schedule=("geometric", 1.0, 0.1),
         from qiskit import QuantumCircuit
     except:
         raise Exception("Please install qiskit to export the circuit")
-    clifford_circ, _ = clifford_region.to_cifford_circuit_arch_aware(topology,
+    clifford_circ, _ = clifford_region.to_clifford_circuit_arch_aware(topology,
                                                                      include_swaps=False)
     pp_circuit = pp.to_circuit(topology)
 
