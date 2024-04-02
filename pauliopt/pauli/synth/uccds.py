@@ -343,8 +343,9 @@ def uccds(pp: PauliPolynomial, topo: Topology):
         gadget_order += [region[i] for i in sub_gadget_perm]
 
     global_clifford_circ, _ = global_cliffords.to_circuit(
-        "ct_resynthesis", topology=topo, include_swaps=False
+        "ct_resynthesis_perm_row_col", topology=topo, include_swaps=False
     )
     qc += global_clifford_circ
+    qc.final_permutation = global_clifford_circ.final_permutation
     perm = list(range(pp.num_qubits))
     return qc, gadget_order, perm
