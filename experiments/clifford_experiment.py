@@ -12,6 +12,7 @@ from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.providers.models import BackendConfiguration, GateConfig
 from qiskit.providers.fake_provider import FakeBackend
 from qiskit import QuantumCircuit
+from pytket.extensions.qiskit import qiskit_to_tk
 from mqt import qmap
 import stim
 import seaborn as sns
@@ -36,8 +37,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 def get_2q_depth(qc: QuantumCircuit):
-    #c = qiskit_to_tk(qc)
-    return {"2q_depth": qc.depth()}
+    qc = qiskit_to_tk(qc)
+    return qc.depth_2q()
 
 
 def get_depth(qc: QuantumCircuit):
