@@ -306,6 +306,8 @@ def synth_pp_pauliopt_divide_conquer(pp: PauliPolynomial, topo: Topology, prefix
 
 def synth_pp_naive(pp: PauliPolynomial, topo: Topology, prefix="naive"):
     circ_out = pp.to_circuit(topo).to_qiskit()
+    with open(prefix, "wb") as handle:
+        pickle.dump(circ_out, handle)
     return get_ops_count(circ_out)
 
 
@@ -472,11 +474,16 @@ def random_pauli_experiment(
         ]
     )
     circuit_folder = "datasets/pauli_experiments/"
+    naive_circuit_folder = "datasets/pauli_experiments/naive_circuits/"
     topo_folder = os.path.join(circuit_folder, backend_name)
+    circuit_topo_folder = os.path.join(naive_circuit_folder, backend_name)
     os.makedirs(topo_folder, exist_ok=True)
+    os.makedirs(circuit_topo_folder, exist_ok=True)
     for num_gadgets, i in itertools.product(range(1, nr_input_gates, nr_steps), range(20)):
         circuit_file = os.path.join(
-            topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}')
+            topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
+        naive_circuit = os.path.join(
+            circuit_topo_folder, f'nc_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
         pp = create_random_pauli_polynomial(
             num_qubits, num_gadgets)
         pp = simplify_pauli_polynomial(pp, allow_acs=True)
@@ -485,7 +492,6 @@ def random_pauli_experiment(
             pickle.dump(pp, handle)
 
         for synth, synth_method in SYNTHESIS_METHODS.items():
-            print(f"Synth Method: {synth_method}")
             # print(f"Synth: {synth_method}")
             column = {
                 "n_rep": i,
@@ -493,7 +499,8 @@ def random_pauli_experiment(
                 "n_gadgets": num_gadgets,
                 "method": synth,
             } | synth_method(
-                pp, topo, prefix="")
+                pp, topo, prefix=naive_circuit)
+
             df.loc[len(df)] = column
             df.to_csv(output_csv)
 
