@@ -30,7 +30,8 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
-
+from multiprocessing import Pool, Manager
+from itertools import product, repeat
 import json
 
 
@@ -507,51 +508,135 @@ def random_pauli_experiment(
     df.to_csv(output_csv)
 
 
+def threaded_random_pauli_experiment(
+    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
+):
+    manager = Manager()
+    _, output_csv = get_backend_and_df_name(
+        backend_name, df_name=df_name)
+
+    df = pd.DataFrame(
+        columns=[
+            "n_rep",
+            "num_qubits",
+            "n_gadgets",
+            "method",
+            "h",
+            "s",
+            "cx",
+            "time",
+            "depth",
+            "2q_depth",
+        ]
+    )
+    circuit_folder = "datasets/pauli_experiments/"
+    naive_circuit_folder = "datasets/pauli_experiments/naive_circuits/"
+    topo_folder = os.path.join(circuit_folder, backend_name)
+    circuit_topo_folder = os.path.join(naive_circuit_folder, backend_name)
+    os.makedirs(topo_folder, exist_ok=True)
+    os.makedirs(circuit_topo_folder, exist_ok=True)
+    pp_dict = manager.dict()
+    gadget_iter = range(1, nr_input_gates, nr_steps)
+    exp_iter = range(20)
+    synth = SYNTHESIS_METHODS.items()
+
+    arguments = product(gadget_iter, exp_iter, synth)
+    arguments = zip(arguments, repeat(
+        (backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict)))
+
+    with Pool() as p:
+        results = p.starmap(pooled_function, arguments)
+
+    p.join()
+    df = pd.DataFrame(results)
+    df.to_csv(output_csv)
+
+
+def pooled_function(exp_data, fixed_data):
+    num_gadgets, i, synth_data = exp_data
+    synth_name, synth_method = synth_data
+    backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict = fixed_data
+
+    backend, _ = get_backend_and_df_name(
+        backend_name, df_name=df_name)
+
+    if backend not in ["complete", "line"]:
+        num_qubits = backend.configuration().num_qubits
+    else:
+        num_qubits = int(backend_name.split("_")[1])
+
+    topo = get_topo_kind(backend, num_qubits)
+
+    if (num_qubits, num_gadgets) in pp_dict:
+        pp = pp_dict[(num_qubits, num_gadgets)]
+    else:
+        pp = create_random_pauli_polynomial(
+            num_qubits, num_gadgets)
+        pp = simplify_pauli_polynomial(pp, allow_acs=True)
+        pp_dict[(num_qubits, num_gadgets)] = pp
+
+    circuit_file = os.path.join(
+        topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
+    naive_circuit = os.path.join(
+        circuit_topo_folder, f'nc_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
+
+    with open(circuit_file, "wb") as handle:
+        pickle.dump(pp, handle)
+
+    column = {
+        "n_rep": i,
+        "num_qubits": num_qubits,
+        "n_gadgets": num_gadgets,
+        "method": synth_name,
+    } | synth_method(
+        pp, topo, prefix=naive_circuit)
+    return column
+
+
 if __name__ == '__main__':
     df_name = "data/pauli/random/random"
     print("Experiment: quito")
-    random_pauli_experiment(
+    threaded_random_pauli_experiment(
         backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
     )
     print("Experiment: complete_5")
-    random_pauli_experiment(
+    threaded_random_pauli_experiment(
         backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
     )
-
     print("Experiment: nairobi")
-    random_pauli_experiment(backend_name="nairobi",
-                            nr_input_gates=300, nr_steps=20, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="nairobi",
+                                     nr_input_gates=300, nr_steps=20, df_name=df_name)
     print("Experiment: complete_7")
-    random_pauli_experiment(backend_name="complete_7",
-                            nr_input_gates=300, nr_steps=20, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="complete_7",
+                                     nr_input_gates=300, nr_steps=20, df_name=df_name)
 
     print("Experiment: guadalupe")
-    random_pauli_experiment(backend_name="guadalupe",
-                            nr_input_gates=400, nr_steps=20, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="guadalupe",
+                                     nr_input_gates=400, nr_steps=20, df_name=df_name)
     print("Experiment: complete_16")
-    random_pauli_experiment(backend_name="complete_16",
-                            nr_input_gates=400, nr_steps=20, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="complete_16",
+                                     nr_input_gates=400, nr_steps=20, df_name=df_name)
 
     print("Experiment: mumbai")
-    random_pauli_experiment(backend_name="mumbai", nr_input_gates=800,
-                            nr_steps=40, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="mumbai", nr_input_gates=800,
+                                     nr_steps=40, df_name=df_name)
     print("Experiment: complete_27")
-    random_pauli_experiment(backend_name="complete_27",
-                            nr_input_gates=800, nr_steps=40, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="complete_27",
+                                     nr_input_gates=800, nr_steps=40, df_name=df_name)
 
     print("Experiment: ithaca")
-    random_pauli_experiment(
+    threaded_random_pauli_experiment(
         backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
     )
 
     print("Experiment: complete_65")
-    random_pauli_experiment(
+    threaded_random_pauli_experiment(
         backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
     )
 
     print("Experiment: brisbane")
-    random_pauli_experiment(backend_name="brisbane",
-                            nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="brisbane",
+                                     nr_input_gates=10000, nr_steps=400, df_name=df_name)
     print("Experiment: complete_127")
-    random_pauli_experiment(backend_name="complete_127",
-                            nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    threaded_random_pauli_experiment(backend_name="complete_127",
+                                     nr_input_gates=10000, nr_steps=400, df_name=df_name)
