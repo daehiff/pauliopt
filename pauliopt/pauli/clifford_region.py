@@ -78,7 +78,7 @@ class CliffordRegion:
             if "include_swaps" not in kwargs:
                 kwargs["include_swaps"] = False
             ct = self.to_tableau()
-            return ct.to_cifford_circuit_perm_row_col(topo, include_swaps=False)
+            return ct.to_clifford_circuit_perm_row_col(topo, include_swaps=False)
 
         else:
             raise NotImplementedError(f"Method {method} not implemented")
