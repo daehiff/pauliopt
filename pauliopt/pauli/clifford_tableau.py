@@ -183,7 +183,7 @@ def compute_steiner_tree(
     include_swaps,
 ):
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(
-        sub_graph, nodes, mode='kou'
+        sub_graph, nodes, method='kou'
     )
     steiner_stree = nx.Graph(steiner_stree)
     if len(steiner_stree.nodes()) < 1:
