@@ -110,7 +110,7 @@ def split_pauli_polynomial(pp: PauliPolynomial):
     for gadget in pp.pauli_gadgets[: pp.num_gadgets // 2]:
         pp_left >>= gadget
 
-    for gadget in pp.pauli_gadgets[pp.num_gadgets // 2 :]:
+    for gadget in pp.pauli_gadgets[pp.num_gadgets // 2:]:
         pp_right >>= gadget
 
     return pp_left, pp_right
@@ -120,7 +120,8 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
     try:
         from qiskit import QuantumCircuit
     except ImportError:
-        raise ImportError("Qiskit must be installed to use synth_divide_and_conquer")
+        raise ImportError(
+            "Qiskit must be installed to use synth_divide_and_conquer")
 
     permutation = compute_global_permutation(pp, topology)
     gadget_perm = list(range(pp.num_gadgets))
@@ -129,7 +130,8 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
     c_l = CliffordTableau(pp.num_qubits)
     c_r = CliffordTableau(pp.num_qubits)
     legs_cache = {}
-    regions = synth_divide_and_conquer_(c_l, pp, c_r, topology, leg_cache=legs_cache)
+    regions = synth_divide_and_conquer_(
+        c_l, pp, c_r, topology, leg_cache=legs_cache)
 
     circ_out = PauliCircuit(pp.num_qubits)
     for region in regions:
@@ -137,8 +139,7 @@ def divide_and_conquer(pp: PauliPolynomial, topology: Topology):
             circ_out += region.to_circuit(topology=topology)
         else:
             circ, _ = region.to_clifford_circuit_arch_aware(
-                topology, include_swaps=False
-            )
+                topology, include_swaps=False)
             circ_out += circ
 
     perm = list(range(pp.num_qubits))

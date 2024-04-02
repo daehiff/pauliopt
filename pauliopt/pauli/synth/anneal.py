@@ -74,7 +74,8 @@ def anneal(
         gate, effect = get_best_gate(
             pp, ctrl, trg, gate_set, topology, leg_cache=leg_cache
         )
-        accept_step = effect < 0 or random_nrs[it] < np.exp(-np.log(2) * effect / t)
+        accept_step = effect < 0 or random_nrs[it] < np.exp(
+            -np.log(2) * effect / t)
         if accept_step:
             clifford_region.append_gate(gate)
             pp.propagate(gate)
@@ -82,9 +83,8 @@ def anneal(
         from qiskit import QuantumCircuit
     except:
         raise Exception("Please install qiskit to export the circuit")
-    clifford_circ, _ = clifford_region.to_clifford_circuit_arch_aware(
-        topology, include_swaps=False
-    )
+    clifford_circ, _ = clifford_region.to_clifford_circuit_arch_aware(topology,
+                                                                      include_swaps=False)
     pp_circuit = pp.to_circuit(topology)
 
     qc = PauliCircuit(pp.num_qubits)
