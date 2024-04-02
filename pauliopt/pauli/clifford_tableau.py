@@ -183,7 +183,7 @@ def compute_steiner_tree(
     include_swaps,
 ):
     steiner_stree = nx.algorithms.approximation.steinertree.steiner_tree(
-        sub_graph, nodes, method="mehlhorn"
+        sub_graph, nodes
     )
     steiner_stree = nx.Graph(steiner_stree)
     if len(steiner_stree.nodes()) < 1:
@@ -823,7 +823,103 @@ class CliffordTableau:
                     print(f" {int(self.z_out(i, j))} ", end="")
                 print()
 
-    def to_clifford_circuit_arch_aware(self, topo: Topology, include_swaps: bool = True):
+    def to_clifford_circuit_perm_row_col(
+        self, topo: Topology, include_swaps: bool = True
+    ):
+        qc = PauliCircuit(self.n_qubits)
+
+        remaining = self.inverse()
+        permutation = {v: v for v in range(self.n_qubits)}
+        swappable_nodes = list(range(self.n_qubits))
+
+        remaining_rows = list(range(self.n_qubits))
+
+        G = topo.to_nx
+        for e1, e2 in G.edges:
+            G[e1][e2]["weight"] = 0
+
+        def apply(gate_name: str, gate_data: tuple):
+            if gate_name == "CNOT":
+                remaining.append_cnot(gate_data[0], gate_data[1])
+                qc.cx(gate_data[0], gate_data[1])
+                if gate_data[0] in swappable_nodes:
+                    swappable_nodes.remove(gate_data[0])
+                if gate_data[1] in swappable_nodes:
+                    swappable_nodes.remove(gate_data[1])
+                G[gate_data[0]][gate_data[1]]["weight"] = 2
+            elif gate_name == "H":
+                remaining.append_h(gate_data[0])
+                qc.h(gate_data[0])
+            elif gate_name == "S":
+                remaining.append_s(gate_data[0])
+                qc.s(gate_data[0])
+            else:
+                raise Exception("Unknown Gate")
+
+        while G.nodes:
+            pivot_row = pick_row(G, remaining, remaining_rows)
+            pivot_col = pick_col(
+                G, remaining, swappable_nodes, include_swaps, pivot_row
+            )
+            if is_cutting(pivot_col, G) and include_swaps:
+                non_cutting_vectices = [
+                    (
+                        node,
+                        nx.shortest_path_length(
+                            G, source=node, target=pivot_col, weight="weight"
+                        ),
+                    )
+                    for node in G.nodes
+                    if not is_cutting(node, G) and node in swappable_nodes
+                ]
+                non_cutting = min(non_cutting_vectices, key=lambda x: x[1])[0]
+
+                relabel_graph_inplace(G, non_cutting, pivot_col)
+                # remaining.swap_cols(parent, child)
+                permutation[pivot_col], permutation[non_cutting] = (
+                    permutation[non_cutting],
+                    permutation[pivot_col],
+                )
+
+            steiner_reduce_column_perm_row_col(
+                pivot_col,
+                pivot_row,
+                G,
+                remaining,
+                apply,
+                swappable_nodes,
+                permutation,
+                include_swaps,
+            )
+
+            if pivot_col in swappable_nodes:
+                swappable_nodes.remove(pivot_col)
+            G.remove_node(pivot_col)
+            remaining_rows.remove(pivot_row)
+
+        final_permutation = np.argmax(remaining.x_matrix, axis=1)
+        qc.final_permutation = final_permutation
+        signs_copy_z = remaining.signs[self.n_qubits: 2 * self.n_qubits].copy()
+
+        for col in range(self.n_qubits):
+            if signs_copy_z[col] != 0:
+                apply("H", (final_permutation[col],))
+                apply("S", (final_permutation[col],))
+                apply("S", (final_permutation[col],))
+                apply("H", (final_permutation[col],))
+
+        for col in range(self.n_qubits):
+            if remaining.signs[col] != 0:
+                apply("S", (final_permutation[col],))
+                apply("S", (final_permutation[col],))
+
+        permutation = [permutation[i] for i in range(self.n_qubits)]
+
+        return qc, permutation
+
+    def to_clifford_circuit_arch_aware(
+        self, topo: Topology, include_swaps: bool = True
+    ):
         qc = PauliCircuit(self.n_qubits)
 
         remaining = self.inverse()
