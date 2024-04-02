@@ -558,7 +558,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
     circ_recurse, circ_prop = identity_recurse(
         columns_to_use, list(range(pp.num_qubits))
     )
-    circ_prop, permutation = circ_prop.to_tableau().to_cifford_circuit_perm_row_col(
+    circ_prop, permutation = circ_prop.to_tableau().to_clifford_circuit_perm_row_col(
         topo, include_swaps=False
     )
 
