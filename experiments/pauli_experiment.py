@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os
 import pickle
@@ -14,11 +15,14 @@ from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
-from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
-from pytket.extensions.qiskit import tk_to_qiskit
+from pytket._tket.transform import Transform, PauliSynthStrat
+from pytket.circuit import CXConfigType
+from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
 from pytket.utils import gen_term_sequence_circuit, QubitPauliOperator
 from qiskit import QuantumCircuit
+from qiskit.providers.models import BackendConfiguration, GateConfig
+from qiskit.providers.fake_provider import FakeBackend
 from qiskit.quantum_info import process_fidelity
 from sympy.core.symbol import Symbol
 
@@ -26,6 +30,13 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
+
+import json
+
+
+def get_2q_depth(qc: QuantumCircuit):
+    q = qiskit_to_tk(qc)
+    return q.depth_2q()
 
 
 def get_logger(name):
@@ -54,7 +65,8 @@ def generate_random_z_polynomial(num_qubits: int, num_gadgets: int, min_legs=Non
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64]
+        allowed_angels = [2 * pi, pi, pi / 2, pi /
+                          4, pi / 8, pi / 16, pi / 32, pi / 64]
     allowed_legs = [Z]
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -69,7 +81,8 @@ def create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels,
         allowed_legs = [X, Y, Z]
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
-    legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
+    legs = np.random.choice(
+        [i for i in range(num_qubits)], size=nr_legs, replace=False)
     phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
         phase_gadget[leg] = np.random.choice(allowed_legs)
@@ -87,7 +100,8 @@ def create_random_pauli_polynomial(num_qubits: int, num_gadgets: int, min_legs=N
 
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
-        pp >>= create_random_phase_gadget(num_qubits, min_legs, max_legs, allowed_angels)
+        pp >>= create_random_phase_gadget(
+            num_qubits, min_legs, max_legs, allowed_angels)
 
     return pp
 
@@ -254,60 +268,56 @@ def term_sequence_tket(operator, n_qubits):
 def synth_pp_tket_uccs_set(pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_set"):
     operator = pp_to_operator(pp)
     circ_out = synth_tket(operator, topo, PauliSynthStrat.Sets)
-    return get_ops_count(circ_out, prefix=prefix)
+    return get_ops_count(circ_out)
 
 
 def synth_pp_tket_uccs_pair(pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_pair"):
     operator = pp_to_operator(pp)
     circ_out = synth_tket(operator, topo, PauliSynthStrat.Pairwise)
-    return get_ops_count(circ_out, prefix=prefix)
+    return get_ops_count(circ_out)
 
 
 def synth_pp_pauliopt_ucc(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_ucc"):
     pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.UCCDS, topo)
     synthesizer.synthesize()
-    return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
+    return get_ops_count(synthesizer.circ_out_qiskit)
 
 
-def synth_pp_pauliopt_steiner_nc(pp: PauliPolynomial, topo: Topology,
-                                 prefix="pauliopt_steiner_nc"):
+def synth_pp_pauliopt_steiner_nc(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_nc"):
     pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
     synthesizer.synthesize()
-    return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
+    return get_ops_count(synthesizer.circ_out_qiskit)
 
 
-def synth_pp_pauliopt_steiner_clifford(pp: PauliPolynomial, topo: Topology,
-                                       prefix="pauliopt_steiner_clifford"):
+def synth_pp_pauliopt_steiner_clifford(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_clifford"):
     pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_CLIFFORD, topo)
     synthesizer.synthesize()
-    return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
+    return get_ops_count(synthesizer.circ_out_qiskit)
 
 
-def synth_pp_pauliopt_divide_conquer(pp: PauliPolynomial, topo: Topology,
-                                     prefix="pauliopt_divide_conquer"):
+def synth_pp_pauliopt_divide_conquer(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_divide_conquer"):
     synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
     synthesizer.synthesize()
-    return get_ops_count(synthesizer.circ_out_qiskit, prefix=prefix)
+    return get_ops_count(synthesizer.circ_out_qiskit)
 
 
 def synth_pp_naive(pp: PauliPolynomial, topo: Topology, prefix="naive"):
     circ_out = pp.to_circuit(topo).to_qiskit()
-    return get_ops_count(circ_out, prefix=prefix)
+    return get_ops_count(circ_out)
 
 
-def get_ops_count(qc: QuantumCircuit, prefix):
-    if prefix == "":
-        prefix = "circ"
-    count = {f"{prefix}_cx": 0, f"{prefix}_depth": 0}
+def get_ops_count(qc: QuantumCircuit):
+    count = {"cx": 0, "depth": 0}
     ops = qc.count_ops()
     if "cx" in ops.keys():
-        count[f"{prefix}_cx"] += ops['cx']
+        count["cx"] += ops['cx']
     if "swap" in ops.keys():
-        count[f"{prefix}_cx"] += ops['swap'] * 3
-    count[f"{prefix}_depth"] = qc.depth()
+        count["cx"] += ops['swap'] * 3
+    count["depth"] = qc.depth()
+    count["2q_depth"] = get_2q_depth(qc)
     return count
 
 
@@ -339,6 +349,74 @@ def find_square_dimensions(n):
         upper_n += 1
 
 
+class FakeJSONBackend(FakeBackend):
+    def __init__(self, backend_name):
+        with open("./backends_2023.json", "r") as f:
+            backends = json.load(f)
+        my_backend = None
+        for backend in backends:
+            if backend["name"] == backend_name:
+                my_backend = backend
+        if my_backend is None:
+            raise ValueError(f"Unknown backend: {backend_name}")
+
+        config = BackendConfiguration(
+            backend_name=backend_name,
+            backend_version="0.0",
+            n_qubits=my_backend["qubits"],
+            basis_gates=my_backend["basisGates"],
+            gates=[GateConfig(name="cx", parameters=[], qasm_def="cx")],
+            local=True,
+            simulator=False,
+            conditional=False,
+            open_pulse=False,
+            memory=False,
+            max_shots=2048,
+            coupling_map=my_backend["couplingMap"],
+        )
+
+        super().__init__(config)
+
+        self.coupling_map = my_backend["couplingMap"]
+
+
+def get_backend_and_df_name(backend_name, df_name="data/random"):
+    if backend_name == "vigo":
+        backend = FakeJSONBackend("ibm_vigo")
+        df_name = f"{df_name}_vigo.csv"
+    elif backend_name == "mumbai":
+        backend = FakeJSONBackend("ibmq_mumbai")
+        df_name = f"{df_name}_mumbai.csv"
+    elif backend_name == "guadalupe":
+        backend = FakeJSONBackend("ibmq_guadalupe")
+        df_name = f"{df_name}_guadalupe.csv"
+    elif backend_name == "quito":
+        backend = FakeJSONBackend("ibmq_quito")
+        df_name = f"{df_name}_quito.csv"
+    elif backend_name == "nairobi":
+        backend = FakeJSONBackend("ibm_nairobi")
+        df_name = f"{df_name}_nairobi.csv"
+    elif backend_name == "ithaca":
+        backend = FakeJSONBackend("ibm_ithaca")
+        df_name = f"{df_name}_ithaca.csv"
+    elif backend_name == "seattle":
+        backend = FakeJSONBackend("ibm_seattle")
+        df_name = f"{df_name}_seattle.csv"
+    elif backend_name == "brisbane":
+        backend = FakeJSONBackend("ibm_brisbane")
+        df_name = f"{df_name}_brisbane.csv"
+    elif "complete" in backend_name:
+        backend = "complete"
+        df_name = f"{df_name}_{backend_name}.csv"
+    elif "line" in backend_name:
+        backend = "line"
+        df_name = f"{df_name}_{backend_name}.csv"
+
+    else:
+        raise ValueError(f"Unknown backend: {backend_name}")
+    return backend, df_name
+
+
 def get_topo_kind(topo_kind, num_qubits):
     if topo_kind == "line":
         return Topology.line(num_qubits)
@@ -354,394 +432,119 @@ def get_topo_kind(topo_kind, num_qubits):
         else:
             n_rows, n_cols = find_square_dimensions(num_qubits)
             return Topology.grid(n_rows, n_cols)
+
+    return Topology.from_qiskit_backend(topo_kind)
+
+
+SYNTHESIS_METHODS = {"tket_uccs_set": synth_pp_tket_uccs_set,
+                     "tket_uccs_pair": synth_pp_tket_uccs_pair,
+                     "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
+                     "pauliopt_ucc": synth_pp_pauliopt_ucc,
+                     "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
+                     "pauliopt_steiner_clifford": synth_pp_pauliopt_steiner_clifford,
+                     "naive": synth_pp_naive}
+
+
+def random_pauli_experiment(
+    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
+):
+    backend, output_csv = get_backend_and_df_name(
+        backend_name, df_name=df_name)
+    if backend not in ["complete", "line"]:
+        num_qubits = backend.configuration().num_qubits
     else:
-        raise Exception("Unknown topology kind")
+        num_qubits = int(backend_name.split("_")[1])
 
+    topo = get_topo_kind(backend, num_qubits)
 
-def synth_ucc_evaluation():
-    print("Start!")
-    with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
-        orbitals_lookup_table = json.load(json_file)
-    logger = get_logger("synth_ucc_evaluation")
-    for topo_kind in ["line", "complete", "cycle"]:
-        for encoding_name in ["P", "BK", "JW"]:
+    df = pd.DataFrame(
+        columns=[
+            "n_rep",
+            "num_qubits",
+            "n_gadgets",
+            "method",
+            "h",
+            "s",
+            "cx",
+            "time",
+            "depth",
+            "2q_depth",
+        ]
+    )
+    circuit_folder = "datasets/pauli_experiments/"
+    topo_folder = os.path.join(circuit_folder, backend_name)
+    os.makedirs(topo_folder, exist_ok=True)
+    for num_gadgets, i in itertools.product(range(1, nr_input_gates, nr_steps), range(20)):
+        circuit_file = os.path.join(
+            topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}')
+        pp = create_random_pauli_polynomial(
+            num_qubits, num_gadgets)
+        pp = simplify_pauli_polynomial(pp, allow_acs=True)
 
-            op_directory = f"{BASE_PATH}/operators/{encoding_name}_operators"
-            results_file = f"data/pauli/uccsd/{topo_kind}/{encoding_name}_results.csv"
-            df = pd.DataFrame()
-            for filename in os.listdir(op_directory):
-                name = filename.replace(".pickle", "")
-                logger.info(name)
-                active_spin_orbitals = orbitals_lookup_table[name]
-                if encoding_name == "P":
-                    n_qubits = active_spin_orbitals - 2
-                else:
-                    n_qubits = active_spin_orbitals
-                logger.info(n_qubits)
-                if n_qubits >= 15:
-                    continue
-                path = op_directory + "/" + filename
-                with open(path, "rb") as pickle_in:
-                    qubit_pauli_operator = pickle.load(pickle_in)
+        with open(circuit_file, "wb") as handle:
+            pickle.dump(pp, handle)
 
-                topo = get_topo_kind(topo_kind, n_qubits)
-                pp = operator_to_pp(qubit_pauli_operator, n_qubits)
-                col = {"name": name, "n_qubits": n_qubits, "gadgets": pp.num_gadgets}
-                col = col | synth_pp_tket_uccs_set(pp, topo)
-                col = col | synth_pp_tket_uccs_pair(pp, topo)
-                col = col | synth_pp_pauliopt_steiner_nc(pp, topo)
-                # col = col | synth_pp_pauliopt_divide_concquer(pp, topo)
-                col = col | synth_pp_pauliopt_ucc(pp, topo)
-                col = col | synth_pp_naive(pp, topo)
-                df_col = pd.DataFrame(col, index=[0])
-                logger.info(df_col)
-                df = pd.concat([df, df_col], ignore_index=True)
-                df.to_csv(results_file)
-            print("====")
+        for synth, synth_method in SYNTHESIS_METHODS.items():
+            print(f"Synth Method: {synth_method}")
+            # print(f"Synth: {synth_method}")
+            column = {
+                "n_rep": i,
+                "num_qubits": num_qubits,
+                "n_gadgets": num_gadgets,
+                "method": synth,
+            } | synth_method(
+                pp, topo, prefix="")
+            df.loc[len(df)] = column
+            df.to_csv(output_csv)
 
-
-def random_pauli_polynomial_experiment():
-    logger = get_logger("random_pauli_polynomial_experiment")
-    df = pd.DataFrame()
-    for num_gadgets in [50, 100, 200, 300, 500, 1000]:
-        logger.info(f"Num gadgets: {num_gadgets}")
-        for num_qubits in [6, 8, 10, 15]:
-            logger.info(f"Num qubits: {num_qubits}")
-            for topo_name in ["complete", "line", "cycle", "grid"]:
-                topo = get_topo_kind(topo_name, num_qubits)
-                print(f"The TOPO: {topo}")
-                for _ in range(20):
-                    pp = create_random_pauli_polynomial(
-                        num_qubits, num_gadgets)
-                    # print(pp)
-                    naive_data = synth_pp_naive(pp, topo, prefix="naive")
-                    pp = simplify_pauli_polynomial(pp, allow_acs=True)
-                    for synth in ["tket_uccs_set", "tket_uccs_pair",
-                                  "pauliopt_steiner_nc", "pauliopt_ucc",
-                                  "pauliopt_divide_conquer", "pauliopt_steiner_clifford"]:
-                        col = {"method": synth, "n_qubits": num_qubits,
-                               "gadgets": num_gadgets, "topo": topo_name} | naive_data
-                        print("Running synth method: " + synth)
-                        if synth == "tket_uccs_set":
-                            col = col | synth_pp_tket_uccs_set(
-                                pp, topo, prefix="")
-                        elif synth == "tket_uccs_pair":
-                            col = col | synth_pp_tket_uccs_pair(
-                                pp, topo, prefix="")
-                        elif synth == "pauliopt_steiner_nc":
-                            col = col | synth_pp_pauliopt_steiner_nc(
-                                pp, topo, prefix="")
-                        elif synth == "pauliopt_steiner_clifford":
-                            col = col | synth_pp_pauliopt_steiner_clifford(
-                                pp, topo, prefix="")
-                        elif synth == "pauliopt_divide_conquer":
-                            col = col | synth_pp_pauliopt_divide_conquer(pp, topo,
-                                                                         prefix="")
-                        elif synth == "pauliopt_ucc":
-                            col = col | synth_pp_pauliopt_ucc(
-                                pp, topo, prefix="")
-                        else:
-                            raise Exception("Unknown synthesis method")
-
-                        df_col = pd.DataFrame(col, index=[0])
-                        df = pd.concat([df, df_col], ignore_index=True)
-                        df.to_csv(
-                            "data/pauli/random/random_pauli_polynomial.csv")
-
-    df.to_csv("data/pauli/random/random_pauli_polynomial.csv")
-
-
-def plot_random_pauli_polynomial_experiment():
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "sans-serif",
-        "font.size": 11
-    })
-    sns.set_palette(sns.color_palette("colorblind"))
-
-    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
-    df = df[df["topo"] == "complete"]
-    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
-
-    df["method"] = df["method"].replace("pauliopt_ucc", "A-UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_steiner_nc", "PSGS")
-    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
-    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_divide_conquer", "SD\&C")
-
-    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
-    # df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "SD\&C",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "A-UCCSD-set",
-                    "PSGS",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_large_complete.pdf", bbox_inches='tight')
-    plt.show()
-
-    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
-    df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "SD\&C",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "A-UCCSD-set",
-                    "PSGS",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_small_complete.pdf", bbox_inches='tight')
-    plt.show()
-    df = pd.read_csv("data/pauli/random/random_pauli_polynomial.csv")
-    df = df[df["topo"] != "complete"]
-    df["cx"] = (df["naive_cx"] - df["circ_cx"]) / df["naive_cx"] * 100.0
-
-    df["method"] = df["method"].replace("pauliopt_ucc", "A-UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_steiner_nc", "PSGS")
-    df["method"] = df["method"].replace("tket_uccs_pair", "UCCSD-pair")
-    df["method"] = df["method"].replace("tket_uccs_set", "UCCSD-set")
-    df["method"] = df["method"].replace("pauliopt_divide_conquer", "SD\&C")
-
-    df_ = df[df["gadgets"].isin([100, 200, 300, 500, 1000])]
-    # df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "SD\&C",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "A-UCCSD-set",
-                    "PSGS",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_large_arch.pdf", bbox_inches='tight')
-    plt.show()
-
-    df_ = df[df["gadgets"].isin([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])]
-    df_ = df_[df_["method"] != "UCCSD-pair"]
-    sns.barplot(x="gadgets", y="cx", hue="method",
-                hue_order=[
-                    "SD\&C",
-                    "UCCSD-pair",
-                    "UCCSD-set",
-                    "A-UCCSD-set",
-                    "PSGS",
-                ],
-                data=df_)
-    plt.xlabel("Number of gadgets")
-    plt.ylabel(r"Reduction of CX count [\%]")
-    plt.legend(title="Algorithm")
-    plt.savefig("data/pauli/random/random_small_arch.pdf", bbox_inches='tight')
-    plt.show()
-
-
-def fidelity_experiment_trotterisation():
-    with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
-        orbitals_lookup_table = json.load(json_file)
-
-    logger = get_logger("fidelity_experiment_trotterisation")
-    for name, encoding in [("H2_P_631g", "P"),
-                           ("H4_P_sto3g", "P"),
-                           ("LiH_P_sto3g", "P"),
-                           ("LiH_JW_sto3g", "JW")]:
-
-        fid_default = []
-        fid_ours = []
-        fid_tket = []
-        logger.info(f"Name: {name}")
-        for t in np.linspace(0.0, 1.0, 40):
-            t = float(t * 2 * np.pi)
-            logger.info(f"Time: {t}")
-            # t = 1.0
-            orbigtals = orbitals_lookup_table[name]
-            if encoding == "P":
-                n_qubits = orbigtals - 2
-            else:
-                n_qubits = orbigtals
-
-            with open(
-                    f"tket_benchmarking/compilation_strategy/operators/{encoding}_operators/{name}.pickle",
-                    "rb") as pickle_in:
-                operator = pickle.load(pickle_in)
-
-            topo = Topology.complete(n_qubits)
-            summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
-
-            pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
-
-            evolution_op = (t / 2.0 * summed_pauli_operator).exp_i().to_matrix()
-
-            U_expected = evolution_op  # qiskit.quantum_info.Operator(evolution_op)
-            synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
-            synthesizer.synthesize()
-            U_ours = synthesizer.get_operator()
-            steiner_fid = process_fidelity(U_ours, target=U_expected)
-            logger.info(f"Steiner-NC fidelity: {steiner_fid}")
-            fid_ours.append(steiner_fid)
-
-            circ_tket = term_sequence_tket(operator * (t / np.pi), n_qubits)
-            unitarysimulator = aer.Aer.get_backend("unitary_simulator")
-            result = qiskit.execute(circ_tket, unitarysimulator).result()
-            U_tket = result.get_unitary(circ_tket)
-            tket_fid = process_fidelity(U_tket, target=U_expected)
-            logger.info(f"tket fidelity: {tket_fid}")
-            fid_tket.append(tket_fid)
-
-            pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
-            unitarysimulator = aer.Aer.get_backend("unitary_simulator")
-            circ = pp.to_qiskit()
-            result = qiskit.execute(circ, unitarysimulator).result()
-            U_default = result.get_unitary(circ)
-            default_fid = process_fidelity(U_default, target=U_expected)
-            logger.info(f"Default fidelity: {default_fid}")
-            fid_default.append(default_fid)
-        # store data
-        df = pd.DataFrame({"t": np.linspace(0.0, 1.0, 40),
-                           "fid_default": fid_default,
-                           "fid_ours": fid_ours,
-                           "fid_tket": fid_tket})
-        df.to_csv(f"data/pauli/fidelity/{name}.csv")
-
-
-def get_min_max_interaction(summed_pauli):
-    coeff_list = []
-    for el in summed_pauli:
-        coeff = el.primitive.coeffs[0]
-        coeff_list.append(coeff.real)
-    return np.max(np.abs(coeff_list))
-
-
-def plot_fidelity():
-    with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
-        orbitals_lookup_table = json.load(json_file)
-    eps = 0.1
-    for name, encoding in [("H2_P_631g", "P"),
-                           ("H4_P_sto3g", "P"),
-                           ("LiH_P_sto3g", "P")]:
-
-        # t = 1.0
-        orbigtals = orbitals_lookup_table[name]
-        if encoding == "P":
-            n_qubits = orbigtals - 2
-        else:
-            n_qubits = orbigtals
-
-        with open(
-                f"tket_benchmarking/compilation_strategy/operators/{encoding}_operators/{name}.pickle",
-                "rb") as pickle_in:
-            operator = pickle.load(pickle_in)
-
-        summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
-        print("Name: ", name)
-        max = get_min_max_interaction(summed_pauli_operator)
-        print("Max: ", max)
-
-        df = pd.read_csv(f"data/pauli/fidelity/{name}.csv")
-        df["t"] = df["t"] * 2 * np.pi
-
-        x_max = [t for t in df["t"] if max * t > eps][0]
-
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.size": 11
-        })
-        sns.set_palette(sns.color_palette("colorblind"))
-
-        sns.lineplot(df, x="t", y="fid_default", label="Default")
-        sns.lineplot(df, x="t", y="fid_ours", label="PSGS")
-        sns.lineplot(df, x="t", y="fid_tket", label="UCCDS-set")
-        # set ticks to be between 0 and 2pi and label them
-        plt.xticks(np.linspace(0.0, 2 * np.pi, 5),
-                   [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"])
-        plt.xlabel(r"Time $t$")
-        plt.ylabel(r"Fidelity")
-        # add  vertical line at t = 1
-        plt.axvline(x=x_max, color=sns.color_palette("colorblind")[4], linestyle="--")
-        # add a label to the vertical line
-        plt.text(x=x_max + 0.1, y=0.01, s=r"$\vec{t}_{max} > 0.1$")
-
-        plt.tight_layout()
-        plt.savefig(f"data/pauli/fidelity/{name}.pdf")
-        plt.show()
-
-
-def bold_max(df, alg, type, row):
-    values = [f'tket_uccs_set_{type}',
-              f'pauliopt_steiner_nc_{type}',
-              f"pauliopt_ucc_{type}"]
-    max_val = min(df.loc[row.name, values])
-    curr_alg = f"{alg}{type}"
-    outstring = f"{row[f'{alg}{type}']} ({row[f'{alg}{type}_reduction']:.2f})"
-    if row[curr_alg] == max_val:
-        return f"\\textbf{{{outstring}}}"
-    else:
-        return outstring
-
-
-def sanatize_uccsd_molecules():
-    for arch_name in ["complete", "line", "cycle"]:
-        if not os.path.exists(f"data/pauli/uccsd_san/{arch_name}"):
-            os.makedirs(f"data/pauli/uccsd_san/{arch_name}")
-        else:
-            shutil.rmtree(f"data/pauli/uccsd_san/{arch_name}")
-            os.makedirs(f"data/pauli/uccsd_san/{arch_name}")
-
-        for encoding in ["BK", "JW", "P"]:
-            df = pd.read_csv(f"data/pauli/uccsd/{arch_name}/{encoding}_results.csv")
-            del df["Unnamed: 0"]
-            del df["tket_uccs_pair_cx"]
-            del df["tket_uccs_pair_depth"]
-            df.sort_values(by=["n_qubits", "gadgets"], inplace=True)
-            df.reset_index(drop=True, inplace=True)
-
-            for alg, rename in [("tket_uccs_set_", "UCCSD-set"),
-                                ("pauliopt_steiner_nc_", "pauli-steiner-gray-synth"),
-                                ("pauliopt_ucc_", "architecture-aware-UCCSD-set")]:
-                for type in ["cx", "depth"]:
-                    df[f"{alg}{type}_reduction"] \
-                        = (df[f"naive_{type}"] - df[f"{alg}{type}"]) / df[
-                        f"naive_{type}"] * 100
-
-                    # assign df, alg, type to lambda function
-                    bold_max_ = lambda row: bold_max(df, alg, type, row)
-
-                    # create a new column {rename} ({type}) which is formatted as a string: "{{alg}{type}}, ({alg}{type}_reduction)"
-                    df[f"{rename} ({type})"] = df.apply(bold_max_, axis=1)
-                    # drop the old columns
-
-            for alg, rename in [("tket_uccs_set_", "UCCSD-set"),
-                                ("pauliopt_steiner_nc_", "pauli-steiner-gray-synth"),
-                                ("pauliopt_ucc_", "architecture-aware-UCCSD-set")]:
-                for type in ["cx", "depth"]:
-                    del df[f"{alg}{type}"]
-                    del df[f"{alg}{type}_reduction"]
-
-            del df["naive_cx"]
-            del df["naive_depth"]
-
-            df.to_csv(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.csv")
-            with open(f"data/pauli/uccsd_san/{arch_name}/{encoding}_results.tex",
-                      "w") as f:
-                df.to_latex(f, index=False, escape=False, float_format="%.2f")
+    df.to_csv(output_csv)
 
 
 if __name__ == '__main__':
-    # fidelity_experiment_trotterisation()
-    # plot_fidelity()
-    # random_pauli_polynomial_experiment()
-    # plot_random_pauli_polynomial_experiment()
-    synth_ucc_evaluation()
-    # sanatize_uccsd_molecules()
+    df_name = "data/pauli/random/random"
+    print("Experiment: quito")
+    random_pauli_experiment(
+        backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
+    )
+    print("Experiment: complete_5")
+    random_pauli_experiment(
+        backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
+    )
+
+    print("Experiment: nairobi")
+    random_pauli_experiment(backend_name="nairobi",
+                            nr_input_gates=300, nr_steps=20, df_name=df_name)
+    print("Experiment: complete_7")
+    random_pauli_experiment(backend_name="complete_7",
+                            nr_input_gates=300, nr_steps=20, df_name=df_name)
+
+    print("Experiment: guadalupe")
+    random_pauli_experiment(backend_name="guadalupe",
+                            nr_input_gates=400, nr_steps=20, df_name=df_name)
+    print("Experiment: complete_16")
+    random_pauli_experiment(backend_name="complete_16",
+                            nr_input_gates=400, nr_steps=20, df_name=df_name)
+
+    print("Experiment: mumbai")
+    random_pauli_experiment(backend_name="mumbai", nr_input_gates=800,
+                            nr_steps=40, df_name=df_name)
+    print("Experiment: complete_27")
+    random_pauli_experiment(backend_name="complete_27",
+                            nr_input_gates=800, nr_steps=40, df_name=df_name)
+
+    print("Experiment: ithaca")
+    random_pauli_experiment(
+        backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    )
+
+    print("Experiment: complete_65")
+    random_pauli_experiment(
+        backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    )
+
+    print("Experiment: brisbane")
+    random_pauli_experiment(backend_name="brisbane",
+                            nr_input_gates=10000, nr_steps=400, df_name=df_name)
+    print("Experiment: complete_127")
+    random_pauli_experiment(backend_name="complete_127",
+                            nr_input_gates=10000, nr_steps=400, df_name=df_name)
