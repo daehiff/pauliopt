@@ -1,9 +1,10 @@
 import itertools
 import logging
-import os
+import os, sys
 import pickle
 import shutil
 from numbers import Number
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -30,7 +31,7 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool, Manager, Queue
 from itertools import product, repeat
 import json
 
@@ -39,6 +40,26 @@ def get_2q_depth(qc: QuantumCircuit):
     q = qiskit_to_tk(qc)
     return q.depth_2q()
 
+
+def get_size(obj, seen=None):
+    """Recursively finds size of objects"""
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+        size += sum([get_size(i, seen) for i in obj])
+    return size
 
 def get_logger(name):
     logger = logging.getLogger(name)
@@ -507,12 +528,15 @@ def random_pauli_experiment(
 
     df.to_csv(output_csv)
 
+def create_csv_header():
+    header = ["n_rep", "num_qubits", "n_gadgets", "method", "cx", "depth", "2q_depth", "time"]
+    return header
 
 def threaded_random_pauli_experiment(
     backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
 ):
     manager = Manager()
-    _, output_csv = get_backend_and_df_name(
+    backend, output_csv = get_backend_and_df_name(
         backend_name, df_name=df_name)
 
     df = pd.DataFrame(
@@ -535,62 +559,98 @@ def threaded_random_pauli_experiment(
     circuit_topo_folder = os.path.join(naive_circuit_folder, backend_name)
     os.makedirs(topo_folder, exist_ok=True)
     os.makedirs(circuit_topo_folder, exist_ok=True)
-    pp_dict = manager.dict()
+
     gadget_iter = range(1, nr_input_gates, nr_steps)
     exp_iter = range(20)
     synth = SYNTHESIS_METHODS.items()
-
-    arguments = product(gadget_iter, exp_iter, synth)
-    arguments = zip(arguments, repeat(
-        (backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict)))
-
-    with Pool() as p:
-        results = p.starmap(pooled_function, arguments)
-
-    p.join()
-    df = pd.DataFrame(results)
-    df.to_csv(output_csv)
-
-
-def pooled_function(exp_data, fixed_data):
-    num_gadgets, i, synth_data = exp_data
-    synth_name, synth_method = synth_data
-    backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict = fixed_data
-
-    backend, _ = get_backend_and_df_name(
-        backend_name, df_name=df_name)
 
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
         num_qubits = int(backend_name.split("_")[1])
 
-    topo = get_topo_kind(backend, num_qubits)
-
-    if (num_qubits, num_gadgets) in pp_dict:
-        pp = pp_dict[(num_qubits, num_gadgets)]
-    else:
-        pp = create_random_pauli_polynomial(
-            num_qubits, num_gadgets)
+    print("Synthesizing all PauliPolynomials")
+    pp_dict = manager.dict()
+    for num_gadgets, i in product(gadget_iter, exp_iter):
+        pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
         pp = simplify_pauli_polynomial(pp, allow_acs=True)
-        pp_dict[(num_qubits, num_gadgets)] = pp
+        pp_dict[(num_qubits, i, num_gadgets)] = pp
 
-    circuit_file = os.path.join(
-        topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
-    naive_circuit = os.path.join(
-        circuit_topo_folder, f'nc_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
+        circuit_file = os.path.join(
+            topo_folder, f'pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
+        naive_circuit = os.path.join(
+            circuit_topo_folder, f'nc_{backend_name}_{num_gadgets:03}_{i:02}.pickle')
 
-    with open(circuit_file, "wb") as handle:
-        pickle.dump(pp, handle)
+        with open(circuit_file, "wb") as handle:
+            pickle.dump(pp, handle)
+    print("Done synthesizing", len(pp_dict), "PauliPolynomials of size", get_size(pp_dict), "bytes")
 
-    column = {
-        "n_rep": i,
-        "num_qubits": num_qubits,
-        "n_gadgets": num_gadgets,
-        "method": synth_name,
-    } | synth_method(
-        pp, topo, prefix=naive_circuit)
-    return column
+    arguments = product(gadget_iter, exp_iter, synth)
+    arguments = zip(arguments, repeat(
+        (backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict)))
+    
+    # Create a Queue for the workers to work from 
+    q = manager.Queue()
+    for args in arguments:
+        q.put(args)
+    original_size = q.qsize()
+    n_workers = os.cpu_count() *2
+    print("Created task Queue on length", original_size)
+
+    print("Creating csv fill at", datetime.now())
+    df = pd.DataFrame({c:[] for c in create_csv_header()})
+    with open(output_csv, "wb") as f:
+        df.to_csv(f, header=create_csv_header(), index=False)
+    print("Starting the pool with ", n_workers, "workers")
+    p = Pool(n_workers)
+    for _ in range(n_workers):
+        results = p.apply_async(pooled_function, [q])
+    p.close()
+    p.join()
+    if not q.empty():
+        print("Something went wrong, Queue is not empty", q.qsize())
+    print("Done")
+
+
+def pooled_function(q:Queue):
+    while True:
+        q.qsize()%100==0 and print(".", end="", flush=True)
+        try:
+            q_data = q.get(timeout=10)
+            if q_data is None:
+                return
+        except: # Q is empty
+            return
+        exp_data, fixed_data = q_data
+        num_gadgets, i, synth_data = exp_data
+        synth_name, synth_method = synth_data
+        backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict = fixed_data
+
+        backend, output_csv = get_backend_and_df_name(
+            backend_name, df_name=df_name)
+        if backend not in ["complete", "line"]:
+            num_qubits = backend.configuration().num_qubits
+        else:
+            num_qubits = int(backend_name.split("_")[1])
+        topo = get_topo_kind(backend, num_qubits)
+
+        pp = pp_dict[(num_qubits, i, num_gadgets)]
+        
+        start = datetime.now()
+        count_dict = synth_method(pp, topo)
+        time_passed = (datetime.now()-start).total_seconds()
+
+        column = {
+            "n_rep": i,
+            "num_qubits": num_qubits,
+            "n_gadgets": num_gadgets,
+            "time": time_passed,
+            "method": synth_name,
+        } | count_dict
+
+        df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
+        with open(output_csv, "ab") as f_ptr:
+            df.to_csv(f_ptr, header=False, index=False)
 
 
 if __name__ == '__main__':
@@ -603,6 +663,7 @@ if __name__ == '__main__':
     threaded_random_pauli_experiment(
         backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
     )
+    
     print("Experiment: nairobi")
     threaded_random_pauli_experiment(backend_name="nairobi",
                                      nr_input_gates=300, nr_steps=20, df_name=df_name)
