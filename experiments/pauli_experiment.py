@@ -736,8 +736,9 @@ def pooled_function(q: Queue):
             "time": time_passed,
             "method": synth_name,
         } | count_dict
-        lock.acquire()
+        
         df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
+        lock.acquire()
         with open(output_csv, "ab") as f_ptr:
             df.to_csv(f_ptr, header=False, index=False)
         lock.release()
