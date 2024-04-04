@@ -42,7 +42,7 @@ import networkx as nx
 
 
 def get_2q_depth(qc: QuantumCircuit):
-    return qc.depth(lambda x: x.operation.name == "cx")
+    return qc.depth(lambda inst: inst.operation.name == "cx")
 
 
 def get_size(obj, seen=None):
@@ -256,8 +256,8 @@ def operator_to_pp(operator, n_qubits, t=1):
                 pp >>= PPhase(float(coeff)) @ paulis
             elif isinstance(coeff, complex):
                 pp >>= PPhase(coeff) @ paulis
-            elif isinstance(coeff, Number):
-                pp >>= PPhase(Angle(float(coeff))) @ paulis
+            # elif isinstance(coeff, Number):
+            #     pp >>= PPhase(Angle(float(coeff))) @ paulis
             elif isinstance(coeff, Symbol):
                 pp >>= PPhase(AngleVar(coeff.name)) @ paulis
             else:
@@ -271,6 +271,7 @@ def operator_to_pp(operator, n_qubits, t=1):
 def synth_tket(operator, topo: Topology, method: PauliSynthStrat, n_qubits: int = None):
     if n_qubits is None:
         n_qubits = topo.num_qubits
+    print(n_qubits)
     initial_circ = pytket.Circuit(n_qubits)
     circuit = gen_term_sequence_circuit(operator, initial_circ)
 
@@ -351,7 +352,11 @@ def paulihedral_rep_from_paulipolynomial(pp: PauliPolynomial):
     parr = []
     for p_gadget in pp:
         p_str = "".join([ps.value for ps in p_gadget.paulis])
-        p_string_ph = pauliString(p_str, coeff=float(p_gadget.angle))
+        coeff = (
+            p_gadget.angle if isinstance(p_gadget.angle, float) else np.random.rand()
+        )
+
+        p_string_ph = pauliString(p_str, coeff=coeff)
         parr.append([p_string_ph])
     return parr
 
@@ -360,7 +365,6 @@ def topology_to_ph_graph(topo: Topology, dist_comp=True):
     n = topo.num_qubits
     G = nx.adjacency_matrix(topo.to_nx).todense()
     C = topo._dist
-
 
     return pGraph(G, C)
 
@@ -387,12 +391,13 @@ def synth_pp_naive(pp: PauliPolynomial, topo: Topology, prefix="naive"):
 
 def get_ops_count(qc: QuantumCircuit):
     qc = transpile(qc, basis_gates=["u3", "cx"])
-    count = {"cx": 0, "depth": 0}
+    count = {"cx": 0, "u3": 0, "depth": 0}
     ops = qc.count_ops()
     if "cx" in ops.keys():
         count["cx"] += ops["cx"]
     if "swap" in ops.keys():
         count["cx"] += ops["swap"] * 3
+    count["u3"] = ops["u3"]
     count["depth"] = qc.depth()
     count["2q_depth"] = get_2q_depth(qc)
     return count
@@ -514,13 +519,13 @@ def get_topo_kind(topo_kind, num_qubits):
 
 
 SYNTHESIS_METHODS = {
-    "tket_uccs_set": synth_pp_tket_uccs_set,
-    "tket_uccs_pair": synth_pp_tket_uccs_pair,
+    # "tket_uccs_set": synth_pp_tket_uccs_set,
+    # "tket_uccs_pair": synth_pp_tket_uccs_pair,
     "paulihedral": synth_pp_paulihedral,
-    "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
+    # "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
     "pauliopt_ucc": synth_pp_pauliopt_ucc,
     # "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
-    # "pauliopt_steiner_clifford": synth_pp_pauliopt_steiner_clifford,
+    "pauliopt_steiner_clifford": synth_pp_pauliopt_steiner_clifford,
     "naive": synth_pp_naive,
 }
 
@@ -729,73 +734,59 @@ def pooled_function(q: Queue):
             df.to_csv(f_ptr, header=False, index=False)
 
 
-def test_paulihedral(num_qubits=5, num_gadgets=10):
-    pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
-    pp = simplify_pauli_polynomial(pp, allow_acs=True)
-
-    topo = Topology.line(num_qubits)
-
-    print("Pauli Hedral")
-    print(synth_pp_paulihedral(pp, topo))
-
-    print("PSGS")
-    print(synth_pp_pauliopt_steiner_clifford(pp, topo))
-
-
 if __name__ == "__main__":
-    test_paulihedral()
-    # df_name = "data/pauli/random/random"
-    # print("Experiment: quito")
-    # threaded_random_pauli_experiment(
-    #     backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
-    # )
-    # print("Experiment: complete_5")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
-    # )
+    df_name = "data/pauli/random/random"
+    print("Experiment: quito")
+    threaded_random_pauli_experiment(
+        backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
+    )
+    print("Experiment: complete_5")
+    threaded_random_pauli_experiment(
+        backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
+    )
 
-    # print("Experiment: nairobi")
-    # threaded_random_pauli_experiment(
-    #     backend_name="nairobi", nr_input_gates=300, nr_steps=20, df_name=df_name
-    # )
-    # print("Experiment: complete_7")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_7", nr_input_gates=300, nr_steps=20, df_name=df_name
-    # )
-    #
-    # print("Experiment: guadalupe")
-    # threaded_random_pauli_experiment(
-    #     backend_name="guadalupe", nr_input_gates=400, nr_steps=20, df_name=df_name
-    # )
-    # print("Experiment: complete_16")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_16", nr_input_gates=400, nr_steps=20, df_name=df_name
-    # )
-    #
-    # print("Experiment: mumbai")
-    # threaded_random_pauli_experiment(
-    #     backend_name="mumbai", nr_input_gates=800, nr_steps=40, df_name=df_name
-    # )
-    # print("Experiment: complete_27")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_27", nr_input_gates=800, nr_steps=40, df_name=df_name
-    # )
-    #
-    # print("Experiment: ithaca")
-    # threaded_random_pauli_experiment(
-    #     backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
-    # )
-    #
-    # print("Experiment: complete_65")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
-    # )
-    #
-    # print("Experiment: brisbane")
-    # threaded_random_pauli_experiment(
-    #     backend_name="brisbane", nr_input_gates=10000, nr_steps=400, df_name=df_name
-    # )
-    # print("Experiment: complete_127")
-    # threaded_random_pauli_experiment(
-    #     backend_name="complete_127", nr_input_gates=10000, nr_steps=400, df_name=df_name
-    # )
+    print("Experiment: nairobi")
+    threaded_random_pauli_experiment(
+        backend_name="nairobi", nr_input_gates=300, nr_steps=20, df_name=df_name
+    )
+    print("Experiment: complete_7")
+    threaded_random_pauli_experiment(
+        backend_name="complete_7", nr_input_gates=300, nr_steps=20, df_name=df_name
+    )
+
+    print("Experiment: guadalupe")
+    threaded_random_pauli_experiment(
+        backend_name="guadalupe", nr_input_gates=400, nr_steps=20, df_name=df_name
+    )
+    print("Experiment: complete_16")
+    threaded_random_pauli_experiment(
+        backend_name="complete_16", nr_input_gates=400, nr_steps=20, df_name=df_name
+    )
+
+    print("Experiment: mumbai")
+    threaded_random_pauli_experiment(
+        backend_name="mumbai", nr_input_gates=800, nr_steps=40, df_name=df_name
+    )
+    print("Experiment: complete_27")
+    threaded_random_pauli_experiment(
+        backend_name="complete_27", nr_input_gates=800, nr_steps=40, df_name=df_name
+    )
+
+    print("Experiment: ithaca")
+    threaded_random_pauli_experiment(
+        backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    )
+
+    print("Experiment: complete_65")
+    threaded_random_pauli_experiment(
+        backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
+    )
+
+    print("Experiment: brisbane")
+    threaded_random_pauli_experiment(
+        backend_name="brisbane", nr_input_gates=10000, nr_steps=400, df_name=df_name
+    )
+    print("Experiment: complete_127")
+    threaded_random_pauli_experiment(
+        backend_name="complete_127", nr_input_gates=10000, nr_steps=400, df_name=df_name
+    )

@@ -1,9 +1,5 @@
-,name,n_qubits,gadgets,tket_uccs_set_cx,tket_uccs_set_depth,tket_uccs_pair_cx,tket_uccs_pair_depth,pauliopt_steiner_nc_cx,pauliopt_steiner_nc_depth,pauliopt_ucc_cx,pauliopt_ucc_depth,naive_cx,naive_depth
-0,H2O_BK_sto3g,14,1000,4045,5305,6190,10518,4456,6440,6281,5669,11426,13497
-1,LiH_BK_sto3g,12,640,2004,2912,3408,6271,2462,3723,3621,3467,6220,7576
-2,CH2_BK_sto3g,14,1488,6620,7540,9294,15113,6056,8795,9688,8559,16222,19460
-3,H2_BK_631g,8,84,180,334,284,702,306,485,245,311,530,767
-4,NH_BK_sto3g,12,640,2164,3014,3414,6341,2456,3744,2950,2866,6084,7511
-5,BeH2_BK_sto3g,14,1488,6313,7272,9490,14876,6462,9487,10907,9559,16666,19690
-6,H2_BK_sto3g,4,12,18,41,26,80,28,56,22,50,46,75
-7,H4_BK_sto3g,8,160,494,740,640,1340,508,830,451,516,1172,1553
+name,num_qubits,n_gadgets,method,cx,depth,2q_depth,time
+H2_P_sto3g,2,4,paulihedral,4,9,4,0.008328
+H2_P_sto3g,2,4,pauliopt_ucc,6,8,6,0.011488
+H2_P_sto3g,2,4,pauliopt_steiner_clifford,2,4,2,0.010267
+H2_P_sto3g,2,4,naive,4,9,4,0.008933
