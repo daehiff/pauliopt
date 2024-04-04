@@ -36,7 +36,7 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar
-from multiprocessing import Pool, Manager, Queue
+from multiprocessing import Pool, Manager, Queue, Lock
 from itertools import product, repeat
 import json
 import networkx as nx
