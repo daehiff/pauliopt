@@ -296,12 +296,12 @@ def real_hw_ucc_evaluation(max_qubits=15):
 
 
 
-def synth_ucc_evaluation(max_qubits=15):
+def synth_ucc_evaluation(max_qubits=7):
     logger = get_logger("synth_ucc_evaluation")
     for topo_kind in ["line", "complete", "cycle"]:
         for encoding_name in ["P", "BK", "JW"]:
             op_directory = f"./datasets/pp_molecules/"
-            results_file = f"data/pauli/uccsd/{topo_kind}/{encoding_name}_results.csv"
+            results_file = f"data/pauli/uccsd/{topo_kind}/results.csv"
             df = pd.DataFrame({c: [] for c in create_csv_header()})
             with open(results_file, "wb") as f:
                 df.to_csv(f, header=create_csv_header(), index=False)

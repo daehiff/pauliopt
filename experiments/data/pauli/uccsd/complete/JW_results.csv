@@ -1,5 +1,0 @@
-name,num_qubits,n_gadgets,method,cx,depth,2q_depth,time
-H2_P_sto3g,2,4,paulihedral,4,9,4,0.008253
-H2_P_sto3g,2,4,pauliopt_ucc,6,8,6,0.012833
-H2_P_sto3g,2,4,pauliopt_steiner_clifford,2,4,2,0.010593
-H2_P_sto3g,2,4,naive,4,9,4,0.009402
