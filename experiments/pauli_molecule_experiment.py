@@ -1,10 +1,15 @@
+from itertools import product, repeat
 import json
 import logging
 import os
 import pickle
 import shutil
 from datetime import datetime
+from multiprocessing import Lock, Pool
 from numbers import Number
+import tqdm
+
+
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,7 +23,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import process_fidelity
 from sympy import Symbol
 
-from experiments.pauli_experiment import (
+from pauli_experiment import (
     term_sequence_tket,
     SYNTHESIS_METHODS,
     get_backend_and_df_name,
@@ -27,6 +32,7 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar, Angle
+
 
 
 def get_2q_depth(qc: QuantumCircuit):
@@ -295,17 +301,22 @@ def pad_pp_to_ibm_backend(pp: PauliPolynomial, n_qubits):
         pp_ >>= PauliGadget(angle, paulis)
     return pp_
 
+def get_lock(new_lock):
+    global lock
+    lock = new_lock
 
-def real_hw_ucc_evaluation(max_qubits=7):
+def real_hw_ucc_evaluation(max_qubits=30):
     logger = get_logger("real_hw_ucc_evaluation")
-    op_directory = f"./datasets/pp_molecules/"
-    for filename in os.listdir(op_directory):
-        results_file = f"data/pauli/uccsd/ibm/results.csv"
-        df = pd.DataFrame({c: [] for c in create_csv_header_real_hw()})
+    op_directory = "./datasets/pp_molecules/"
+    results_directory = "data/pauli/uccsd/ibm/"
+    os.makedirs(results_directory, exist_ok=True)
 
+    for filename in os.listdir(op_directory):
+        results_file = os.path.join(results_directory, "results.csv")
+        df = pd.DataFrame({c: [] for c in create_csv_header_real_hw()})
         name = filename.replace(".pickle", "")
         logger.info(name)
-        path = op_directory + "/" + filename
+        path = os.path.join(op_directory, filename)
         with open(path, "rb") as pickle_in:
             pp = pickle.load(pickle_in)
             pp = simplify_pauli_polynomial(pp, allow_acs=True)
@@ -338,45 +349,167 @@ def real_hw_ucc_evaluation(max_qubits=7):
             df = pd.concat([df, new_row], ignore_index=True)
             df.to_csv(results_file)
 
-def synth_ucc_evaluation(max_qubits=7):
+def synth_ucc_evaluation(max_qubits=30):
     logger = get_logger("synth_ucc_evaluation")
+    op_directory = "./datasets/pp_molecules/"
     for topo_kind in ["line", "complete", "cycle"]:
-        for encoding_name in ["P", "BK", "JW"]:
-            op_directory = f"./datasets/pp_molecules/"
-            results_file = f"data/pauli/uccsd/{topo_kind}/results.csv"
-            df = pd.DataFrame({c: [] for c in create_csv_header()})
-            with open(results_file, "wb") as f:
-                df.to_csv(f, header=create_csv_header(), index=False)
-            for filename in os.listdir(op_directory):
-                name = filename.replace(".pickle", "")
-                logger.info(name)
-                path = op_directory + "/" + filename
-                with open(path, "rb") as pickle_in:
-                    pp = pickle.load(pickle_in)
-                    pp = simplify_pauli_polynomial(pp, allow_acs=True)
+        results_directory = f"data/pauli/uccsd/{topo_kind}/"
+        os.makedirs(results_directory, exist_ok=True)
+        results_file = os.path.join(results_directory, "results.csv")
+        df = pd.DataFrame({c: [] for c in create_csv_header()})
+        with open(results_file, "wb") as f:
+            df.to_csv(f, header=create_csv_header(), index=False)
 
-                n_qubits = pp.num_qubits
-                if n_qubits >= max_qubits:
-                    continue
+        for filename in os.listdir(op_directory):
+            name = filename.replace(".pickle", "")
+            logger.info(name)
+            path = f"{op_directory}/" + filename
+            with open(path, "rb") as pickle_in:
+                pp = pickle.load(pickle_in)
+                pp = simplify_pauli_polynomial(pp, allow_acs=True)
 
-                topo = get_topo_kind(topo_kind, n_qubits)
-                for synth_name, synth_method in SYNTHESIS_METHODS.items():
-                    start = datetime.now()
-                    count_dict = synth_method(pp, topo)
-                    time_passed = (datetime.now() - start).total_seconds()
-                    column = {
-                        "name": name,
-                        "num_qubits": n_qubits,
-                        "n_gadgets": pp.num_gadgets,
-                        "method": synth_name,
-                        "time": time_passed,
-                    } | count_dict
+            n_qubits = pp.num_qubits
+            if n_qubits >= max_qubits:
+                continue
 
-                    df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
-                    with open(results_file, "ab") as f_ptr:
-                        df.to_csv(f_ptr, header=False, index=False)
+            topo = get_topo_kind(topo_kind, n_qubits)
+            for synth_name, synth_method in SYNTHESIS_METHODS.items():
+                start = datetime.now()
+                count_dict = synth_method(pp, topo)
+                time_passed = (datetime.now() - start).total_seconds()
+                column = {
+                    "name": name,
+                    "num_qubits": n_qubits,
+                    "n_gadgets": pp.num_gadgets,
+                    "method": synth_name,
+                    "time": time_passed,
+                } | count_dict
+
+                df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
+                with open(results_file, "ab") as f_ptr:
+                    df.to_csv(f_ptr, header=False, index=False)
             print("====")
 
+def get_lock(new_lock):
+    global lock
+    lock = new_lock
+
+CHUNKS=2
+
+def threaded_synth_ucc_evaluation(max_qubits=30):
+    op_directory = "./datasets/pp_molecules/"
+    topo_kinds = ["line", "complete", "cycle"]
+    for topo_kind in topo_kinds:
+        results_directory = f"data/pauli/uccsd/{topo_kind}/"
+        results_file = os.path.join(results_directory, "results.csv")
+        os.makedirs(results_directory, exist_ok=True)
+        df = pd.DataFrame({c: [] for c in create_csv_header()})
+        with open(results_file, "wb") as f:
+            df.to_csv(f, header=create_csv_header(), index=False)
+    files = os.listdir(op_directory)
+    
+    total_len = len(topo_kinds) * len(files) * len(SYNTHESIS_METHODS.items())
+    arguments = zip(product(topo_kinds, files, SYNTHESIS_METHODS.items()), repeat((op_directory)))
+    lock = Lock()
+    n_workers = os.cpu_count() - 1
+    with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
+        for _ in tqdm.tqdm(p.imap_unordered(threaded_function, arguments, chunksize=CHUNKS), total=total_len/CHUNKS):
+            pass
+    p.join()
+
+def threaded_function(data):
+    exp_data, op_directory = data
+    topo_kind, filename, synthesis = exp_data
+    synth_name, synth_method = synthesis
+    
+    results_directory = f"data/pauli/uccsd/{topo_kind}/"
+    results_file = os.path.join(results_directory, "results.csv")
+        
+    name = filename.replace(".pickle", "")
+    pp_source_file = os.path.join(op_directory, filename)
+
+    with open(pp_source_file, "rb") as pickle_in:
+        pp = pickle.load(pickle_in)
+        pp = simplify_pauli_polynomial(pp, allow_acs=True)
+
+    n_qubits = pp.num_qubits
+
+    topo = get_topo_kind(topo_kind, n_qubits)
+    start = datetime.now()
+    count_dict = synth_method(pp, topo)
+    time_passed = (datetime.now() - start).total_seconds()
+    column = {
+        "name": name,
+        "num_qubits": n_qubits,
+        "n_gadgets": pp.num_gadgets,
+        "method": synth_name,
+        "time": time_passed,
+    } | count_dict
+
+    df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
+    lock.acquire()
+    with open(results_file, "ab") as f_ptr:
+        df.to_csv(f_ptr, header=False, index=False)
+    lock.release()
+
+def threaded_real_hw_ucc_evaluation(max_qubits=30):
+    op_directory = "./datasets/pp_molecules/"
+    files = os.listdir(op_directory)
+
+    results_directory = "data/pauli/uccsd/ibm/"
+    os.makedirs(results_directory, exist_ok=True)
+
+    results_file = os.path.join(results_directory, "results.csv")
+    df = pd.DataFrame({c: [] for c in create_csv_header_real_hw()})
+    with open(results_file, "wb") as f:
+        df.to_csv(f, header=create_csv_header_real_hw(), index=False)
+
+    total_len = len(files) * len(SYNTHESIS_METHODS.items())
+    
+    arguments = zip(product(files, SYNTHESIS_METHODS.items()), repeat((op_directory, results_file)))
+    lock = Lock()
+    n_workers = os.cpu_count() - 1
+    with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
+        for _ in tqdm.tqdm(p.imap_unordered(threaded_hw_function, arguments, chunksize=CHUNKS), total=total_len/CHUNKS):
+            pass
+    p.join()
+
+def threaded_hw_function(data):
+    exp_data, fixed_data = data
+    filename, (synth_name, synth_method) = exp_data
+    op_directory, results_file = fixed_data
+    path = os.path.join(op_directory, filename)
+    name = filename.replace(".pickle", "")
+
+    with open(path, "rb") as pickle_in:
+        pp = pickle.load(pickle_in)
+        pp = simplify_pauli_polynomial(pp, allow_acs=True)
+
+    n_qubits = pp.num_qubits
+
+    backend_name = get_suitable_ibm_backend(n_qubits)
+    backend, _ = get_backend_and_df_name(backend_name)
+
+    topo = Topology.from_qiskit_backend(backend)
+    pp_ = pad_pp_to_ibm_backend(pp, topo.num_qubits)
+
+    start = datetime.now()
+    count_dict = synth_method(pp_, topo)
+    time_passed = (datetime.now() - start).total_seconds()
+    column = {
+        "name": name,
+        "backend": backend_name,
+        "num_qubits": n_qubits,
+        "n_gadgets": pp.num_gadgets,
+        "method": synth_name,
+        "time": time_passed,
+    } | count_dict
+    
+    df = pd.DataFrame([{c: column[c] for c in create_csv_header_real_hw()}])
+    lock.acquire()
+    with open(results_file, "ab") as f_ptr:
+        df.to_csv(f_ptr, header=False, index=False)
+    lock.release()
 
 def fidelity_experiment_trotterisation():
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
@@ -522,6 +655,7 @@ def read_out_pps_tket_benchmarking():
 
 
 if __name__ == "__main__":
-    real_hw_ucc_evaluation()
-    # synth_ucc_evaluation()
+    # real_hw_ucc_evaluation()
+    threaded_real_hw_ucc_evaluation()
+    # threaded_synth_ucc_evaluation()
     # read_out_pps_tket_benchmarking()
