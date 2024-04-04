@@ -271,7 +271,7 @@ def operator_to_pp(operator, n_qubits, t=1):
 def synth_tket(operator, topo: Topology, method: PauliSynthStrat, n_qubits: int = None):
     if n_qubits is None:
         n_qubits = topo.num_qubits
-    print(n_qubits)
+
     initial_circ = pytket.Circuit(n_qubits)
     circuit = gen_term_sequence_circuit(operator, initial_circ)
 
@@ -519,12 +519,12 @@ def get_topo_kind(topo_kind, num_qubits):
 
 
 SYNTHESIS_METHODS = {
-    # "tket_uccs_set": synth_pp_tket_uccs_set,
-    # "tket_uccs_pair": synth_pp_tket_uccs_pair,
+    "tket_uccs_set": synth_pp_tket_uccs_set,
+    "tket_uccs_pair": synth_pp_tket_uccs_pair,
     "paulihedral": synth_pp_paulihedral,
-    # "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
+    "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
     "pauliopt_ucc": synth_pp_pauliopt_ucc,
-    # "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
+    "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
     "pauliopt_steiner_clifford": synth_pp_pauliopt_steiner_clifford,
     "naive": synth_pp_naive,
 }
