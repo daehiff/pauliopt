@@ -2,9 +2,16 @@ import warnings
 
 import qiskit
 from qiskit import transpile, QuantumCircuit
-from qiskit.circuit.library import PauliEvolutionGate
+
+# from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import random_clifford, Clifford
 
+from paulihedral import synthesis_SC
+from paulihedral.arch import load_coupling_map, dijkstra, pGraph, max_dist
+from paulihedral.benchmark import uccsd
+from paulihedral.benchmark.mypauli import pauliString
+from paulihedral.benchmark.offline import load_oplist
+from paulihedral.parallel_bl import depth_oriented_scheduling
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -230,9 +237,6 @@ def test_tableau_1002(n_qubits=6):
     )
 
 
-
-
-
 def test_steiner_gray_pauli(n_qubits=4, n_gadgets=100):
     topo = Topology.line(n_qubits)
 
@@ -242,8 +246,52 @@ def test_steiner_gray_pauli(n_qubits=4, n_gadgets=100):
     synthesizer.synthesize()
 
 
+def paulihedral_rep_from_paulipolynomial(pp: PauliPolynomial):
+    parr = []
+    for p_gadget in pp:
+        p_str = "".join([ps.value for ps in p_gadget.paulis])
+        p_string_ph = pauliString(p_str, coeff=float(p_gadget.angle))
+        parr.append([p_string_ph])
+    return parr
+
+
+def topology_to_ph_graph(topo: Topology, dist_comp=True):
+    n = topo.num_qubits
+    G = np.zeros((n, n))
+    C = np.ones((n, n)) * max_dist
+    for i in range(n):
+        C[i, i] = 0
+
+    for i, j in topo.couplings:
+        G[i, j] = 1
+        G[j, i] = 1
+
+        C[j, i] = 1
+        C[i, j] = 1
+
+    if dist_comp:
+        for i in range(n):
+            dijkstra(C, i)
+
+    return pGraph(G, C)
+
+
+def test_paulihedral(n_qubits=3, n_gadgets=10):
+    topo = Topology.line(n_qubits)
+    graph = topology_to_ph_graph(topo)
+
+    pp = generate_random_pauli_polynomial(n_qubits, n_gadgets)
+    parr = paulihedral_rep_from_paulipolynomial(pp)
+
+    lnq = len(parr[0][0])
+    length = lnq // 2
+    a1 = depth_oriented_scheduling(parr, length=length, maxiter=30)
+    qc = synthesis_SC.block_opt_SC(a1, graph=graph)
+    qc = transpile(qc, basis_gates=["cx", "h", "s", "sdg", "v", "vdg", "rz"])
+    print(qc.count_ops())
+
+
 if __name__ == "__main__":
-    for _ in range(1000):
-        test_tableau_1002(6)
-
-
+    test_paulihedral()
+    # for _ in range(1000):
+    #    test_tableau_1002(6)
