@@ -16,7 +16,8 @@ from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
-from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
+from pytket._tket.transform import Transform, PauliSynthStrat
+from pytket.circuit import CXConfigType
 
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
@@ -605,11 +606,17 @@ def create_csv_header():
     return header
 
 
+def get_lock(new_lock):
+    global lock
+    lock = new_lock
+
+
 def threaded_random_pauli_experiment(
     backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
 ):
     manager = Manager()
-    backend, output_csv = get_backend_and_df_name(backend_name, df_name=df_name)
+    backend, output_csv = get_backend_and_df_name(
+        backend_name, df_name=df_name)
 
     df = pd.DataFrame(
         columns=[
@@ -684,7 +691,8 @@ def threaded_random_pauli_experiment(
     with open(output_csv, "wb") as f:
         df.to_csv(f, header=create_csv_header(), index=False)
     print("Starting the pool with ", n_workers, "workers")
-    p = Pool(n_workers)
+    lock = Lock()
+    p = Pool(n_workers, initializer=get_lock, initargs=(lock,))
     for _ in range(n_workers):
         results = p.apply_async(pooled_function, [q])
     p.close()
@@ -728,10 +736,11 @@ def pooled_function(q: Queue):
             "time": time_passed,
             "method": synth_name,
         } | count_dict
-
+        lock.acquire()
         df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
         with open(output_csv, "ab") as f_ptr:
             df.to_csv(f_ptr, header=False, index=False)
+        lock.release()
 
 
 if __name__ == "__main__":
