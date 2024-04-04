@@ -21,7 +21,7 @@ class pNode:
         # self.child = []
         self.idx = idx
         self.adj = []
-        self.lqb = None  # logical qubit
+        self.lqb = idx#None  # logical qubit
         # self.parent = []
 
     def add_adjacent(self, idx):

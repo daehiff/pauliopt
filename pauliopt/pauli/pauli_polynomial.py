@@ -87,7 +87,8 @@ class PauliPolynomial:
     def __irshift__(self, gadget: PauliGadget):
         if not len(gadget) == self.num_qubits:
             raise Exception(
-                f"Pauli Polynomial has {self.num_qubits}, but Pauli gadget has: {len(gadget)}"
+                f"Pauli Polynomial has {self.num_qubits} qubits, but Pauli gadget has: "
+                f"{len(gadget)} qubits"
             )
         self.append_pauli_gadget(gadget)
         return self

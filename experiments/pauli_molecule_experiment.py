@@ -21,6 +21,7 @@ from sympy import Symbol
 from experiments.pauli_experiment import (
     term_sequence_tket,
     SYNTHESIS_METHODS,
+    get_backend_and_df_name,
 )
 from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
@@ -244,6 +245,22 @@ def create_csv_header():
     return header
 
 
+def create_csv_header_real_hw():
+    header = [
+        "name",
+        "backend",
+        "num_qubits",
+        "n_gadgets",
+        "method",
+        "cx",
+        "u3",
+        "depth",
+        "2q_depth",
+        "time",
+    ]
+    return header
+
+
 def get_suitable_ibm_backend(n_qubits):
     available_backends = [
         ("quito", 5),
@@ -257,44 +274,69 @@ def get_suitable_ibm_backend(n_qubits):
     available_backends = list(sorted(available_backends, key=lambda x: x[1]))
 
     for name, backend_qubits in available_backends:
-        if backend_qubits <= n_qubits:
+        if backend_qubits >= n_qubits:
             return name
 
     raise Exception(f"No backend with: {n_qubits} in list: {available_backends}")
 
-def pad_pp_to_ibm_backend(pp, n_qubits):
+
+def pad_pp_to_ibm_backend(pp: PauliPolynomial, n_qubits):
     pp_ = PauliPolynomial(n_qubits)
 
     pp_qubits = pp.num_qubits
 
-    identity_pad = [I for _ in range(n_qubits-pp_qubits)]
-    pass
+    identity_pad = [I for _ in range(n_qubits - pp_qubits)]
+
+    for gadget in pp:
+        assert isinstance(gadget, PauliGadget)
+        angle = gadget.angle
+        paulis = gadget.paulis + identity_pad
+
+        pp_ >>= PauliGadget(angle, paulis)
+    return pp_
 
 
-def real_hw_ucc_evaluation(max_qubits=15):
+def real_hw_ucc_evaluation(max_qubits=7):
     logger = get_logger("real_hw_ucc_evaluation")
     op_directory = f"./datasets/pp_molecules/"
-    for encoding_name in ["P", "BK", "JW"]:
-        for filename in os.listdir(op_directory):
-            results_file = f"data/pauli/uccsd/ibm/{encoding_name}_results.csv"
-            df = pd.DataFrame({c: [] for c in create_csv_header()})
+    for filename in os.listdir(op_directory):
+        results_file = f"data/pauli/uccsd/ibm/results.csv"
+        df = pd.DataFrame({c: [] for c in create_csv_header_real_hw()})
 
-            for filename in os.listdir(op_directory):
-                name = filename.replace(".pickle", "")
-                logger.info(name)
-                path = op_directory + "/" + filename
-                with open(path, "rb") as pickle_in:
-                    pp = pickle.load(pickle_in)
-                    pp = simplify_pauli_polynomial(pp, allow_acs=True)
+        name = filename.replace(".pickle", "")
+        logger.info(name)
+        path = op_directory + "/" + filename
+        with open(path, "rb") as pickle_in:
+            pp = pickle.load(pickle_in)
+            pp = simplify_pauli_polynomial(pp, allow_acs=True)
 
-                n_qubits = pp.num_qubits
-                if n_qubits >= max_qubits:
-                    continue
+        n_qubits = pp.num_qubits
+        if n_qubits >= max_qubits:
+            continue
 
-                backend_name = get_suitable_ibm_backend(n_qubits)
+        backend_name = get_suitable_ibm_backend(n_qubits)
+        logger.info(f"Used {backend_name} with {n_qubits} on the PP")
+        backend, _ = get_backend_and_df_name(backend_name)
 
+        topo = Topology.from_qiskit_backend(backend)
+        pp_ = pad_pp_to_ibm_backend(pp, topo.num_qubits)
 
-
+        for synth_name, synth_method in SYNTHESIS_METHODS.items():
+            start = datetime.now()
+            count_dict = synth_method(pp_, topo)
+            time_passed = (datetime.now() - start).total_seconds()
+            column = {
+                "name": name,
+                "backend": backend_name,
+                "num_qubits": n_qubits,
+                "n_gadgets": pp.num_gadgets,
+                "method": synth_name,
+                "time": time_passed,
+            } | count_dict
+            print(column)
+            new_row = pd.DataFrame([{c: column[c] for c in create_csv_header_real_hw()}])
+            df = pd.concat([df, new_row], ignore_index=True)
+            df.to_csv(results_file)
 
 def synth_ucc_evaluation(max_qubits=7):
     logger = get_logger("synth_ucc_evaluation")
@@ -480,5 +522,6 @@ def read_out_pps_tket_benchmarking():
 
 
 if __name__ == "__main__":
-    synth_ucc_evaluation()
+    real_hw_ucc_evaluation()
+    # synth_ucc_evaluation()
     # read_out_pps_tket_benchmarking()
