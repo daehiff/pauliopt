@@ -1,6 +1,6 @@
 import itertools
 import logging
-import os, sys
+import os, sys, signal
 import pickle
 import shutil
 from numbers import Number
@@ -17,7 +17,7 @@ from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
 from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
-# from pytket.circuit import CXConfigType
+#from pytket.circuit import CXConfigType
 
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
@@ -40,7 +40,6 @@ from multiprocessing import Pool, Manager, Queue, Lock
 from itertools import product, repeat
 import json
 import networkx as nx
-
 
 def get_2q_depth(qc: QuantumCircuit):
     return qc.depth(lambda inst: inst.operation.name == "cx")
@@ -403,7 +402,6 @@ def get_ops_count(qc: QuantumCircuit):
     count["2q_depth"] = get_2q_depth(qc)
     return count
 
-
 BASE_PATH = "tket_benchmarking/compilation_strategy"
 
 
@@ -599,6 +597,7 @@ def create_csv_header():
         "n_gadgets",
         "method",
         "cx",
+        "u3",
         "depth",
         "2q_depth",
         "time",
@@ -612,26 +611,12 @@ def get_lock(new_lock):
 
 
 def threaded_random_pauli_experiment(
-    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
+    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random", n_gadgets=None
 ):
+    print("----------------------------------","Experiment", backend_name, "----------------------------------")
     manager = Manager()
     backend, output_csv = get_backend_and_df_name(
         backend_name, df_name=df_name)
-
-    df = pd.DataFrame(
-        columns=[
-            "n_rep",
-            "num_qubits",
-            "n_gadgets",
-            "method",
-            "h",
-            "s",
-            "cx",
-            "time",
-            "depth",
-            "2q_depth",
-        ]
-    )
     circuit_folder = "datasets/pauli_experiments/"
     naive_circuit_folder = "datasets/pauli_experiments/naive_circuits/"
     topo_folder = os.path.join(circuit_folder, backend_name)
@@ -639,33 +624,32 @@ def threaded_random_pauli_experiment(
     os.makedirs(topo_folder, exist_ok=True)
     os.makedirs(circuit_topo_folder, exist_ok=True)
 
-    gadget_iter = range(1, nr_input_gates, nr_steps)
+    if n_gadgets:
+        gadget_iter = n_gadgets
+    else:
+        gadget_iter = range(1, nr_input_gates, nr_steps)
     exp_iter = range(20)
     synth = SYNTHESIS_METHODS.items()
+    n_workers = os.cpu_count() -1
 
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
         num_qubits = int(backend_name.split("_")[1])
 
-    print("Synthesizing all PauliPolynomials")
+    print("Synthesizing all", len(gadget_iter)*len(exp_iter), "PauliPolynomials")
+    generation_p = Pool(n_workers)
     pp_dict = manager.dict()
+    generation_q = manager.Queue()
     for num_gadgets, i in product(gadget_iter, exp_iter):
-        pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
-        pp = simplify_pauli_polynomial(pp, allow_acs=True)
-        pp_dict[(num_qubits, i, num_gadgets)] = pp
-
-        circuit_file = os.path.join(
-            topo_folder, f"pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
-        )
-        naive_circuit = os.path.join(
-            circuit_topo_folder, f"nc_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
-        )
-
-        with open(circuit_file, "wb") as handle:
-            pickle.dump(pp, handle)
+        generation_q.put((num_qubits, num_gadgets, i, topo_folder, backend_name, pp_dict))
+    print("Starting a task Queue of length", generation_q.qsize(), "on", n_workers, "workers")
+    for _ in range(n_workers):
+        generation_p.apply(pooled_generation, [generation_q])
+    generation_p.close()
+    generation_p.join()
     print(
-        "Done synthesizing",
+        "\nDone synthesizing",
         len(pp_dict),
         "PauliPolynomials of size",
         get_size(pp_dict),
@@ -683,10 +667,9 @@ def threaded_random_pauli_experiment(
     for args in arguments:
         q.put(args)
     original_size = q.qsize()
-    n_workers = os.cpu_count() * 2
     print("Created task Queue on length", original_size)
 
-    print("Creating csv fill at", datetime.now())
+    print("Creating csv file at", datetime.now())
     df = pd.DataFrame({c: [] for c in create_csv_header()})
     with open(output_csv, "wb") as f:
         df.to_csv(f, header=create_csv_header(), index=False)
@@ -697,10 +680,42 @@ def threaded_random_pauli_experiment(
         results = p.apply_async(pooled_function, [q])
     p.close()
     p.join()
+    print("")
     if not q.empty():
         print("Something went wrong, Queue is not empty", q.qsize())
     print("Done")
 
+def pooled_generation(q:Queue):
+    OVERWRITE_FILES = False
+    while True:
+        q.qsize() % 10 == 0 and print(".", end="", flush=True)
+        try:
+            q_data = q.get(timeout=10)
+            if q_data is None:
+                return
+        except:  # Q is empty
+            return
+        num_qubits, num_gadgets, i, topo_folder, backend_name, pp_dict = q_data 
+        circuit_file = os.path.join(
+                    topo_folder, f"pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
+                )
+        pp = None
+        if not OVERWRITE_FILES and os.path.exists(circuit_file):
+            try:
+                with open(circuit_file, "rb") as handle:
+                    pp = pickle.load(handle)
+            except:
+                pp = None
+        if pp is None:
+            pp = create_random_pauli_polynomial(num_qubits, num_gadgets)
+            pp = simplify_pauli_polynomial(pp, allow_acs=True)
+            with open(circuit_file, "wb") as handle:
+                pickle.dump(pp, handle)
+        pp_dict[(num_qubits, i, num_gadgets)] = pp
+
+
+def timeout_handler(*args):
+    raise TimeoutError()
 
 def pooled_function(q: Queue):
     while True:
@@ -726,7 +741,15 @@ def pooled_function(q: Queue):
         pp = pp_dict[(num_qubits, i, num_gadgets)]
 
         start = datetime.now()
-        count_dict = synth_method(pp, topo)
+
+        try:
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(30*60)
+            count_dict = synth_method(pp, topo)
+            signal.alarm(0) # Turn of the alarm.
+        except TimeoutError:
+            print("Skipping", *exp_data, flush=True)
+            continue # Method failed
         time_passed = (datetime.now() - start).total_seconds()
 
         column = {
@@ -743,13 +766,13 @@ def pooled_function(q: Queue):
             df.to_csv(f_ptr, header=False, index=False)
         lock.release()
 
-
 if __name__ == "__main__":
     df_name = "data/pauli/random/random"
     print("Experiment: quito")
     threaded_random_pauli_experiment(
         backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
     )
+    
     print("Experiment: complete_5")
     threaded_random_pauli_experiment(
         backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
@@ -763,20 +786,22 @@ if __name__ == "__main__":
     threaded_random_pauli_experiment(
         backend_name="complete_7", nr_input_gates=300, nr_steps=20, df_name=df_name
     )
-
+    
     print("Experiment: guadalupe")
     threaded_random_pauli_experiment(
         backend_name="guadalupe", nr_input_gates=400, nr_steps=20, df_name=df_name
     )
+    
     print("Experiment: complete_16")
     threaded_random_pauli_experiment(
         backend_name="complete_16", nr_input_gates=400, nr_steps=20, df_name=df_name
     )
-
+    
     print("Experiment: mumbai")
     threaded_random_pauli_experiment(
         backend_name="mumbai", nr_input_gates=800, nr_steps=40, df_name=df_name
     )
+    
     print("Experiment: complete_27")
     threaded_random_pauli_experiment(
         backend_name="complete_27", nr_input_gates=800, nr_steps=40, df_name=df_name
