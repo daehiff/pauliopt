@@ -10,7 +10,6 @@ from numbers import Number
 import tqdm
 
 
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import qiskit.quantum_info
@@ -32,7 +31,6 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar, Angle
-
 
 
 def get_2q_depth(qc: QuantumCircuit):
@@ -66,7 +64,8 @@ def create_random_phase_gadget(
         allowed_legs = [X, Y, Z]
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
-    legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
+    legs = np.random.choice(
+        [i for i in range(num_qubits)], size=nr_legs, replace=False)
     phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
         phase_gadget[leg] = np.random.choice(allowed_legs)
@@ -283,7 +282,8 @@ def get_suitable_ibm_backend(n_qubits):
         if backend_qubits >= n_qubits:
             return name
 
-    raise Exception(f"No backend with: {n_qubits} in list: {available_backends}")
+    raise Exception(
+        f"No backend with: {n_qubits} in list: {available_backends}")
 
 
 def pad_pp_to_ibm_backend(pp: PauliPolynomial, n_qubits):
@@ -301,9 +301,11 @@ def pad_pp_to_ibm_backend(pp: PauliPolynomial, n_qubits):
         pp_ >>= PauliGadget(angle, paulis)
     return pp_
 
+
 def get_lock(new_lock):
     global lock
     lock = new_lock
+
 
 def real_hw_ucc_evaluation(max_qubits=30):
     logger = get_logger("real_hw_ucc_evaluation")
@@ -345,9 +347,11 @@ def real_hw_ucc_evaluation(max_qubits=30):
                 "time": time_passed,
             } | count_dict
             print(column)
-            new_row = pd.DataFrame([{c: column[c] for c in create_csv_header_real_hw()}])
+            new_row = pd.DataFrame(
+                [{c: column[c] for c in create_csv_header_real_hw()}])
             df = pd.concat([df, new_row], ignore_index=True)
             df.to_csv(results_file)
+
 
 def synth_ucc_evaluation(max_qubits=30):
     logger = get_logger("synth_ucc_evaluation")
@@ -385,16 +389,20 @@ def synth_ucc_evaluation(max_qubits=30):
                     "time": time_passed,
                 } | count_dict
 
-                df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
+                df = pd.DataFrame([{c: column[c]
+                                  for c in create_csv_header()}])
                 with open(results_file, "ab") as f_ptr:
                     df.to_csv(f_ptr, header=False, index=False)
             print("====")
+
 
 def get_lock(new_lock):
     global lock
     lock = new_lock
 
-CHUNKS=2
+
+CHUNKS = 2
+
 
 def threaded_synth_ucc_evaluation(max_qubits=30):
     op_directory = "./datasets/pp_molecules/"
@@ -407,24 +415,31 @@ def threaded_synth_ucc_evaluation(max_qubits=30):
         with open(results_file, "wb") as f:
             df.to_csv(f, header=create_csv_header(), index=False)
     files = os.listdir(op_directory)
-    
+
     total_len = len(topo_kinds) * len(files) * len(SYNTHESIS_METHODS.items())
-    arguments = zip(product(topo_kinds, files, SYNTHESIS_METHODS.items()), repeat((op_directory)))
+    arguments = zip(product(topo_kinds, files,
+                    SYNTHESIS_METHODS.items()), repeat((op_directory)))
     lock = Lock()
     n_workers = os.cpu_count() - 1
     with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
-        for _ in tqdm.tqdm(p.imap_unordered(threaded_function, arguments, chunksize=CHUNKS), total=total_len/CHUNKS):
-            pass
+        imap_iter = p.imap_unordered(threaded_function, arguments, chunksize=1)
+        for i in tqdm.tqdm(arguments, total=total_len):
+            try:
+                imap_iter.next(timeout=480)
+            except:
+                print(f"Didn't run {i}")
+
     p.join()
+
 
 def threaded_function(data):
     exp_data, op_directory = data
     topo_kind, filename, synthesis = exp_data
     synth_name, synth_method = synthesis
-    
+
     results_directory = f"data/pauli/uccsd/{topo_kind}/"
     results_file = os.path.join(results_directory, "results.csv")
-        
+
     name = filename.replace(".pickle", "")
     pp_source_file = os.path.join(op_directory, filename)
 
@@ -452,6 +467,7 @@ def threaded_function(data):
         df.to_csv(f_ptr, header=False, index=False)
     lock.release()
 
+
 def threaded_real_hw_ucc_evaluation(max_qubits=30):
     op_directory = "./datasets/pp_molecules/"
     files = os.listdir(op_directory)
@@ -465,14 +481,16 @@ def threaded_real_hw_ucc_evaluation(max_qubits=30):
         df.to_csv(f, header=create_csv_header_real_hw(), index=False)
 
     total_len = len(files) * len(SYNTHESIS_METHODS.items())
-    
-    arguments = zip(product(files, SYNTHESIS_METHODS.items()), repeat((op_directory, results_file)))
+
+    arguments = zip(product(files, SYNTHESIS_METHODS.items()),
+                    repeat((op_directory, results_file)))
     lock = Lock()
     n_workers = os.cpu_count() - 1
     with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
         for _ in tqdm.tqdm(p.imap_unordered(threaded_hw_function, arguments, chunksize=CHUNKS), total=total_len/CHUNKS):
             pass
     p.join()
+
 
 def threaded_hw_function(data):
     exp_data, fixed_data = data
@@ -504,12 +522,13 @@ def threaded_hw_function(data):
         "method": synth_name,
         "time": time_passed,
     } | count_dict
-    
+
     df = pd.DataFrame([{c: column[c] for c in create_csv_header_real_hw()}])
     lock.acquire()
     with open(results_file, "ab") as f_ptr:
         df.to_csv(f_ptr, header=False, index=False)
     lock.release()
+
 
 def fidelity_experiment_trotterisation():
     with open(f"{BASE_PATH}/orbital_lut.txt") as json_file:
@@ -543,15 +562,18 @@ def fidelity_experiment_trotterisation():
                 operator = pickle.load(pickle_in)
 
             topo = Topology.complete(n_qubits)
-            summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
+            summed_pauli_operator = operator_to_summed_pauli_op(
+                operator, n_qubits)
 
             pp = summed_pauli_to_pp(summed_pauli_operator, n_qubits, t)
 
-            evolution_op = (t / 2.0 * summed_pauli_operator).exp_i().to_matrix()
+            evolution_op = (
+                t / 2.0 * summed_pauli_operator).exp_i().to_matrix()
 
             # qiskit.quantum_info.Operator(evolution_op)
             U_expected = evolution_op
-            synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
+            synthesizer = PauliSynthesizer(
+                pp, SynthMethod.STEINER_GRAY_NC, topo)
             synthesizer.synthesize()
             U_ours = synthesizer.get_operator()
             steiner_fid = process_fidelity(U_ours, target=U_expected)
@@ -656,6 +678,6 @@ def read_out_pps_tket_benchmarking():
 
 if __name__ == "__main__":
     # real_hw_ucc_evaluation()
-    threaded_real_hw_ucc_evaluation()
-    # threaded_synth_ucc_evaluation()
+    # threaded_real_hw_ucc_evaluation()
+    threaded_synth_ucc_evaluation()
     # read_out_pps_tket_benchmarking()
