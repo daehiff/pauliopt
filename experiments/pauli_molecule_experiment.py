@@ -425,7 +425,7 @@ def threaded_synth_ucc_evaluation(max_qubits=30):
         imap_iter = p.imap_unordered(threaded_function, arguments, chunksize=1)
         for i in tqdm.tqdm(arguments, total=total_len):
             try:
-                imap_iter.next(timeout=480)
+                imap_iter.next(timeout=30*60)
             except:
                 print(f"Didn't run {i}")
 
