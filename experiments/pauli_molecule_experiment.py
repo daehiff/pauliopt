@@ -5,7 +5,7 @@ import os
 import pickle
 import shutil
 from datetime import datetime
-from multiprocessing import Lock, Pool
+from multiprocess import Lock, Pool
 from numbers import Number
 import tqdm
 
@@ -31,6 +31,8 @@ from pauliopt.pauli.pauli_gadget import PPhase
 from pauliopt.pauli.pauli_polynomial import *
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
 from pauliopt.utils import pi, AngleVar, Angle
+
+import signal
 
 
 def get_2q_depth(qc: QuantumCircuit):
@@ -396,6 +398,30 @@ def synth_ucc_evaluation(max_qubits=30):
             print("====")
 
 
+TIMEOUT = 60*30
+
+
+def signal_handler(signum, frame):
+    raise TimeoutError("Timed out!")
+
+
+def time_out(func):
+    def wrapper(data):
+        try:
+            signal.signal(signal.SIGALRM, signal_handler)
+            signal.alarm(TIMEOUT)
+            func(data)
+        except Exception as e:
+            exp_data, _ = data
+            synthesis = exp_data[-1]
+            synth_name, _ = synthesis
+
+            print(f"{synth_name} failed")
+            return
+
+    return wrapper
+
+
 def get_lock(new_lock):
     global lock
     lock = new_lock
@@ -422,16 +448,13 @@ def threaded_synth_ucc_evaluation(max_qubits=30):
     lock = Lock()
     n_workers = os.cpu_count() - 1
     with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
-        imap_iter = p.imap_unordered(threaded_function, arguments, chunksize=1)
-        for i in tqdm.tqdm(arguments, total=total_len):
-            try:
-                imap_iter.next(timeout=30*60)
-            except:
-                print(f"Didn't run {i}")
+        for _ in tqdm.tqdm(p.imap_unordered(threaded_function, arguments, chunksize=1), total=total_len):
+            pass
 
     p.join()
 
 
+@time_out
 def threaded_function(data):
     exp_data, op_directory = data
     topo_kind, filename, synthesis = exp_data
@@ -487,11 +510,12 @@ def threaded_real_hw_ucc_evaluation(max_qubits=30):
     lock = Lock()
     n_workers = os.cpu_count() - 1
     with Pool(n_workers, initializer=get_lock, initargs=(lock,)) as p:
-        for _ in tqdm.tqdm(p.imap_unordered(threaded_hw_function, arguments, chunksize=CHUNKS), total=total_len/CHUNKS):
+        for _ in tqdm.tqdm(p.imap_unordered(threaded_hw_function, arguments, chunksize=1), total=total_len):
             pass
     p.join()
 
 
+@time_out
 def threaded_hw_function(data):
     exp_data, fixed_data = data
     filename, (synth_name, synth_method) = exp_data
