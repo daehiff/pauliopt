@@ -310,7 +310,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         # find new identities on `row` in `col_rest` and
         col_i, col_rest_4 = identity_partition_pauli_polynomial(pp, row, col_rest_3)
         # immediately recurse removing `row`
-        qc_i_re, qc_prop_i_re = identity_recurse(col_i, remaining_qubits)
+        qc_i_re, qc_prop_i_re = identity_recurse(col_i_swap+col_i, remaining_qubits)
         qc_out += qc_i_re
 
         propagate_circuit(pp, qc_prop_i_re, col_rest_4)
