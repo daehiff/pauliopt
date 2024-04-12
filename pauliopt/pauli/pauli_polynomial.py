@@ -136,6 +136,12 @@ class PauliPolynomial:
     def append_pauli_gadget(self, pauli_gadget):
         self.pauli_gadgets.append(pauli_gadget)
 
+
+    def assign_time(self, time):
+        for gadet in self.pauli_gadgets:
+            assert isinstance(gadet, PauliGadget)
+            gadet.assign_time(time)
+
     def to_qiskit(self, topology=None, time=1):
         num_qubits = self.num_qubits
         if topology is None:

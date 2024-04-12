@@ -443,9 +443,6 @@ def optimal_remove_signs(
             apply(qc, remaining, "S", (col,))
 
 
-def optimal_pivot_removal(qc, remaining, apply, pivot):
-    pass
-
 
 class CliffordTableau:
     def __init__(

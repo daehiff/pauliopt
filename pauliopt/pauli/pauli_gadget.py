@@ -7,7 +7,7 @@ import numpy as np
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.utils import Pauli, X, Y, Z, I
 from pauliopt.topologies import Topology
-from pauliopt.utils import AngleExpr
+from pauliopt.utils import AngleExpr, Angle
 
 
 def decompose_cnot_ladder_z(ctrl: int, trg: int, arch: Topology):
@@ -204,7 +204,10 @@ class PauliGadget:
                 circ.cx(pauli_idx, target)
         else:
             target = np.argmax(column_binary)
-            circ.rz(self.angle * time, target)
+            if isinstance(self.angle, Angle):
+                circ.rz(self.angle.to_qiskit * time, target)
+            else:
+                circ.rz(float(self.angle), target)
 
         for pauli_idx in range(len(column)):
             if column[pauli_idx] == Pauli.I:
@@ -225,3 +228,6 @@ class PauliGadget:
     def permute(self, permutation: dict):
         for k, v in permutation.items():
             self.paulis[k], self.paulis[v] = self.paulis[v], self.paulis[k]
+
+    def assign_time(self, time):
+        self.angle = self.angle.to_qiskit*time
