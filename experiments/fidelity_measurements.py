@@ -10,7 +10,7 @@ from pytket.extensions.qiskit import tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit
 from qiskit.quantum_info import process_fidelity, state_fidelity, DensityMatrix
 
-from experiments.pauli_experiment import pp_to_operator, synth_tket
+from pauli_experiment import pp_to_operator, synth_tket
 from pauliopt.pauli.pauli_gadget import PauliGadget, PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import Pauli as Pauliopt_Pauli, apply_permutation
@@ -83,14 +83,14 @@ def pp_to_summed_pauli_op(pp: PauliPolynomial):
 def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
     fid = []
 
+    ket_zero = np.zeros((2**pp.num_qubits,))
+    ket_zero[0] = 1.0
+
     for t in np.linspace(t_start, t_end, t_steps):
         pp_ = pp.copy()
 
         t = float(t)
         pp_.assign_time(t)
-        print(t)
-        print(pp_)
-        print(pp)
 
         topo = Topology.complete(pp.num_qubits)
         if algorithm == "PSGS":
@@ -114,10 +114,16 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
             raise Exception(f"Unknown Method: {algorithm}")
 
         H = pp_to_summed_pauli_op(pp_)
-        U_expected = (t / 2.0 * H).exp_i()
+        U_expected = (t / 2.0 * H).exp_i().to_matrix()
+        U_circ = qiskit.quantum_info.Operator.from_circuit(circ_out).data
 
-        fidelity = process_fidelity(circ_out, target=U_expected)
-        fid.append(fidelity)
+        overlap = np.abs(ket_zero.conj().T @ U_circ.conj().T @ U_expected @ ket_zero)
+        # print(overlap)
+
+        # fidelity = process_fidelity(circ_out, target=U_expected)
+        # print(fidelity)
+        # print("===")
+        fid.append(overlap)
     return fid
 
 
@@ -132,7 +138,7 @@ def get_pp_save_path(i, n_qubits, n_gadgets):
 def run_fidelity_experiment(
     algorithm, n_qubits, n_gadgets, t_start=0.0, t_end=2 * np.pi, t_steps=100
 ):
-    allowed_angels = [pi / 4, pi / 8, pi / 16]
+    allowed_angels = [pi / 16, pi / 32, pi / 64]
 
     all_fidelities = []
 
@@ -201,7 +207,9 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
                 get_fidelities(pp, algorithm, t_start, t_end, t_steps)
             )
 
-            save_path_data = f"data/fidelity_experiments/results/{molecule_name}_{algorithm}"
+            save_path_data = (
+                f"data/fidelity_experiments/results/{molecule_name}_{algorithm}"
+            )
 
             np.save(save_path_data, all_fidelities)
         print(pp.num_qubits)
@@ -209,17 +217,17 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
 
 
 if __name__ == "__main__":
-    molecule_fidelity_experiment()
+    # molecule_fidelity_experiment()
 
-    #run_fidelity_experiment("PSGS", 6, 160)
-    #run_fidelity_experiment("default", 6, 160)
-    #run_fidelity_experiment("UCCSD", 6, 160)
+    run_fidelity_experiment("PSGS", 6, 160)
+    run_fidelity_experiment("default", 6, 160)
+    run_fidelity_experiment("UCCSD", 6, 160)
 
-    #run_fidelity_experiment("PSGS", 10, 630)
-    #run_fidelity_experiment("default", 10, 630)
-    #run_fidelity_experiment("UCCSD", 10, 630)
+    # run_fidelity_experiment("PSGS", 10, 630)
+    # run_fidelity_experiment("default", 10, 630)
+    # run_fidelity_experiment("UCCSD", 10, 630)
 
-    # plot_fidelites(["PSGS", "default", "UCCSD"], 3, 20)
+    plot_fidelites(["PSGS"], 3, 160)
     # T = np.random.randn(100, 10) + np.linspace(0, 10, 100).reshape(-1, 1)
     # print(T.shape)
     # main()
