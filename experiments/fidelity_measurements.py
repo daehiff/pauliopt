@@ -223,11 +223,11 @@ if __name__ == "__main__":
     run_fidelity_experiment("default", 6, 160)
     run_fidelity_experiment("UCCSD", 6, 160)
 
-    # run_fidelity_experiment("PSGS", 10, 630)
-    # run_fidelity_experiment("default", 10, 630)
-    # run_fidelity_experiment("UCCSD", 10, 630)
+    #run_fidelity_experiment("PSGS", 10, 630)
+    #run_fidelity_experiment("default", 10, 630)
+    #run_fidelity_experiment("UCCSD", 10, 630)
 
-    plot_fidelites(["PSGS"], 3, 160)
+    #plot_fidelites(["PSGS"], 3, 160)
     # T = np.random.randn(100, 10) + np.linspace(0, 10, 100).reshape(-1, 1)
     # print(T.shape)
     # main()

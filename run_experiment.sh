@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd experiments/
-python -u clifford_experiment.py
+python -u fidelity_measurements.py 
