@@ -160,6 +160,10 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
         pp = pickle.load(f)
 
     fids = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
+    np.save(
+        f"{get_save_path(n_qubits, n_gadgets, algorithm)}_{i}.npy",
+        np.asarray(fids),
+    )
     print(i, "Done", time.time() - start)
     return fids
 
@@ -265,8 +269,8 @@ def generate_pps(n_qubits, n_gadgets):
 
 
 if __name__ == "__main__":
-    #generate_pps(6, 160)
-    #generate_pps(10, 630)
+    # generate_pps(6, 160)
+    # generate_pps(10, 630)
 
     run_pp_experiments()
 
