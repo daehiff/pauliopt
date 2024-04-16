@@ -154,26 +154,17 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
     t_start = 0.0
     t_end = 2 * np.pi
     t_steps = 50
-    allowed_angels = [pi / 32, pi / 64, pi / 128]
     save_path = f"{get_pp_save_path(i, n_qubits, n_gadgets)}.pickle"
-    if not os.path.isfile(save_path):
-        pp = generate_random_pauli_polynomial(
-            n_qubits, n_gadgets, allowed_angels=allowed_angels
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(pp, f)
-    else:
-        with open(save_path, "rb") as f:
-            pp = pickle.load(f)
+    assert os.path.isfile(save_path)
+    with open(save_path, "rb") as f:
+        pp = pickle.load(f)
 
     fids = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
     print(i, "Done", time.time() - start)
     return fids
 
 
-def run_fidelity_experiment(
-    algorithm, n_qubits, n_gadgets
-):
+def run_fidelity_experiment(algorithm, n_qubits, n_gadgets):
     args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
     with Pool(os.cpu_count()) as p:
@@ -253,26 +244,31 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
         print(pp.num_gadgets)
 
 
-if __name__ == "__main__":
-
+def run_pp_experiments():
     algorithm = os.getenv("ALG")
     qubits = int(os.getenv("QUBITS"))
     gadgets = int(os.getenv("GADGETS"))
     print("Running: ", algorithm, qubits, gadgets)
     run_fidelity_experiment(algorithm, qubits, gadgets)
-    # run_fidelity_experiment("default", 6, 160)
-    # run_fidelity_experiment("UCCSD", 6, 160)
-    # run_fidelity_experiment("paulihedral", 6, 160)
 
-    # run_fidelity_experiment("PSGS", 10, 630)
-    # run_fidelity_experiment("default", 10, 630)
-    # run_fidelity_experiment("UCCSD", 10, 630)
-    # run_fidelity_experiment("paulihedral", 10, 630)
 
-    # run_fidelity_experiment("default", 10, 630)
+def generate_pps(n_qubits, n_gadgets):
+    allowed_angels = [pi / 32, pi / 64, pi / 128]
+    for i in range(20):
+        save_path = f"{get_pp_save_path(i, n_qubits, n_gadgets)}.pickle"
+        if not os.path.isfile(save_path):
+            pp = generate_random_pauli_polynomial(
+                n_qubits, n_gadgets, allowed_angels=allowed_angels
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(pp, f)
+
+
+if __name__ == "__main__":
+    #generate_pps(6, 160)
+    #generate_pps(10, 630)
+
+    run_pp_experiments()
 
     # plot_fidelites(["PSGS", "default", "UCCSD"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
-    # T = np.random.randn(100, 10) + np.linspace(0, 10, 100).reshape(-1, 1)
-    # print(T.shape)
-    # main()
