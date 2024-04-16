@@ -3,18 +3,17 @@ import pickle
 import time
 from multiprocessing import Pool
 
+import numpy as np
 import pytket
 import qiskit.quantum_info
-import scipy
+import seaborn as sns
 from matplotlib import pyplot as plt
-from pytket._tket.transform import PauliSynthStrat, Transform
+from pytket._tket.transform import Transform
 from pytket.extensions.qiskit import tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit
-from qiskit.quantum_info import process_fidelity, state_fidelity, DensityMatrix
 
 from pauli_experiment import (
     pp_to_operator,
-    synth_tket,
     topology_to_ph_graph,
     paulihedral_rep_from_paulipolynomial,
 )
@@ -22,10 +21,8 @@ from paulihedral import synthesis_SC
 from paulihedral.parallel_bl import depth_oriented_scheduling
 from pauliopt.pauli.pauli_gadget import PauliGadget, PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
-from pauliopt.pauli.utils import Pauli as Pauliopt_Pauli, apply_permutation
-import numpy as np
-
 from pauliopt.pauli.synthesis import PauliSynthesizer, SynthMethod
+from pauliopt.pauli.utils import Pauli as Pauliopt_Pauli, apply_permutation
 from pauliopt.topologies import Topology
 from pauliopt.utils import pi
 
@@ -121,7 +118,7 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
             circ_out = pp_.to_qiskit(time=t)
         elif algorithm == "paulihedral":
             graph = topology_to_ph_graph(topo)
-            parr = paulihedral_rep_from_paulipolynomial(pp)
+            parr = paulihedral_rep_from_paulipolynomial(pp_)
 
             lnq = len(parr[0][0])
             length = lnq // 2
@@ -195,13 +192,13 @@ def run_fidelity_experiment_molecule(
 
 
 def plot_fidelites(
-    algorithms, n_qubits, n_gadgets, t_start=0.0, t_end=2 * np.pi, t_steps=100, p=90
+    algorithms, n_qubits, n_gadgets, t_start=0.0, t_end=2 * np.pi, t_steps=50, p=90
 ):
     plt.rcParams.update(
         {"text.usetex": True, "font.family": "sans-serif", "font.size": 11}
     )
 
-    colors = ["red", "blue", "green"]
+    colors = colorblind_colors = sns.color_palette("colorblind").as_hex()
 
     for color, algorithm in zip(colors, algorithms):
         all_fidelities = np.load(f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy")
@@ -272,7 +269,7 @@ if __name__ == "__main__":
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    run_pp_experiments()
+    # run_pp_experiments()
 
-    # plot_fidelites(["PSGS", "default", "UCCSD"], 6, 160)
+    plot_fidelites(["PSGS", "default", "UCCSD", "paulihedral"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
