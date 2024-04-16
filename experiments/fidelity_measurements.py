@@ -1,5 +1,7 @@
 import os
 import pickle
+import time
+from multiprocessing import Pool
 
 import pytket
 import qiskit.quantum_info
@@ -10,7 +12,14 @@ from pytket.extensions.qiskit import tk_to_qiskit
 from pytket.utils import gen_term_sequence_circuit
 from qiskit.quantum_info import process_fidelity, state_fidelity, DensityMatrix
 
-from pauli_experiment import pp_to_operator, synth_tket
+from pauli_experiment import (
+    pp_to_operator,
+    synth_tket,
+    topology_to_ph_graph,
+    paulihedral_rep_from_paulipolynomial,
+)
+from paulihedral import synthesis_SC
+from paulihedral.parallel_bl import depth_oriented_scheduling
 from pauliopt.pauli.pauli_gadget import PauliGadget, PPhase
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import Pauli as Pauliopt_Pauli, apply_permutation
@@ -110,6 +119,16 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
             circ_out = tk_to_qiskit(circ_out)
         elif algorithm == "default":
             circ_out = pp_.to_qiskit(time=t)
+        elif algorithm == "paulihedral":
+            graph = topology_to_ph_graph(topo)
+            parr = paulihedral_rep_from_paulipolynomial(pp)
+
+            lnq = len(parr[0][0])
+            length = lnq // 2
+
+            a1 = depth_oriented_scheduling(parr, length=length, maxiter=100)
+
+            circ_out = synthesis_SC.block_opt_SC(a1, graph=graph, arch=None)
         else:
             raise Exception(f"Unknown Method: {algorithm}")
 
@@ -118,11 +137,6 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
         U_circ = qiskit.quantum_info.Operator.from_circuit(circ_out).data
 
         overlap = np.abs(ket_zero.conj().T @ U_circ.conj().T @ U_expected @ ket_zero)
-        # print(overlap)
-
-        # fidelity = process_fidelity(circ_out, target=U_expected)
-        # print(fidelity)
-        # print("===")
         fid.append(overlap)
     return fid
 
@@ -135,31 +149,54 @@ def get_pp_save_path(i, n_qubits, n_gadgets):
     return f"data/fidelity_experiments/pp/{n_qubits}_{n_gadgets}_{i}"
 
 
+def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
+    start = time.time()
+    t_start = 0.0
+    t_end = 2 * np.pi
+    t_steps = 50
+    allowed_angels = [pi / 32, pi / 64, pi / 128]
+    save_path = f"{get_pp_save_path(i, n_qubits, n_gadgets)}.pickle"
+    if not os.path.isfile(save_path):
+        pp = generate_random_pauli_polynomial(
+            n_qubits, n_gadgets, allowed_angels=allowed_angels
+        )
+        with open(save_path, "wb") as f:
+            pickle.dump(pp, f)
+    else:
+        with open(save_path, "rb") as f:
+            pp = pickle.load(f)
+
+    fids = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
+    print(i, "Done", time.time() - start)
+    return fids
+
+
 def run_fidelity_experiment(
-    algorithm, n_qubits, n_gadgets, t_start=0.0, t_end=2 * np.pi, t_steps=100
+    algorithm, n_qubits, n_gadgets
 ):
-    allowed_angels = [pi / 16, pi / 32, pi / 64]
+    args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
-    all_fidelities = []
+    with Pool(os.cpu_count()) as p:
+        all_fidelities = p.starmap(run_pp_experiment, args)
 
-    for i in range(100):
-        save_path = f"{get_pp_save_path(i, n_qubits, n_gadgets)}.pickle"
-        print(os.path.isfile(save_path))
-        if not os.path.isfile(save_path):
-            pp = generate_random_pauli_polynomial(
-                n_qubits, n_gadgets, allowed_angels=allowed_angels
-            )
-            with open(save_path, "wb") as f:
-                pickle.dump(pp, f)
-        else:
-            with open(save_path, "rb") as f:
-                pp = pickle.load(f)
+    np.save(
+        f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy",
+        np.asarray(all_fidelities),
+    )
 
-        all_fidelities.append(get_fidelities(pp, algorithm, t_start, t_end, t_steps))
 
-    all_fidelities = np.asarray(all_fidelities)
+def run_fidelity_experiment_molecule(
+    algorithm, molecule_name, t_start=0.0, t_end=2 * np.pi, t_steps=100
+):
+    pp_source_file = f"./datasets/pp_molecules/{molecule_name}.pickle"
+    with open(pp_source_file, "rb") as pickle_in:
+        pp = pickle.load(pickle_in)
 
-    np.save(f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy", all_fidelities)
+    all_fidelities = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
+    np.save(
+        f"data/fidelity_experiments/results{molecule_name}_{algorithm}.npy",
+        np.asarray(all_fidelities),
+    )
 
 
 def plot_fidelites(
@@ -217,17 +254,25 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
 
 
 if __name__ == "__main__":
-    # molecule_fidelity_experiment()
 
-    run_fidelity_experiment("PSGS", 6, 160)
-    run_fidelity_experiment("default", 6, 160)
-    run_fidelity_experiment("UCCSD", 6, 160)
+    algorithm = os.getenv("ALG")
+    qubits = int(os.getenv("QUBITS"))
+    gadgets = int(os.getenv("GADGETS"))
+    print("Running: ", algorithm, qubits, gadgets)
+    run_fidelity_experiment(algorithm, qubits, gadgets)
+    # run_fidelity_experiment("default", 6, 160)
+    # run_fidelity_experiment("UCCSD", 6, 160)
+    # run_fidelity_experiment("paulihedral", 6, 160)
 
-    #run_fidelity_experiment("PSGS", 10, 630)
-    #run_fidelity_experiment("default", 10, 630)
-    #run_fidelity_experiment("UCCSD", 10, 630)
+    # run_fidelity_experiment("PSGS", 10, 630)
+    # run_fidelity_experiment("default", 10, 630)
+    # run_fidelity_experiment("UCCSD", 10, 630)
+    # run_fidelity_experiment("paulihedral", 10, 630)
 
-    #plot_fidelites(["PSGS"], 3, 160)
+    # run_fidelity_experiment("default", 10, 630)
+
+    # plot_fidelites(["PSGS", "default", "UCCSD"], 6, 160)
+    # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
     # T = np.random.randn(100, 10) + np.linspace(0, 10, 100).reshape(-1, 1)
     # print(T.shape)
     # main()
