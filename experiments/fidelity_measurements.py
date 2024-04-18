@@ -168,11 +168,11 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
 def run_fidelity_experiment(algorithm, n_qubits, n_gadgets):
     args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
-    # with Pool(os.cpu_count()) as p:
-    #    all_fidelities = p.starmap(run_pp_experiment, args)
-    all_fidelities = []
-    for arg in args:
-        all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
+    with Pool(os.cpu_count()) as p:
+       all_fidelities = p.starmap(run_pp_experiment, args)
+    # all_fidelities = []
+    # for arg in args:
+    #     all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
 
     np.save(
         f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy",
