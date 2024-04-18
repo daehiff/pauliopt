@@ -269,7 +269,7 @@ if __name__ == "__main__":
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    # run_pp_experiments()
+    run_pp_experiments()
 
-    plot_fidelites(["PSGS", "default", "UCCSD", "paulihedral"], 6, 160)
+    # plot_fidelites(["PSGS", "default", "UCCSD", "paulihedral"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
