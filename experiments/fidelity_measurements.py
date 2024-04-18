@@ -118,7 +118,7 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
             circ_out = pp_.to_qiskit(time=t)
         elif algorithm == "paulihedral":
             graph = topology_to_ph_graph(topo)
-            parr = paulihedral_rep_from_paulipolynomial(pp_)
+            parr = paulihedral_rep_from_paulipolynomial(pp_.copy())
 
             lnq = len(parr[0][0])
             length = lnq // 2
@@ -168,8 +168,11 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
 def run_fidelity_experiment(algorithm, n_qubits, n_gadgets):
     args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
-    with Pool(os.cpu_count()) as p:
-        all_fidelities = p.starmap(run_pp_experiment, args)
+    # with Pool(os.cpu_count()) as p:
+    #    all_fidelities = p.starmap(run_pp_experiment, args)
+    all_fidelities = []
+    for arg in args:
+        all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
 
     np.save(
         f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy",
@@ -266,10 +269,11 @@ def generate_pps(n_qubits, n_gadgets):
 
 
 if __name__ == "__main__":
+    # generate_pps(3, 10)
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
     run_pp_experiments()
 
-    # plot_fidelites(["PSGS", "default", "UCCSD", "paulihedral"], 6, 160)
+    # plot_fidelites(["paulihedral", "PSGS", "default", "UCCSD"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)

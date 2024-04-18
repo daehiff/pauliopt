@@ -3,6 +3,7 @@ from .arch import *
 from .synthesis_FT import assign_time_parameter
 from functools import partial
 
+
 def dummy_local_move(qc, graph, pauli_map, src, target):
     an = graph[src]
     ml = 10000
@@ -11,19 +12,22 @@ def dummy_local_move(qc, graph, pauli_map, src, target):
         if graph.C[i, target] < ml:
             ml = graph.C[i, target]
             mn = i
-    if ml == 0: # we find it
+    if ml == 0:  # we find it
         qc.cx(src, target)
     else:
         swap_nodes(pauli_map, graph[src], graph[mn])
         qc.swap(src, mn)
         dummy_local_move(qc, graph, pauli_map, mn, target)
 
+
 from qiskit import QuantumCircuit
+
 
 class treeNode:
     def __init__(self, pid, status):
         self.pid = pid
-        self.status = 0 # 0 means inner node; 1 means leaf node
+        self.status = 0  # 0 means inner node; 1 means leaf node
+
 
 class tree:
     def __init__(self, graph, dp, parent=None, depth=0):
@@ -35,41 +39,47 @@ class tree:
             self.status = 1
             self.leaf = [self]
         else:
-            self.status = 0   
+            self.status = 0
             st = []
             for i in range(1, len(dp)):
                 if dp[i] in graph[self.pid].adj:
                     st.append(i)
             st.append(len(dp))
-            for i in range(len(st)-1):
-                child = tree(graph, dp[st[i]:st[i+1]], parent=self, depth=self.depth+1)
+            for i in range(len(st) - 1):
+                child = tree(
+                    graph, dp[st[i] : st[i + 1]], parent=self, depth=self.depth + 1
+                )
                 self.childs.append(child)
                 self.leaf += child.leaf
         if parent != None:
             self.parent = parent
+
+
 # swap tree nodes only change its physical qubit id and logical id mapping;
 def swap_tree_node(t0, t1):
     pass
 
+
 def pauli_single_gates(qc, pauli_map, ps, left=True):
     if left == True:
         for i in range(len(ps)):
-            if ps[i] == 'X':
-                qc.u3(np.pi/2, 0, np.pi, pauli_map[i])
-            elif ps[i] == 'Y':
-                qc.u3(np.pi/2, -np.pi/2, np.pi/2, pauli_map[i])
+            if ps[i] == "X":
+                qc.u3(np.pi / 2, 0, np.pi, pauli_map[i])
+            elif ps[i] == "Y":
+                qc.u3(np.pi / 2, -np.pi / 2, np.pi / 2, pauli_map[i])
     else:
         for i in range(len(ps)):
-            if ps[i] == 'X':
-                qc.u3(np.pi/2, 0, np.pi, pauli_map[i])
-            elif ps[i] == 'Y':
-                qc.u3(-np.pi/2, -np.pi/2, np.pi/2, pauli_map[i])
+            if ps[i] == "X":
+                qc.u3(np.pi / 2, 0, np.pi, pauli_map[i])
+            elif ps[i] == "Y":
+                qc.u3(-np.pi / 2, -np.pi / 2, np.pi / 2, pauli_map[i])
+
 
 def tree_synthesis1(qc, graph, pauli_map, ptree, psd):
     ps = psd.ps
     psn = ps2nodes(ps)
     pauli_single_gates(qc, pauli_map, ps, left=True)
-    lfs = ptree.leaf # first in, first out
+    lfs = ptree.leaf  # first in, first out
     swaps = {}
     cnum = len(psn) - 1
     lc = 0
@@ -78,7 +88,7 @@ def tree_synthesis1(qc, graph, pauli_map, ptree, psd):
         l = lfs[0]
         if l.depth == 0:
             # psd.real may be zero
-            qc.rz(1, l.pid) # qc.rz(2*psd.real+1, l.pid)
+            qc.rz(psd.coeff, l.pid)
             break
         # actually, if psn is empty in the middle, we can stop it first
         # and the choice of root is also important
@@ -91,9 +101,9 @@ def tree_synthesis1(qc, graph, pauli_map, ptree, psd):
                 swaps[l.parent.pid] = l
                 swap_nodes(pauli_map, graph[l.pid], graph[l.parent.pid])
         else:
-            pass #lfs.remove(l)
+            pass  # lfs.remove(l)
         if l.parent not in lfs:
-                lfs.append(l.parent)
+            lfs.append(l.parent)
         lfs.remove(l)
         # print(lfs)
     # if lc != cnum:
@@ -117,28 +127,35 @@ def tree_synthesis1(qc, graph, pauli_map, ptree, psd):
     pauli_single_gates(qc, pauli_map, ps, left=False)
     return qc
 
-def synthesis_initial(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhattan'):
-    assign_time_parameter(pauli_layers, 1)
-    lnq = len(pauli_layers[0][0][0]) # logical qubits
+
+def synthesis_initial(
+    pauli_layers, pauli_map=None, graph=None, qc=None, arch="manhattan"
+):
+    #assign_time_parameter(pauli_layers, 1)
+    lnq = len(pauli_layers[0][0][0])  # logical qubits
     if graph == None:
-        G, C = load_graph(arch, dist_comp=True) # G is adj, C is dist
+        G, C = load_graph(arch, dist_comp=True)  # G is adj, C is dist
         graph = pGraph(G, C)
     if pauli_map == None:
         pauli_map = dummy_qubit_mapping(graph, lnq)
     else:
         add_pauli_map(graph, pauli_map)
-    pnq = len(graph) # physical qubits
+    pnq = len(graph)  # physical qubits
     if qc == None:
         qc = QuantumCircuit(pnq)
     return pauli_map, graph, qc
 
-def inter_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhattan'):
+
+def inter_synthesis(
+    pauli_layers, pauli_map=None, graph=None, qc=None, arch="manhattan"
+):
     pauli_map, graph, qc = synthesis_initial(pauli_layers, pauli_map, graph, qc, arch)
     for i1 in pauli_layers:
         for i2 in i1:
             pass
 
-def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhattan'):
+
+def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch="manhattan"):
     pauli_map, graph, qc = synthesis_initial(pauli_layers, pauli_map, graph, qc, arch)
     remain_layers = []
     # print(pauli_layers)
@@ -157,7 +174,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
             lmc = -1
             lmi = -1
             lmt = []
-            for i3 in ptir: # pauli_map, pcover
+            for i3 in ptir:  # pauli_map, pcover
                 dp = max_dfs_tree(graph, pcover, graph[i3])
                 if len(dp) > lmc:
                     lmc = len(dp)
@@ -179,7 +196,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 lmt.append(pauli_map[id0])
                 nc.remove(id0)
             for i3 in ins:
-                if i3[0] == 'swap':
+                if i3[0] == "swap":
                     qc.swap(i3[1][0], i3[1][1])
             pcover = logical_list_physical(pauli_map, lcover)
             # root is lmi
@@ -222,7 +239,14 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
             pauli_map_try = pauli_map.copy()
             while nc_try != []:
                 id0, id1 = find_short_node(graph_try, pauli_map_try, nc_try, lmt_try)
-                ret = try_connect_node_2(graph_try, pauli_map_try, pauli_map_try[id0], pauli_map_try[id1], ins_try, xlist)
+                ret = try_connect_node_2(
+                    graph_try,
+                    pauli_map_try,
+                    pauli_map_try[id0],
+                    pauli_map_try[id1],
+                    ins_try,
+                    xlist,
+                )
                 if ret == -1:
                     remain_layers.append([i2])
                     break
@@ -240,7 +264,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 lmt.append(pauli_map[id0])
                 nc.remove(id0)
             for i3 in ins:
-                if i3[0] == 'swap':
+                if i3[0] == "swap":
                     qc.swap(i3[1][0], i3[1][1])
             pcover = logical_list_physical(pauli_map, lcover)
             dp = max_dfs_tree(graph, pcover, graph[lmi])
@@ -249,6 +273,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 tree_synthesis1(qc, graph, pauli_map, dt, i3)
     # print(remain_layers)
     if remain_layers != []:
+
         def __key(cost_matrix, pauli_map, ly):
             ns = ps2nodes(ly[0][0].ps)
             ns_len = len(ns)
@@ -256,12 +281,15 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 return 0
             s = 0
             for i in range(ns_len):
-                for j in range(i+1,ns_len):
+                for j in range(i + 1, ns_len):
                     s += cost_matrix[pauli_map[ns[i]], pauli_map[ns[j]]]
             return s
+
         while remain_layers != []:
             # print(remain_layers)
-            remain_layers = sorted(remain_layers, key=partial(__key, graph.C, pauli_map))
+            remain_layers = sorted(
+                remain_layers, key=partial(__key, graph.C, pauli_map)
+            )
             picked = remain_layers[0]
             remain_layers = remain_layers[1:]
             for i2 in picked:
@@ -272,7 +300,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 lmc = -1
                 lmi = -1
                 lmt = []
-                for i3 in ptir: # pauli_map, pcover
+                for i3 in ptir:  # pauli_map, pcover
                     dp = max_dfs_tree(graph, pcover, graph[i3])
                     if len(dp) > lmc:
                         lmc = len(dp)
@@ -295,7 +323,7 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                     lmt.append(pauli_map[id0])
                     nc.remove(id0)
                 for i3 in ins:
-                    if i3[0] == 'swap':
+                    if i3[0] == "swap":
                         qc.swap(i3[1][0], i3[1][1])
                 pcover = logical_list_physical(pauli_map, lcover)
                 # root is lmi
@@ -304,18 +332,22 @@ def block_opt_SC(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhat
                 dt = tree(graph, dp)
                 for i3 in i2:
                     tree_synthesis1(qc, graph, pauli_map, dt, i3)
+    print(pauli_map)
     return qc
 
-def connected_tree_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhattan'):
-    lnq = len(pauli_layers[0][0][0]) # logical qubits
+
+def connected_tree_synthesis(
+    pauli_layers, pauli_map=None, graph=None, qc=None, arch="manhattan"
+):
+    lnq = len(pauli_layers[0][0][0])  # logical qubits
     if graph == None:
-        G, C = load_graph(arch, dist_comp=True) # G is adj, C is dist
+        G, C = load_graph(arch, dist_comp=True)  # G is adj, C is dist
         graph = pGraph(G, C)
     if pauli_map == None:
         pauli_map = dummy_qubit_mapping(graph, lnq)
     else:
         add_pauli_map(graph, pauli_map)
-    pnq = len(graph) # physical qubits
+    pnq = len(graph)  # physical qubits
     if qc == None:
         qc = QuantumCircuit(pnq)
     for i1 in pauli_layers:
@@ -342,25 +374,28 @@ def connected_tree_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, 
                 connect_node(graph, pauli_map, pauli_map[id0], pauli_map[id1], ins)
                 nc.remove(id0)
             for i3 in ins:
-                if i3[0] == 'swap':
+                if i3[0] == "swap":
                     qc.swap(i3[1][0], i3[1][1])
             qc = dummy_synthesis([[i2]], pauli_map=pauli_map, graph=graph, qc=qc)
     return qc
 
-def dummy_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, arch='manhattan'):
-    lnq = len(pauli_layers[0][0][0]) # logical qubits
+
+def dummy_synthesis(
+    pauli_layers, pauli_map=None, graph=None, qc=None, arch="manhattan"
+):
+    lnq = len(pauli_layers[0][0][0])  # logical qubits
     if graph == None:
-        G, C = load_graph(arch, dist_comp=True) # G is adj, C is dist
+        G, C = load_graph(arch, dist_comp=True)  # G is adj, C is dist
         graph = pGraph(G, C)
     if pauli_map == None:
         pauli_map = dummy_qubit_mapping(graph, lnq)
     else:
         add_pauli_map(graph, pauli_map)
-    pnq = len(graph) # physical qubits
+    pnq = len(graph)  # physical qubits
     if qc == None:
         qc = QuantumCircuit(pnq)
-    for i1 in pauli_layers: # i1 is layer of blocks
-        for i2 in i1: # i2 is block of pauli strings
+    for i1 in pauli_layers:  # i1 is layer of blocks
+        for i2 in i1:  # i2 is block of pauli strings
             for i3 in i2:  # i3 is pauli string
                 cns = ps2nodes(i3.ps)
                 pauli_single_gates(qc, pauli_map, i3.ps, left=True)
@@ -370,12 +405,16 @@ def dummy_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, arch='man
                 #         # qc.h(pauli_map[i])
                 #     elif i3.ps[i] == 'Y':
                 #         qc.u3(np.pi/2, -np.pi/2, np.pi/2, pauli_map[i])
-                for i4 in range(len(cns)-1):
-                    dummy_local_move(qc, graph, pauli_map, pauli_map[cns[i4]], pauli_map[cns[i4+1]])
+                for i4 in range(len(cns) - 1):
+                    dummy_local_move(
+                        qc, graph, pauli_map, pauli_map[cns[i4]], pauli_map[cns[i4 + 1]]
+                    )
                 if len(cns) >= 1:
                     qc.rz(i3.real, pauli_map[cns[-1]])
-                for i4 in range(len(cns)-1, 0, -1):
-                    dummy_local_move(qc, graph, pauli_map, pauli_map[cns[i4-1]], pauli_map[cns[i4]])
+                for i4 in range(len(cns) - 1, 0, -1):
+                    dummy_local_move(
+                        qc, graph, pauli_map, pauli_map[cns[i4 - 1]], pauli_map[cns[i4]]
+                    )
                 pauli_single_gates(qc, pauli_map, i3.ps, left=False)
                 # for i in cns:
                 #     if i3.ps[i] == 'X':
@@ -386,10 +425,18 @@ def dummy_synthesis(pauli_layers, pauli_map=None, graph=None, qc=None, arch='man
                 #         qc.u3(-np.pi/2, -np.pi/2, np.pi/2, pauli_map[i])
     return qc
 
-def qiskit_synthesis(ps_layers, coupling_map=None, arch='manhattan', initial_layout=None, time_parameter=1):
+
+def qiskit_synthesis(
+    ps_layers,
+    coupling_map=None,
+    arch="manhattan",
+    initial_layout=None,
+    time_parameter=1,
+):
     from qiskit.aqua.operators.legacy import evolution_instruction
     from qiskit.quantum_info import Pauli
     from qiskit import transpile
+
     # in evolution_instruction, 1.0 means \pi, so, we need to assign time parameter other than 1.0
     # in assign_time_parameter, we assign time_parameter/3.14 to each pauli string.
     # assign_time_parameter(ps_layers, 1)
@@ -399,10 +446,24 @@ def qiskit_synthesis(ps_layers, coupling_map=None, arch='manhattan', initial_lay
     for i in ps_layers:
         for j in i:
             for k in j:
-                qc.append(evolution_instruction([[1, Pauli.from_label(k.ps)]], 1, 1), qc.qubits)
+                qc.append(
+                    evolution_instruction([[1, Pauli.from_label(k.ps)]], 1, 1),
+                    qc.qubits,
+                )
     if coupling_map == None:
         coupling_map = load_coupling_map(arch)
     if initial_layout != None:
-        return transpile(qc, basis_gates=['u3', 'cx'], initial_layout=initial_layout, coupling_map=coupling_map, optimization_level=0)
+        return transpile(
+            qc,
+            basis_gates=["u3", "cx"],
+            initial_layout=initial_layout,
+            coupling_map=coupling_map,
+            optimization_level=0,
+        )
     else:
-        return transpile(qc, basis_gates=['u3', 'cx'], coupling_map=coupling_map, optimization_level=0)
+        return transpile(
+            qc,
+            basis_gates=["u3", "cx"],
+            coupling_map=coupling_map,
+            optimization_level=0,
+        )

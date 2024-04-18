@@ -352,9 +352,8 @@ def paulihedral_rep_from_paulipolynomial(pp: PauliPolynomial):
     parr = []
     for p_gadget in pp:
         p_str = "".join([ps.value for ps in p_gadget.paulis])
-        coeff = (
-            p_gadget.angle if isinstance(p_gadget.angle, float) else np.random.rand()
-        )
+        assert isinstance(p_gadget.angle, float)
+        coeff = p_gadget.angle
 
         p_string_ph = pauliString(p_str, coeff=coeff)
         parr.append([p_string_ph])
