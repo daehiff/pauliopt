@@ -1,6 +1,8 @@
 import itertools
 import logging
-import os, sys, signal
+import os
+import sys
+import signal
 import pickle
 import shutil
 from numbers import Number
@@ -17,7 +19,7 @@ from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
 from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
-#from pytket.circuit import CXConfigType
+# from pytket.circuit import CXConfigType
 
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
@@ -40,6 +42,7 @@ from multiprocessing import Pool, Manager, Queue, Lock
 from itertools import product, repeat
 import json
 import networkx as nx
+
 
 def get_2q_depth(qc: QuantumCircuit):
     return qc.depth(lambda inst: inst.operation.name == "cx")
@@ -93,7 +96,8 @@ def generate_random_z_polynomial(
     if max_legs is None:
         max_legs = num_qubits
     if allowed_angels is None:
-        allowed_angels = [2 * pi, pi, pi / 2, pi / 4, pi / 8, pi / 16, pi / 32, pi / 64]
+        allowed_angels = [2 * pi, pi, pi / 2, pi /
+                          4, pi / 8, pi / 16, pi / 32, pi / 64]
     allowed_legs = [Z]
     pp = PauliPolynomial(num_qubits)
     for _ in range(num_gadgets):
@@ -110,7 +114,8 @@ def create_random_phase_gadget(
         allowed_legs = [X, Y, Z]
     angle = np.random.choice(allowed_angels)
     nr_legs = np.random.randint(min_legs, max_legs)
-    legs = np.random.choice([i for i in range(num_qubits)], size=nr_legs, replace=False)
+    legs = np.random.choice(
+        [i for i in range(num_qubits)], size=nr_legs, replace=False)
     phase_gadget = [I for _ in range(num_qubits)]
     for leg in legs:
         phase_gadget[leg] = np.random.choice(allowed_legs)
@@ -352,8 +357,10 @@ def paulihedral_rep_from_paulipolynomial(pp: PauliPolynomial):
     parr = []
     for p_gadget in pp:
         p_str = "".join([ps.value for ps in p_gadget.paulis])
-        assert isinstance(p_gadget.angle, float)
-        coeff = p_gadget.angle
+        coeff = (
+            p_gadget.angle if isinstance(
+                p_gadget.angle, float) else np.random.rand()
+        )
 
         p_string_ph = pauliString(p_str, coeff=coeff)
         parr.append([p_string_ph])
@@ -400,6 +407,7 @@ def get_ops_count(qc: QuantumCircuit):
     count["depth"] = qc.depth()
     count["2q_depth"] = get_2q_depth(qc)
     return count
+
 
 BASE_PATH = "tket_benchmarking/compilation_strategy"
 
@@ -521,8 +529,8 @@ SYNTHESIS_METHODS = {
     "tket_uccs_pair": synth_pp_tket_uccs_pair,
     "paulihedral": synth_pp_paulihedral,
     "pauliopt_steiner_nc": synth_pp_pauliopt_steiner_nc,
-    "pauliopt_ucc": synth_pp_pauliopt_ucc,
-    "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
+    # "pauliopt_ucc": synth_pp_pauliopt_ucc,
+    # "pauliopt_divide_conquer": synth_pp_pauliopt_divide_conquer,
     "pauliopt_steiner_clifford": synth_pp_pauliopt_steiner_clifford,
     "naive": synth_pp_naive,
 }
@@ -531,7 +539,8 @@ SYNTHESIS_METHODS = {
 def random_pauli_experiment(
     backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
 ):
-    backend, output_csv = get_backend_and_df_name(backend_name, df_name=df_name)
+    backend, output_csv = get_backend_and_df_name(
+        backend_name, df_name=df_name)
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
@@ -612,7 +621,8 @@ def get_lock(new_lock):
 def threaded_random_pauli_experiment(
     backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random", n_gadgets=None
 ):
-    print("----------------------------------","Experiment", backend_name, "----------------------------------")
+    print("----------------------------------", "Experiment",
+          backend_name, "----------------------------------")
     manager = Manager()
     backend, output_csv = get_backend_and_df_name(
         backend_name, df_name=df_name)
@@ -626,23 +636,26 @@ def threaded_random_pauli_experiment(
     if n_gadgets:
         gadget_iter = n_gadgets
     else:
-        gadget_iter = range(1, nr_input_gates, nr_steps)
+        gadget_iter = range(401, nr_input_gates, nr_steps)
     exp_iter = range(20)
     synth = SYNTHESIS_METHODS.items()
-    n_workers = os.cpu_count() -1
+    n_workers = os.cpu_count() - 1
 
     if backend not in ["complete", "line"]:
         num_qubits = backend.configuration().num_qubits
     else:
         num_qubits = int(backend_name.split("_")[1])
 
-    print("Synthesizing all", len(gadget_iter)*len(exp_iter), "PauliPolynomials")
+    print("Synthesizing all", len(gadget_iter)
+          * len(exp_iter), "PauliPolynomials")
     generation_p = Pool(n_workers)
     pp_dict = manager.dict()
     generation_q = manager.Queue()
     for num_gadgets, i in product(gadget_iter, exp_iter):
-        generation_q.put((num_qubits, num_gadgets, i, topo_folder, backend_name, pp_dict))
-    print("Starting a task Queue of length", generation_q.qsize(), "on", n_workers, "workers")
+        generation_q.put((num_qubits, num_gadgets, i,
+                         topo_folder, backend_name, pp_dict))
+    print("Starting a task Queue of length",
+          generation_q.qsize(), "on", n_workers, "workers")
     for _ in range(n_workers):
         generation_p.apply(pooled_generation, [generation_q])
     generation_p.close()
@@ -684,7 +697,8 @@ def threaded_random_pauli_experiment(
         print("Something went wrong, Queue is not empty", q.qsize())
     print("Done")
 
-def pooled_generation(q:Queue):
+
+def pooled_generation(q: Queue):
     OVERWRITE_FILES = False
     while True:
         q.qsize() % 10 == 0 and print(".", end="", flush=True)
@@ -694,10 +708,10 @@ def pooled_generation(q:Queue):
                 return
         except:  # Q is empty
             return
-        num_qubits, num_gadgets, i, topo_folder, backend_name, pp_dict = q_data 
+        num_qubits, num_gadgets, i, topo_folder, backend_name, pp_dict = q_data
         circuit_file = os.path.join(
-                    topo_folder, f"pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
-                )
+            topo_folder, f"pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
+        )
         pp = None
         if not OVERWRITE_FILES and os.path.exists(circuit_file):
             try:
@@ -716,6 +730,7 @@ def pooled_generation(q:Queue):
 def timeout_handler(*args):
     raise TimeoutError()
 
+
 def pooled_function(q: Queue):
     while True:
         q.qsize() % 100 == 0 and print(".", end="", flush=True)
@@ -730,7 +745,8 @@ def pooled_function(q: Queue):
         synth_name, synth_method = synth_data
         backend_name, df_name, topo_folder, circuit_topo_folder, pp_dict = fixed_data
 
-        backend, output_csv = get_backend_and_df_name(backend_name, df_name=df_name)
+        backend, output_csv = get_backend_and_df_name(
+            backend_name, df_name=df_name)
         if backend not in ["complete", "line"]:
             num_qubits = backend.configuration().num_qubits
         else:
@@ -743,12 +759,12 @@ def pooled_function(q: Queue):
 
         try:
             signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(30*60)
+            signal.alarm(30*120)
             count_dict = synth_method(pp, topo)
-            signal.alarm(0) # Turn of the alarm.
+            signal.alarm(0)  # Turn of the alarm.
         except TimeoutError:
             print("Skipping", *exp_data, flush=True)
-            continue # Method failed
+            continue  # Method failed
         time_passed = (datetime.now() - start).total_seconds()
 
         column = {
@@ -758,69 +774,70 @@ def pooled_function(q: Queue):
             "time": time_passed,
             "method": synth_name,
         } | count_dict
-        
+
         df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
         lock.acquire()
         with open(output_csv, "ab") as f_ptr:
             df.to_csv(f_ptr, header=False, index=False)
         lock.release()
 
+
 if __name__ == "__main__":
     df_name = "data/pauli/random/random"
-    print("Experiment: quito")
-    threaded_random_pauli_experiment(
-        backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
-    )
-    
-    print("Experiment: complete_5")
-    threaded_random_pauli_experiment(
-        backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
-    )
+    # print("Experiment: quito")
+    # threaded_random_pauli_experiment(
+    #     backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name
+    # )
 
-    print("Experiment: nairobi")
-    threaded_random_pauli_experiment(
-        backend_name="nairobi", nr_input_gates=300, nr_steps=20, df_name=df_name
-    )
-    print("Experiment: complete_7")
-    threaded_random_pauli_experiment(
-        backend_name="complete_7", nr_input_gates=300, nr_steps=20, df_name=df_name
-    )
-    
-    print("Experiment: guadalupe")
-    threaded_random_pauli_experiment(
-        backend_name="guadalupe", nr_input_gates=400, nr_steps=20, df_name=df_name
-    )
-    
-    print("Experiment: complete_16")
-    threaded_random_pauli_experiment(
-        backend_name="complete_16", nr_input_gates=400, nr_steps=20, df_name=df_name
-    )
-    
-    print("Experiment: mumbai")
-    threaded_random_pauli_experiment(
-        backend_name="mumbai", nr_input_gates=800, nr_steps=40, df_name=df_name
-    )
-    
-    print("Experiment: complete_27")
-    threaded_random_pauli_experiment(
-        backend_name="complete_27", nr_input_gates=800, nr_steps=40, df_name=df_name
-    )
+    # print("Experiment: complete_5")
+    # threaded_random_pauli_experiment(
+    #     backend_name="complete_5", nr_input_gates=200, nr_steps=20, df_name=df_name
+    # )
 
-    print("Experiment: ithaca")
-    threaded_random_pauli_experiment(
-        backend_name="ithaca", nr_input_gates=2000, nr_steps=100, df_name=df_name
-    )
+    # print("Experiment: nairobi")
+    # threaded_random_pauli_experiment(
+    #     backend_name="nairobi", nr_input_gates=300, nr_steps=20, df_name=df_name
+    # )
+    # print("Experiment: complete_7")
+    # threaded_random_pauli_experiment(
+    #     backend_name="complete_7", nr_input_gates=300, nr_steps=20, df_name=df_name
+    # )
+
+    # print("Experiment: guadalupe")
+    # threaded_random_pauli_experiment(
+    #     backend_name="guadalupe", nr_input_gates=400, nr_steps=20, df_name=df_name
+    # )
+
+    # print("Experiment: complete_16")
+    # threaded_random_pauli_experiment(
+    #     backend_name="complete_16", nr_input_gates=400, nr_steps=20, df_name=df_name
+    # )
+
+    # print("Experiment: mumbai")
+    # threaded_random_pauli_experiment(
+    #     backend_name="mumbai", nr_input_gates=800, nr_steps=40, df_name=df_name
+    # )
+
+    # print("Experiment: complete_27")
+    # threaded_random_pauli_experiment(
+    #     backend_name="complete_27", nr_input_gates=800, nr_steps=40, df_name=df_name
+    # )
+
+    # print("Experiment: ithaca")
+    # threaded_random_pauli_experiment(
+    #     backend_name="ithaca", nr_input_gates=800, nr_steps=50, df_name=df_name
+    # )
 
     print("Experiment: complete_65")
     threaded_random_pauli_experiment(
-        backend_name="complete_65", nr_input_gates=2000, nr_steps=100, df_name=df_name
+        backend_name="complete_65", nr_input_gates=800, nr_steps=50, df_name=df_name
     )
 
-    print("Experiment: brisbane")
-    threaded_random_pauli_experiment(
-        backend_name="brisbane", nr_input_gates=10000, nr_steps=400, df_name=df_name
-    )
-    print("Experiment: complete_127")
-    threaded_random_pauli_experiment(
-        backend_name="complete_127", nr_input_gates=10000, nr_steps=400, df_name=df_name
-    )
+    # print("Experiment: brisbane")
+    # threaded_random_pauli_experiment(
+    #     backend_name="brisbane", nr_input_gates=10000, nr_steps=400, df_name=df_name
+    # )
+    # print("Experiment: complete_127")
+    # threaded_random_pauli_experiment(
+    #     backend_name="complete_127", nr_input_gates=10000, nr_steps=400, df_name=df_name
+    # )

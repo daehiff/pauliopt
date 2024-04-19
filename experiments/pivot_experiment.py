@@ -122,10 +122,10 @@ if __name__ == "__main__":
     # pivot_experiment(backend_name="complete_27",
     #                  nr_input_gates=800, nr_steps=40, df_name=df_name)
     #
-    pivot_experiment(backend_name="ithaca", nr_input_gates=2000,
-                     nr_steps=100, df_name=df_name)
-    pivot_experiment(backend_name="complete_65",
-                     nr_input_gates=2000, nr_steps=100, df_name=df_name)
+    # pivot_experiment(backend_name="ithaca", nr_input_gates=2000,
+    #                  nr_steps=100, df_name=df_name)
+    # pivot_experiment(backend_name="complete_65",
+    #                  nr_input_gates=2000, nr_steps=100, df_name=df_name)
 
     # pivot_experiment(backend_name="brisbane",
     #                  nr_input_gates=10000, nr_steps=400, df_name=df_name)

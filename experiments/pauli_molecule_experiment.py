@@ -330,29 +330,38 @@ def real_hw_ucc_evaluation(max_qubits=30):
             continue
 
         backend_name = get_suitable_ibm_backend(n_qubits)
-        logger.info(f"Used {backend_name} with {n_qubits} on the PP")
+        # logger.info(f"Used {backend_name} with {n_qubits} on the PP")
         backend, _ = get_backend_and_df_name(backend_name)
 
         topo = Topology.from_qiskit_backend(backend)
         pp_ = pad_pp_to_ibm_backend(pp, topo.num_qubits)
+        print(pp)
 
-        for synth_name, synth_method in SYNTHESIS_METHODS.items():
-            start = datetime.now()
-            count_dict = synth_method(pp_, topo)
-            time_passed = (datetime.now() - start).total_seconds()
-            column = {
-                "name": name,
-                "backend": backend_name,
-                "num_qubits": n_qubits,
-                "n_gadgets": pp.num_gadgets,
-                "method": synth_name,
-                "time": time_passed,
-            } | count_dict
-            print(column)
-            new_row = pd.DataFrame(
-                [{c: column[c] for c in create_csv_header_real_hw()}])
-            df = pd.concat([df, new_row], ignore_index=True)
-            df.to_csv(results_file)
+        # logger.info(f"Used {backend_name} with {n_qubits} on the PP")
+        # topo = get_topo_kind(topo_kind, n_qubits)
+        synthesizer = PauliSynthesizer(
+            pp_, SynthMethod.STEINER_GRAY_CLIFFORD, topo)
+        synthesizer.synthesize()
+        assert synthesizer.check_circuit_equivalence()
+        assert synthesizer.check_connectivity_predicate()
+
+        # for synth_name, synth_method in SYNTHESIS_METHODS.items():
+        #     start = datetime.now()
+        #     count_dict = synth_method(pp_, topo)
+        #     time_passed = (datetime.now() - start).total_seconds()
+        #     column = {
+        #         "name": name,
+        #         "backend": backend_name,
+        #         "num_qubits": n_qubits,
+        #         "n_gadgets": pp.num_gadgets,
+        #         "method": synth_name,
+        #         "time": time_passed,
+        #     } | count_dict
+        #     print(column)
+        #     new_row = pd.DataFrame(
+        #         [{c: column[c] for c in create_csv_header_real_hw()}])
+        #     df = pd.concat([df, new_row], ignore_index=True)
+        #     df.to_csv(results_file)
 
 
 def synth_ucc_evaluation(max_qubits=30):
@@ -366,36 +375,43 @@ def synth_ucc_evaluation(max_qubits=30):
         with open(results_file, "wb") as f:
             df.to_csv(f, header=create_csv_header(), index=False)
 
-        for filename in os.listdir(op_directory):
-            name = filename.replace(".pickle", "")
-            logger.info(name)
-            path = f"{op_directory}/" + filename
-            with open(path, "rb") as pickle_in:
-                pp = pickle.load(pickle_in)
-                pp = simplify_pauli_polynomial(pp, allow_acs=True)
+        # for filename in os.listdir(op_directory):
+        filename = f"tket_benchmarking/compilation_strategy/operators/P_operators/H8_P_sto3g.pickle"
+        with open(filename, "rb",
+                  ) as pickle_in:
+            operator = pickle.load(pickle_in)
 
-            n_qubits = pp.num_qubits
-            if n_qubits >= max_qubits:
-                continue
+        topo = Topology.complete(n_qubits)
+        summed_pauli_operator = operator_to_summed_pauli_op(operator, n_qubits)
+        name = filename.replace(".pickle", "")
+        logger.info(name)
+        path = f"{op_directory}/" + filename
+        with open(path, "rb") as pickle_in:
+            pp = pickle.load(pickle_in)
+            pp = simplify_pauli_polynomial(pp, allow_acs=True)
 
-            topo = get_topo_kind(topo_kind, n_qubits)
-            for synth_name, synth_method in SYNTHESIS_METHODS.items():
-                start = datetime.now()
-                count_dict = synth_method(pp, topo)
-                time_passed = (datetime.now() - start).total_seconds()
-                column = {
-                    "name": name,
-                    "num_qubits": n_qubits,
-                    "n_gadgets": pp.num_gadgets,
-                    "method": synth_name,
-                    "time": time_passed,
-                } | count_dict
+        n_qubits = pp.num_qubits
+        if n_qubits >= max_qubits:
+            continue
+        print(name)
+        topo = get_topo_kind(topo_kind, n_qubits)
+        for synth_name, synth_method in SYNTHESIS_METHODS.items():
+            start = datetime.now()
+            count_dict = synth_method(pp, topo)
+            time_passed = (datetime.now() - start).total_seconds()
+            column = {
+                "name": name,
+                "num_qubits": n_qubits,
+                "n_gadgets": pp.num_gadgets,
+                "method": synth_name,
+                "time": time_passed,
+            } | count_dict
 
-                df = pd.DataFrame([{c: column[c]
-                                  for c in create_csv_header()}])
-                with open(results_file, "ab") as f_ptr:
-                    df.to_csv(f_ptr, header=False, index=False)
-            print("====")
+            df = pd.DataFrame([{c: column[c]
+                                for c in create_csv_header()}])
+            with open(results_file, "ab") as f_ptr:
+                df.to_csv(f_ptr, header=False, index=False)
+        print("====")
 
 
 TIMEOUT = 60*30
@@ -472,7 +488,6 @@ def threaded_function(data):
 
     n_qubits = pp.num_qubits
 
-    topo = get_topo_kind(topo_kind, n_qubits)
     start = datetime.now()
     count_dict = synth_method(pp, topo)
     time_passed = (datetime.now() - start).total_seconds()
@@ -701,7 +716,7 @@ def read_out_pps_tket_benchmarking():
 
 
 if __name__ == "__main__":
-    # real_hw_ucc_evaluation()
+    real_hw_ucc_evaluation(max_qubits=10)
     # threaded_real_hw_ucc_evaluation()
-    threaded_synth_ucc_evaluation()
+    # threaded_synth_ucc_evaluation()
     # read_out_pps_tket_benchmarking()

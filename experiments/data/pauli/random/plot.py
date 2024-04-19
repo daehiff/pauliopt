@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
 
 
 def plot_experiment(name="random_guadalupe", v_line_cx=None, v_line_depth=None):
@@ -18,10 +19,14 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None, v_line_depth=None):
                                         "pauliopt_steiner_nc": "PSGS",
                                          "tket_uccs_pair": "UCCSD-pair",
                                          "tket_uccs_set": "UCCSD-set",
-                                         "pauliopt_divide_conquer": "SD\&C", "pauliopt_steiner_clifford": "PSGS-PRC"})
-
+                                         "pauliopt_divide_conquer": "SD\&C",
+                                         "pauliopt_steiner_clifford": "PSGS-PRC"})
+    hue_order = ["naive", "UCCSD-set",
+                 "UCCSD-pair", "paulihedral", "PSGS", "PSGS-PRC"]
     # df["cx"] = (df["circ_cx"] - df["naive_cx"]) / df["naive_cx"] * 100.0
-
+    palette = ['#377eb8', '#ff7f00', '#4daf4a',
+               '#f781bf', '#a65628', '#984ea3',
+               '#999999', '#e41a1c', '#dede00']
     # add a vertical line for v_line_cx if not none
     if v_line_cx is not None:
         plt.axhline(y=v_line_depth, color="black", linestyle="--")
@@ -29,17 +34,26 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None, v_line_depth=None):
     plt.show()
     plt.clf()
 
-    sns.lineplot(df, x="n_gadgets", y="cx", hue="method")
-    plt.title("CX-Gates")
-    plt.xlabel("Number of input Pauli-Polynomials")
-    plt.ylabel("Number of H-Gates")
+    fig = sns.lineplot(df, x="n_gadgets", y="cx", hue="method",
+                       hue_order=hue_order, palette=palette)
+    handles, labels = fig.get_legend_handles_labels()
+    lgd = fig.legend(handles, labels,
+                     bbox_to_anchor=(0.95, 1.35), ncol=5, borderaxespad=1.)
+    export_legend(lgd)
+    fig.get_legend().remove()
+    plt.title("CNOT Gates")
+    plt.xlabel("\# Pauli Gadgets")
+    plt.ylabel("\# CNOT Gates")
+
     plt.savefig(f"./{name}_cx.pdf")
     plt.show()
     plt.clf()
 
-    sns.lineplot(df, x="n_gadgets", y="2q_depth", hue="method")
+    fig = sns.lineplot(df, x="n_gadgets", y="2q_depth",
+                       hue="method", hue_order=hue_order, palette=palette)
+    fig.get_legend().remove()
     plt.title("2 Qubit Gate depth")
-    plt.xlabel("Number of input Pauli-Polynomials")
+    plt.xlabel("\# Pauli Gadgets")
     plt.ylabel("2 Qubit Gate Depth")
 
     # add a vertical line for v_line_cx if not none
@@ -49,9 +63,11 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None, v_line_depth=None):
     plt.show()
     plt.clf()
 
-    sns.lineplot(df, x="n_gadgets", y="depth", hue="method")
+    fig = sns.lineplot(df, x="n_gadgets", y="depth",
+                       hue="method", hue_order=hue_order, palette=palette)
+    fig.get_legend().remove()
     plt.title("Circuit depth")
-    plt.xlabel("Number of input Pauli-Polynomials")
+    plt.xlabel("\# Pauli Gadgets")
     plt.ylabel("Circuit Depth")
     # add a vertical line for v_line_cx if not none
     # if v_line_depth is not None:
@@ -59,6 +75,15 @@ def plot_experiment(name="random_guadalupe", v_line_cx=None, v_line_depth=None):
     plt.savefig(f".//{name}_depth.pdf")
     plt.show()
     plt.clf()
+
+
+def export_legend(legend, filename="legend.pdf", expand=[-5, -5, 5, 5]):
+    fig = legend.figure
+    fig.canvas.draw()
+    bbox = legend.get_window_extent()
+    bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
+    bbox = bbox.transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig(filename, dpi="figure", bbox_inches=bbox)
 
 
 def plot_random_pauli_polynomial_experiment():
@@ -284,6 +309,19 @@ def plot_random_pauli_polynomial_experiment():
 
 
 if __name__ == '__main__':
-    plot_experiment(name="random_quito")
+    plot_experiment(name="fixed_quito_keefe")
+    plot_experiment(name="fixed_complete_5_keefe")
+
+    plot_experiment(name="fixed_guadalupe_keefe")
+    plot_experiment(name="fixed_complete_7_keefe")
+
+    plot_experiment(name="fixed_nairobi_keefe")
+    plot_experiment(name="fixed_complete_16_keefe")
+
+    plot_experiment(name="fixed_mumbai_keefe")
+    plot_experiment(name="fixed_complete_27_keefe")
+
+    plot_experiment(name="fixed_ithaca_keefe")
+    plot_experiment(name="fixed_complete_65_keefe")
     # plot_experiment(name="random_complete_65", v_line_cx=v_line,
     #                 v_line_depth=v_line_depth)
