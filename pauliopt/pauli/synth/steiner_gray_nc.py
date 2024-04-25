@@ -343,7 +343,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.h(row)
             pp.propagate(H(row), columns_to_use)
         elif rec_type == Y:
-            qc.S(row)
+            qc.s(row)
             pp.propagate(Sdg(row), columns_to_use)
 
         if rec_type_next == X:
