@@ -1,19 +1,16 @@
 from qiskit.quantum_info import Statevector
 import re
-#from pytket.extensions.qiskit import qiskit_to_tk
-import pyzx as zx
+
+# from pytket.extensions.qiskit import qiskit_to_tk
 from pauliopt.topologies import Topology
 from pauliopt.pauli.clifford_tableau import CliffordTableau
-from qiskit.synthesis import (
-    synth_clifford_depth_lnn,
-)
+
 from qiskit.result import Result
 from qiskit.quantum_info import Clifford, hellinger_fidelity
 from qiskit.providers.models import BackendConfiguration, GateConfig
 from qiskit.providers.fake_provider import FakeBackend
 from qiskit import QuantumCircuit
 from pytket.extensions.qiskit import qiskit_to_tk
-from mqt import qmap
 import stim
 import seaborn as sns
 import qiskit
@@ -27,7 +24,6 @@ import os
 import time
 import warnings
 
-from qiskit.qasm2 import dumps, load
 from qiskit import transpile
 
 # from tests.test_clifford_tableau import verify_equality
@@ -547,6 +543,27 @@ def our_compilation_tableau(tab: Clifford, backend, num_qubits):
     circ_out, perm = ct.to_clifford_circuit_arch_aware(topo, include_swaps=True)
     act_time = time.time() - start
     circ_out = circ_out.to_qiskit()
+    circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
+    column = get_ops_count(circ_out)
+    # assert verify_equality(tab.to_circuit(), apply_permutation(circ_out, perm))
+    # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
+    return column
+
+
+def our_compilation_tableau_perm_row_col(tab: Clifford, backend, num_qubits):
+    if backend == "complete":
+        topo = Topology.complete(num_qubits)
+    elif backend == "line":
+        topo = Topology.line(num_qubits)
+    else:
+        topo = Topology.from_qiskit_backend(backend)
+    ct = CliffordTableau.from_qiskit(tab)
+    start = time.time()
+    circ_out, perm = ct.to_clifford_circuit_perm_row_col(topo, include_swaps=True)
+
+    act_time = time.time() - start
+    circ_out = circ_out.to_qiskit()
+    #circ_out = transpile(circ_out, basis_gates=["cx", "h", "s"])
     column = get_ops_count(circ_out)
     # assert verify_equality(tab.to_circuit(), apply_permutation(circ_out, perm))
     # print("Our: ", circ_out.count_ops(), "Time: ", act_time)
@@ -665,9 +682,8 @@ def random_experiment(
     for n_gadgets in range(1, nr_input_gates, nr_steps):
         print(n_gadgets)
         for i in range(20):
-            #circ = get_circuit_from_qasm(backend_name, n_gadgets, i)
-            circ = random_hscx_circuit(
-                nr_qubits=num_qubits, nr_gates=n_gadgets)
+            # circ = get_circuit_from_qasm(backend_name, n_gadgets, i)
+            circ = random_hscx_circuit(nr_qubits=num_qubits, nr_gates=n_gadgets)
 
             ########################################
             # Our clifford circuit
@@ -1255,13 +1271,55 @@ def get_complete_cx_count():
         print((df_.groupby("method").mean().round()["cx"] / bound_u).round(2))
 
 
+def estimate_perm_row_clifford(
+    backend_name, df_name="data/perm_row_clifford/experiment"
+):
+    backend, output_csv = get_backend_and_df_name(backend_name, df_name=df_name)
+    if backend not in ["complete", "line"]:
+        num_qubits = backend.configuration().num_qubits
+    else:
+        num_qubits = int(backend_name.split("_")[1])
+    print(num_qubits)
+    print(df_name)
+    df = pd.DataFrame(
+        columns=["n_rep", "num_qubits", "method", "h", "s", "cx", "depth"]
+    )
+
+    for _ in range(20):
+        clifford = random_clifford_circuit(nr_qubits=num_qubits)
+        column = {
+            "n_rep": _,
+            "num_qubits": num_qubits,
+            "method": "ours",
+        } | our_compilation_tableau(clifford.copy(), backend, num_qubits)
+        df.loc[len(df)] = column
+        df.to_csv(output_csv)
+
+        column = {
+            "n_rep": _,
+            "num_qubits": num_qubits,
+            "method": "ours_prc",
+        } | our_compilation_tableau_perm_row_col(clifford.copy(), backend, num_qubits)
+        df.loc[len(df)] = column
+        df.to_csv(output_csv)
+    df.to_csv(output_csv)
+
+    print(df.groupby("method").mean())
+
+
 if __name__ == "__main__":
     # run_clifford_real_hardware(backend_name="ibmq_quito")
     # run_clifford_real_hardware(backend_name="ibm_nairobi")
 
     # analyze_real_hw(backend_name="ibmq_quito")
     # analyze_real_hw(backend_name="ibm_nairobi")
-    df_name = "data/random"
+    # df_name = "data/random"
+
+    estimate_perm_row_clifford("quito")
+    estimate_perm_row_clifford("nairobi")
+    #estimate_perm_row_clifford("guadalupe")
+    #estimate_perm_row_clifford("mumbai")
+    #estimate_perm_row_clifford("ithaca")
 
     # random_experiment(
     #     backend_name="quito", nr_input_gates=200, nr_steps=20, df_name=df_name

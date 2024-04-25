@@ -231,6 +231,9 @@ class PauliGadget:
 
     def assign_time(self, time):
         if isinstance(self.angle, float):
-            self.angle = self.angle*time
+            self.angle = self.angle * time
         else:
-            self.angle = self.angle.to_qiskit*time
+            self.angle = self.angle.to_qiskit * time
+
+    def set_angle(self, angle):
+        self.angle = float(angle)

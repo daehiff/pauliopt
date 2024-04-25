@@ -126,6 +126,7 @@ def get_fidelities(pp: PauliPolynomial, algorithm, t_start, t_end, t_steps):
             a1 = depth_oriented_scheduling(parr, length=length, maxiter=100)
 
             circ_out = synthesis_SC.block_opt_SC(a1, graph=graph, arch=None)
+
         else:
             raise Exception(f"Unknown Method: {algorithm}")
 
@@ -157,6 +158,7 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
         pp = pickle.load(f)
 
     fids = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
+    print(fids)
     np.save(
         f"{get_save_path(n_qubits, n_gadgets, algorithm)}_{i}.npy",
         np.asarray(fids),
@@ -169,7 +171,8 @@ def run_fidelity_experiment(algorithm, n_qubits, n_gadgets):
     args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
     with Pool(os.cpu_count()) as p:
-       all_fidelities = p.starmap(run_pp_experiment, args)
+        all_fidelities = p.starmap(run_pp_experiment, args)
+
     # all_fidelities = []
     # for arg in args:
     #     all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
@@ -189,19 +192,37 @@ def run_fidelity_experiment_molecule(
 
     all_fidelities = get_fidelities(pp, algorithm, t_start, t_end, t_steps)
     np.save(
-        f"data/fidelity_experiments/results{molecule_name}_{algorithm}.npy",
+        f"data/fidelity_experiments/results/{molecule_name}_{algorithm}.npy",
         np.asarray(all_fidelities),
     )
 
 
 def plot_fidelites(
-    algorithms, n_qubits, n_gadgets, t_start=0.0, t_end=2 * np.pi, t_steps=50, p=90
+    algorithms,
+    molecules,
+    n_qubits,
+    n_gadgets,
+    t_start=0.0,
+    t_end=2 * np.pi,
+    t_steps=50,
+    p=90,
 ):
     plt.rcParams.update(
         {"text.usetex": True, "font.family": "sans-serif", "font.size": 11}
     )
 
-    colors = colorblind_colors = sns.color_palette("colorblind").as_hex()
+    linestyles = [":", "-."]
+    colors = palette = ['#377eb8', '#ff7f00', '#4daf4a',
+               '#f781bf', '#a65628', '#984ea3',
+               '#999999', '#e41a1c', '#dede00']
+    ALG_NAMES = {
+        "paulihedral": "Paulihedral",
+        "PSGS": "Proposed",
+        "default": "Naive Steiner tree decomp.",
+        "UCCSD": "TKET UCCSD (set)",
+    }
+
+    fig, axes = plt.subplots(figsize=(11, 7), nrows=3, sharex=True)
 
     for color, algorithm in zip(colors, algorithms):
         all_fidelities = np.load(f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy")
@@ -212,26 +233,63 @@ def plot_fidelites(
         ci_upper = np.percentile(all_fidelities, p, axis=0)
         time = np.linspace(t_start, t_end, t_steps)
 
-        plt.plot(time, mean_fid, color=color, label=f"{algorithm}")
-        plt.fill_between(time, ci_upper, ci_lower, color=color, alpha=0.1)
+        axes[0].plot(time, mean_fid, color=color)
+        axes[0].fill_between(time, ci_upper, ci_lower, color=color, alpha=0.1)
+    axes[0].set_title("Random Pauli Polynomials")
+    axes[0].set_ylabel("Unitary Overlap")
+    idx = 1
+    for molecule_name, linestyle in zip(molecules, linestyles):
+        for color, algorithm in zip(colors, algorithms):
+            all_fidelities = np.load(
+                f"data/fidelity_experiments/results/{molecule_name}_{algorithm}.npy"
+            )
+
+            all_fidelities = np.asarray(all_fidelities)
+
+            time = np.linspace(t_start, t_end, t_steps)
+
+            axes[idx].plot(
+                time,
+                all_fidelities[0],
+                color=color,
+                # label=f"{molecule_name}: {ALG_NAMES[algorithm]}",
+            )
+        axes[idx].set_title(f"{molecule_name}")
+        axes[idx].set_ylabel("Unitary Overlap")
+        idx += 1
 
     plt.xlabel("t")
-    plt.ylabel("Fidelity")
     plt.xticks(
         np.linspace(0.0, 2 * np.pi, 5),
         [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"],
     )
-    plt.legend()
-    plt.title("Median Fidelity")
+
+    linestyles = ["solid"] + linestyles
+    dummy_lines = []
+    for b_idx in range(len(linestyles)):
+        dummy_lines.append(axes[0].plot([], [], c="black", ls=linestyles[b_idx])[0])
+
+    lines = axes[0].get_lines()
+    axes[0].legend(
+        [lines[i] for i in range(len(algorithms))],
+        [ALG_NAMES[alg] for alg in algorithms],
+        loc="upper right",
+    )
+    # axes[0].add_artist(legend1)
+    plt.tight_layout()
+    plt.savefig(f"data/fidelity_experiments/plots/{n_qubits}_{n_gadgets}.pdf")
     plt.show()
 
 
-def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
-    algorithms = ["PSGS", "default", "UCCSD"]
-    for molecule_name in ["H2_P_631g", "H4_P_sto3g", "LiH_P_sto3g"]:
+def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=50):
+    algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
+    for molecule_name in ["H2_P_631g", "H4_P_sto3g"]:
         save_path = f"datasets/pp_molecules/{molecule_name}.pickle"
         with open(save_path, "rb") as f:
             pp = pickle.load(f)
+
+        allowed_angles = [np.pi / 32, np.pi / 64, np.pi / 128]
+        pp.set_random_angles(allowed_angles)
 
         for algorithm in algorithms:
             all_fidelities = []
@@ -249,9 +307,9 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=100):
 
 
 def run_pp_experiments():
-    algorithm = os.getenv("ALG")
-    qubits = int(os.getenv("QUBITS"))
-    gadgets = int(os.getenv("GADGETS"))
+    algorithm = "paulihedral"  # os.getenv("ALG")
+    qubits = 6  # int(os.getenv("QUBITS"))
+    gadgets = 160  # int(os.getenv("GADGETS"))
     print("Running: ", algorithm, qubits, gadgets)
     run_fidelity_experiment(algorithm, qubits, gadgets)
 
@@ -269,11 +327,16 @@ def generate_pps(n_qubits, n_gadgets):
 
 
 if __name__ == "__main__":
-    # generate_pps(3, 10)
+    # generate_pps(4, 100)
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
     run_pp_experiments()
+
+    # molecule_fidelity_experiment()
+
+    # algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
+    # plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
 
     # plot_fidelites(["paulihedral", "PSGS", "default", "UCCSD"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)

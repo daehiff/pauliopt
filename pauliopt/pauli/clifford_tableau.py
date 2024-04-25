@@ -1054,6 +1054,7 @@ class CliffordTableau:
             if remaining.signs[col] != 0:
                 apply("S", (col,))
                 apply("S", (col,))
+
         return qc
 
     def optimal_to_circuit(self, topo: Topology):

@@ -142,6 +142,11 @@ class PauliPolynomial:
             assert isinstance(gadet, PauliGadget)
             gadet.assign_time(time)
 
+    def set_random_angles(self, allowed_angles):
+        for gadget in self.pauli_gadgets:
+            angle = np.random.choice(allowed_angles)
+            gadget.set_angle(angle)
+
     def to_qiskit(self, topology=None, time=1):
         num_qubits = self.num_qubits
         if topology is None:
