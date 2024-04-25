@@ -307,9 +307,9 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=50):
 
 
 def run_pp_experiments():
-    algorithm = "paulihedral"  # os.getenv("ALG")
-    qubits = 6  # int(os.getenv("QUBITS"))
-    gadgets = 160  # int(os.getenv("GADGETS"))
+    algorithm = os.getenv("ALG")
+    qubits = int(os.getenv("QUBITS"))
+    gadgets = int(os.getenv("GADGETS"))
     print("Running: ", algorithm, qubits, gadgets)
     run_fidelity_experiment(algorithm, qubits, gadgets)
 
