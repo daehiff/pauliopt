@@ -170,11 +170,12 @@ def run_pp_experiment(n_qubits, n_gadgets, algorithm, i):
 def run_fidelity_experiment(algorithm, n_qubits, n_gadgets):
     args = [(n_qubits, n_gadgets, algorithm, i) for i in range(20)]
 
-    # with Pool(os.cpu_count()) as p:
-    #    all_fidelities = p.starmap(run_pp_experiment, args)
-    all_fidelities = []
-    for arg in args:
-        all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
+    with Pool(os.cpu_count()) as p:
+        all_fidelities = p.starmap(run_pp_experiment, args)
+
+    # all_fidelities = []
+    # for arg in args:
+    #     all_fidelities.append(run_pp_experiment(arg[0], arg[1], arg[2], arg[3]))
 
     np.save(
         f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy",
@@ -330,12 +331,12 @@ if __name__ == "__main__":
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    # run_pp_experiments()
+    run_pp_experiments()
 
     # molecule_fidelity_experiment()
 
-    algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
-    plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
+    # algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
+    # plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
 
     # plot_fidelites(["paulihedral", "PSGS", "default", "UCCSD"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
