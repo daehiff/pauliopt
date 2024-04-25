@@ -4,7 +4,7 @@ import networkx as nx
 
 from pauliopt.pauli.clifford_region import CliffordRegion
 from pauliopt.pauli.clifford_tableau import is_cutting
-from pauliopt.pauli.pauli_circuit import CX, H, V
+from pauliopt.pauli.pauli_circuit import CX, H, V, S, Vdg, Sdg
 from pauliopt.pauli.pauli_circuit import PauliCircuit
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
@@ -356,8 +356,8 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             qc_out.h(row)
             pp.propagate(H(row), columns_to_use)
         elif rec_type == Y:
-            qc_out.vdg(row)
-            pp.propagate(V(row), columns_to_use)
+            qc_out.v(row)
+            pp.propagate(Vdg(row), columns_to_use)
 
         col_i_row, _ = identity_partition_pauli_polynomial(pp, row, columns_to_use)
         col_i, col_x, col_y, col_z = partition_pauli_polynomial(
@@ -420,7 +420,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         if rec_type == X:
             qc_prop.append_gate(H(row))
         elif rec_type == Y:
-            qc_prop.append_gate(V(row))
+            qc_prop.append_gate(Vdg(row))
 
         return qc_out, qc_prop
 
@@ -436,8 +436,8 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             qc_out.h(row_next)
             pp.propagate(H(row_next), columns_to_use)
         elif rec_type_1 == X and rec_type_2 == Z:
-            qc_out.vdg(row_next)
-            pp.propagate(V(row_next), columns_to_use)
+            qc_out.s(row_next)
+            pp.propagate(Sdg(row_next), columns_to_use)
 
         qc_out.cx(row, row_next)
         pp.propagate(CX(row, row_next), columns_to_use)
@@ -455,7 +455,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         if rec_type_1 == X and rec_type_2 == Y:
             qc_prop.append_gate(H(row_next))
         elif rec_type_1 == X and rec_type_2 == Z:
-            qc_prop.append_gate(V(row_next))
+            qc_prop.append_gate(Sdg(row_next))
         return qc_out, qc_prop
 
     def simplify_one_pauli(columns_to_use, qubits_to_use, row, row_next, rec_type):
@@ -468,8 +468,8 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             qc_out.h(row_next)
             pp.propagate(H(row_next), columns_to_use)
         elif rec_type == Y:
-            qc_out.vdg(row_next)
-            pp.propagate(V(row_next), columns_to_use)
+            qc_out.v(row_next)
+            pp.propagate(Vdg(row_next), columns_to_use)
 
         qc_out.cx(row, row_next)
         pp.propagate(CX(row, row_next), columns_to_use)
@@ -487,7 +487,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         if rec_type == X:
             qc_prop.append_gate(H(row_next))
         elif rec_type == Y:
-            qc_prop.append_gate(V(row_next))
+            qc_prop.append_gate(Vdg(row_next))
 
         return qc_out, qc_prop
 
@@ -504,8 +504,8 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
             qc_out.h(row)
             pp.propagate(H(row), columns_to_use)
         elif pauli_type == Y:
-            qc_out.vdg(row)
-            pp.propagate(V(row), columns_to_use)
+            qc_out.v(row)
+            pp.propagate(Vdg(row), columns_to_use)
         elif pauli_type == Z:
             pass
 
@@ -521,7 +521,7 @@ def pauli_polynomial_steiner_gray_clifford(pp: PauliPolynomial, topo: Topology):
         if pauli_type == X:
             qc_prop.append_gate(H(row))
         elif pauli_type == Y:
-            qc_prop.append_gate(V(row))
+            qc_prop.append_gate(Vdg(row))
         elif pauli_type == Z:
             pass
 
