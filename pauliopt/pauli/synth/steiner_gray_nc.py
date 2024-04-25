@@ -303,8 +303,8 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.h(row_next)
             pp.propagate(H(row_next), columns_to_use)
         elif rec_type_next_1 == X and rec_type_next_2 == Z:
-            qc.vdg(row_next)
-            pp.propagate(V(row_next), columns_to_use)
+            qc.s(row_next)
+            pp.propagate(Sdg(row_next), columns_to_use)
         elif rec_type_next_1 == Y and rec_type_next_2 == Z:
             pass  # just to note this case
 
@@ -329,7 +329,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         if rec_type_next_1 == X and rec_type_next_2 == Y:
             qc.h(row_next)
         elif rec_type_next_1 == X and rec_type_next_2 == Z:
-            qc.v(row_next)
+            qc.sdg(row_next)
         return qc
 
     def simplify_one_p(
@@ -343,8 +343,8 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.h(row)
             pp.propagate(H(row), columns_to_use)
         elif rec_type == Y:
-            qc.s(row)
-            pp.propagate(Sdg(row), columns_to_use)
+            qc.vdg(row)
+            pp.propagate(V(row), columns_to_use)
 
         if rec_type_next == X:
             qc.h(row_next)
@@ -370,7 +370,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         if rec_type_next == X:
             qc.h(row_next)
         elif rec_type_next == Y:
-            qc.s(row_next)
+            qc.v(row_next)
         return qc
 
     circ_out = PauliCircuit(pp.num_qubits)
