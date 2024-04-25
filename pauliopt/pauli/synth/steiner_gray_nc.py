@@ -2,7 +2,7 @@ import networkx as nx
 
 
 from pauliopt.pauli.clifford_tableau import is_cutting
-from pauliopt.pauli.pauli_circuit import PauliCircuit, CX, H, V
+from pauliopt.pauli.pauli_circuit import PauliCircuit, CX, H, V, Sdg
 from pauliopt.pauli.pauli_polynomial import PauliPolynomial
 from pauliopt.pauli.utils import I, X, Y, Z, Pauli
 from pauliopt.topologies import Topology
@@ -343,8 +343,8 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
             qc.h(row)
             pp.propagate(H(row), columns_to_use)
         elif rec_type == Y:
-            qc.vdg(row)
-            pp.propagate(V(row), columns_to_use)
+            qc.S(row)
+            pp.propagate(Sdg(row), columns_to_use)
 
         if rec_type_next == X:
             qc.h(row_next)
@@ -370,7 +370,7 @@ def pauli_polynomial_steiner_gray_nc(pp: PauliPolynomial, topo: Topology):
         if rec_type_next == X:
             qc.h(row_next)
         elif rec_type_next == Y:
-            qc.v(row_next)
+            qc.s(row_next)
         return qc
 
     circ_out = PauliCircuit(pp.num_qubits)
