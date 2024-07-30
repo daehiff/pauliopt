@@ -208,7 +208,7 @@ def plot_fidelites(
     p=90,
 ):
     plt.rcParams.update(
-        {"text.usetex": True, "font.family": "sans-serif", "font.size": 11}
+        {"text.usetex": False, "font.family": "sans-serif", "font.size": 16}
     )
 
     linestyles = [":", "-."]
@@ -222,7 +222,7 @@ def plot_fidelites(
         "UCCSD": "TKET UCCSD (set)",
     }
 
-    fig, axes = plt.subplots(figsize=(11, 7), nrows=3, sharex=True)
+    fig, axes = plt.subplots(figsize=(13, 7), nrows=3, sharex=True)
 
     for color, algorithm in zip(colors, algorithms):
         all_fidelities = np.load(f"{get_save_path(n_qubits, n_gadgets, algorithm)}.npy")
@@ -235,8 +235,8 @@ def plot_fidelites(
 
         axes[0].plot(time, mean_fid, color=color)
         axes[0].fill_between(time, ci_upper, ci_lower, color=color, alpha=0.1)
-    axes[0].set_title("Random Pauli Polynomials")
-    axes[0].set_ylabel("Unitary Overlap")
+    axes[0].set_title("Random Pauli Polynomials", fontsize=18)
+    axes[0].set_ylabel("Unitary Overlap", fontsize=16)
     idx = 1
     for molecule_name, linestyle in zip(molecules, linestyles):
         for color, algorithm in zip(colors, algorithms):
@@ -258,7 +258,7 @@ def plot_fidelites(
         axes[idx].set_ylabel("Unitary Overlap")
         idx += 1
 
-    plt.xlabel("t")
+    plt.xlabel("t", fontsize=16)
     plt.xticks(
         np.linspace(0.0, 2 * np.pi, 5),
         [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"],
@@ -270,13 +270,15 @@ def plot_fidelites(
         dummy_lines.append(axes[0].plot([], [], c="black", ls=linestyles[b_idx])[0])
 
     lines = axes[0].get_lines()
-    axes[0].legend(
+    fig.legend(
         [lines[i] for i in range(len(algorithms))],
         [ALG_NAMES[alg] for alg in algorithms],
-        loc="upper right",
+        ncol=4,
+        loc="upper center",
+        borderaxespad=0
     )
     # axes[0].add_artist(legend1)
-    plt.tight_layout()
+    #plt.tight_layout()
     plt.savefig(f"data/fidelity_experiments/plots/{n_qubits}_{n_gadgets}.pdf")
     plt.show()
 
@@ -331,12 +333,12 @@ if __name__ == "__main__":
     # generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    run_pp_experiments()
+    #run_pp_experiments()
 
     # molecule_fidelity_experiment()
 
-    # algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
-    # plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
+    algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
+    plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
 
     # plot_fidelites(["paulihedral", "PSGS", "default", "UCCSD"], 6, 160)
     # plot_fidelites(["PSGS", "default", "UCCSD"], 10, 630)
