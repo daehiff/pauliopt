@@ -7,3 +7,4 @@ parameterized
 notebook
 black
 pip-tools
+maturin

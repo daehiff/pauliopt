@@ -5,4 +5,4 @@
 #    pip-compile --allow-unsafe --no-annotate requirements.in
 #
 networkx==3.3
-numpy==2.0.1
+numpy==2.1.1
