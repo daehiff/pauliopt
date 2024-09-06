@@ -25,24 +25,24 @@ from pauliopt.gates import (
 )
 
 
-def mult_paulis(p1, p2, sign1, sign2, n_qubits):
+def mult_paulis(row_i, row_j, sign_i: int, sign_j: int, n_qubits: int):
     """
     Small helper function to multiply two Pauli strings and correctly update the sign.
 
     Args:
-        p1 (np.ndarray): Pauli string 1
-        p2 (np.ndarray): Pauli string 2
-        sign1 (int): Sign of Pauli string 1
-        sign2 (int): Sign of Pauli string 2
+        row_i (np.ndarray): Pauli string 1
+        row_j (np.ndarray): Pauli string 2
+        sign_i (int): Sign of Pauli string 1
+        sign_j (int): Sign of Pauli string 2
         n_qubits (int): Number of qubits in the Pauli strings
 
     Returns:
         np.ndarray: Pauli string 1 * Pauli string 2
     """
-    x_1 = p1[:n_qubits].copy()
-    z_1 = p1[n_qubits:].copy()
-    x_2 = p2[:n_qubits].copy()
-    z_2 = p2[n_qubits:].copy()
+    x_1 = row_i[:n_qubits].copy()
+    z_1 = row_i[n_qubits:].copy()
+    x_2 = row_j[:n_qubits].copy()
+    z_2 = row_j[n_qubits:].copy()
 
     x_1_z_2 = z_1 * x_2
     z_1_x_2 = x_1 * z_2
@@ -54,7 +54,7 @@ def mult_paulis(p1, p2, sign1, sign2, n_qubits):
 
     x_1_z_2 = ((x_1_z_2 + x_1 + z_1) % 2) * ac
     sign_change = int(((np.sum(ac) + 2 * np.sum(x_1_z_2)) % 4) > 1)
-    new_sign = (sign1 + sign2 + sign_change) % 4
+    new_sign = (sign_i + sign_j + sign_change) % 4
     new_p1 = np.concatenate([x_1, z_1])
     return new_p1, new_sign
 
@@ -132,8 +132,8 @@ class CliffordTableau:
         """
         n_qubits = tableau.shape[0] // 2
         if not (
-            tableau.shape == (2 * n_qubits, 2 * n_qubits)
-            and signs.shape == (2 * n_qubits,)
+                tableau.shape == (2 * n_qubits, 2 * n_qubits)
+                and signs.shape == (2 * n_qubits,)
         ):
             raise ValueError(
                 "Tableau and signs must have shape "
@@ -198,8 +198,8 @@ class CliffordTableau:
             col (int): Column index.
         """
         return (
-            self.tableau[row + self.n_qubits, col]
-            + 2 * self.tableau[row + self.n_qubits, col + self.n_qubits]
+                self.tableau[row + self.n_qubits, col]
+                + 2 * self.tableau[row + self.n_qubits, col + self.n_qubits]
         )
 
     def _xor_row(self, i, j):
@@ -363,7 +363,7 @@ class CliffordTableau:
         for k in range(2 * self.n_qubits):
             row2 = other.tableau[k]
             x2 = other.tableau[k, : self.n_qubits]
-            z2 = other.tableau[k, self.n_qubits :]
+            z2 = other.tableau[k, self.n_qubits:]
 
             # Adding a factor of i for each Y in the image of an operator under the
             # first operation, since Y=iXZ
@@ -513,3 +513,13 @@ class CliffordRegion(AbstractCircuit):
     def cz(self, control, target):
         qubits = (control, target)
         self.add_gate(CZ(*qubits))
+
+
+
+if __name__ == '__main__':
+    ct = CliffordTableau(3)
+
+    ct.prepend_h(0)
+
+    print(ct.tableau)
+    print(ct.signs)
