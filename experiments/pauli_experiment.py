@@ -18,8 +18,8 @@ from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
-from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
-# from pytket.circuit import CXConfigType
+from pytket._tket.transform import Transform, PauliSynthStrat#, CXConfigType
+from pytket.circuit import CXConfigType
 
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer

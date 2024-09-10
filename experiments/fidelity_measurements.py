@@ -203,7 +203,7 @@ def plot_fidelites(
     n_qubits,
     n_gadgets,
     t_start=0.0,
-    t_end=2 * np.pi,
+    t_end=np.pi / 2.0,
     t_steps=50,
     p=90,
 ):
@@ -260,8 +260,8 @@ def plot_fidelites(
 
     plt.xlabel("t", fontsize=16)
     plt.xticks(
-        np.linspace(0.0, 2 * np.pi, 5),
-        [r"$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"],
+        np.linspace(0.0, np.pi/2.0, 3),
+        [r"$0$", r"$\frac{\pi}{4}$", r"$\frac{\pi}{2}$"],
     )
 
     linestyles = ["solid"] + linestyles
@@ -280,7 +280,7 @@ def plot_fidelites(
     # axes[0].add_artist(legend1)
     #plt.tight_layout()
     plt.savefig(f"data/fidelity_experiments/plots/{n_qubits}_{n_gadgets}.pdf")
-    plt.show()
+    #plt.show()
 
 
 def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=50):
