@@ -203,8 +203,8 @@ def plot_fidelites(
     n_qubits,
     n_gadgets,
     t_start=0.0,
-    t_end=np.pi / 2.0,
-    t_steps=50,
+    t_end=np.pi,
+    t_steps=25,
     p=90,
 ):
     plt.rcParams.update(
@@ -229,8 +229,11 @@ def plot_fidelites(
 
         all_fidelities = np.asarray(all_fidelities)
         mean_fid = np.mean(all_fidelities, axis=0)
+        mean_fid = mean_fid[:int(mean_fid.shape[0]/2)]
         ci_lower = np.percentile(all_fidelities, 100 - p, axis=0)
+        ci_lower = ci_lower[:int(ci_lower.shape[0]/2)]
         ci_upper = np.percentile(all_fidelities, p, axis=0)
+        ci_upper = ci_upper[:int(ci_upper.shape[0]/2)]
         time = np.linspace(t_start, t_end, t_steps)
 
         axes[0].plot(time, mean_fid, color=color)
@@ -245,12 +248,13 @@ def plot_fidelites(
             )
 
             all_fidelities = np.asarray(all_fidelities)
+            all_fidelities = all_fidelities[0][:int(all_fidelities.shape[1]/2)]
 
             time = np.linspace(t_start, t_end, t_steps)
 
             axes[idx].plot(
                 time,
-                all_fidelities[0],
+                all_fidelities,
                 color=color,
                 # label=f"{molecule_name}: {ALG_NAMES[algorithm]}",
             )
@@ -260,8 +264,8 @@ def plot_fidelites(
 
     plt.xlabel("t", fontsize=16)
     plt.xticks(
-        np.linspace(0.0, np.pi/2.0, 3),
-        [r"$0$", r"$\frac{\pi}{4}$", r"$\frac{\pi}{2}$"],
+        np.linspace(0.0, np.pi, 5),
+        [r"$0$", r"$\frac{\pi}{4}$", r"$\frac{\pi}{2}$", r"$\frac{3\pi}{4}$", r"$\pi$"],
     )
 
     linestyles = ["solid"] + linestyles
@@ -329,13 +333,13 @@ def generate_pps(n_qubits, n_gadgets):
 
 if __name__ == "__main__":
     # generate_pps(4, 100)
-    generate_pps(6, 160)
+    #generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    run_pp_experiments()
+    #run_pp_experiments()
 
     #
-    molecule_fidelity_experiment()
+    #molecule_fidelity_experiment()
 
     algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
     plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)
