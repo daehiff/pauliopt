@@ -309,11 +309,10 @@ def molecule_fidelity_experiment(t_start=0.0, t_end=2 * np.pi, t_steps=50):
 
 
 def run_pp_experiments():
-    algorithm = os.getenv("ALG")
-    qubits = int(os.getenv("QUBITS"))
-    gadgets = int(os.getenv("GADGETS"))
-    print("Running: ", algorithm, qubits, gadgets)
-    run_fidelity_experiment(algorithm, qubits, gadgets)
+    qubits = 6
+    gadgets = 160#int(os.getenv("GADGETS"))
+    for algorithm in ["PSGS", "UCCSD", "default", "paulihedral"]:
+        run_fidelity_experiment(algorithm, qubits, gadgets)
 
 
 def generate_pps(n_qubits, n_gadgets):
@@ -330,12 +329,13 @@ def generate_pps(n_qubits, n_gadgets):
 
 if __name__ == "__main__":
     # generate_pps(4, 100)
-    # generate_pps(6, 160)
+    generate_pps(6, 160)
     # generate_pps(10, 630)
 
-    #run_pp_experiments()
+    run_pp_experiments()
 
-    # molecule_fidelity_experiment()
+    #
+    molecule_fidelity_experiment()
 
     algorithms = ["paulihedral", "PSGS", "default", "UCCSD"]
     plot_fidelites(algorithms, ["H2_P_631g", "H4_P_sto3g"], 6, 160)

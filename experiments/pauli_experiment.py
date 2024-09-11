@@ -18,8 +18,8 @@ from pytket._tket.architecture import Architecture
 from pytket._tket.passes import SequencePass, PlacementPass, RoutingPass
 from pytket._tket.placement import GraphPlacement
 from pytket._tket.predicates import CompilationUnit
-from pytket._tket.transform import Transform, PauliSynthStrat#, CXConfigType
-from pytket.circuit import CXConfigType
+from pytket._tket.transform import Transform, PauliSynthStrat, CXConfigType
+# from pytket.circuit import CXConfigType
 
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pytket.extensions.qiskit.backends import aer
@@ -89,7 +89,7 @@ def get_logger(name):
 
 
 def generate_random_z_polynomial(
-    num_qubits: int, num_gadgets: int, min_legs=None, max_legs=None, allowed_angels=None
+        num_qubits: int, num_gadgets: int, min_legs=None, max_legs=None, allowed_angels=None
 ):
     if min_legs is None:
         min_legs = 2
@@ -108,7 +108,7 @@ def generate_random_z_polynomial(
 
 
 def create_random_phase_gadget(
-    num_qubits, min_legs, max_legs, allowed_angels, allowed_legs=None
+        num_qubits, min_legs, max_legs, allowed_angels, allowed_legs=None
 ):
     if allowed_legs is None:
         allowed_legs = [X, Y, Z]
@@ -123,7 +123,7 @@ def create_random_phase_gadget(
 
 
 def create_random_pauli_polynomial(
-    num_qubits: int, num_gadgets: int, min_legs=None, max_legs=None, allowed_angels=None
+        num_qubits: int, num_gadgets: int, min_legs=None, max_legs=None, allowed_angels=None
 ):
     if min_legs is None:
         min_legs = 1
@@ -313,7 +313,7 @@ def synth_pp_tket_uccs_set(pp: PauliPolynomial, topo: Topology, prefix="tket_ucc
 
 
 def synth_pp_tket_uccs_pair(
-    pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_pair"
+        pp: PauliPolynomial, topo: Topology, prefix="tket_uccs_pair"
 ):
     operator = pp_to_operator(pp)
     circ_out = synth_tket(operator, topo, PauliSynthStrat.Pairwise)
@@ -328,7 +328,7 @@ def synth_pp_pauliopt_ucc(pp: PauliPolynomial, topo: Topology, prefix="pauliopt_
 
 
 def synth_pp_pauliopt_steiner_nc(
-    pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_nc"
+        pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_nc"
 ):
     pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_NC, topo)
@@ -337,7 +337,7 @@ def synth_pp_pauliopt_steiner_nc(
 
 
 def synth_pp_pauliopt_steiner_clifford(
-    pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_clifford"
+        pp: PauliPolynomial, topo: Topology, prefix="pauliopt_steiner_clifford"
 ):
     pp = simplify_pauli_polynomial(pp, allow_acs=True)
     synthesizer = PauliSynthesizer(pp, SynthMethod.STEINER_GRAY_CLIFFORD, topo)
@@ -346,7 +346,7 @@ def synth_pp_pauliopt_steiner_clifford(
 
 
 def synth_pp_pauliopt_divide_conquer(
-    pp: PauliPolynomial, topo: Topology, prefix="pauliopt_divide_conquer"
+        pp: PauliPolynomial, topo: Topology, prefix="pauliopt_divide_conquer"
 ):
     synthesizer = PauliSynthesizer(pp, SynthMethod.DIVIDE_AND_CONQUER, topo)
     synthesizer.synthesize()
@@ -537,7 +537,7 @@ SYNTHESIS_METHODS = {
 
 
 def random_pauli_experiment(
-    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
+        backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random"
 ):
     backend, output_csv = get_backend_and_df_name(
         backend_name, df_name=df_name)
@@ -569,7 +569,7 @@ def random_pauli_experiment(
     os.makedirs(topo_folder, exist_ok=True)
     os.makedirs(circuit_topo_folder, exist_ok=True)
     for num_gadgets, i in itertools.product(
-        range(1, nr_input_gates, nr_steps), range(20)
+            range(1, nr_input_gates, nr_steps), range(20)
     ):
         circuit_file = os.path.join(
             topo_folder, f"pp_{backend_name}_{num_gadgets:03}_{i:02}.pickle"
@@ -586,11 +586,11 @@ def random_pauli_experiment(
         for synth, synth_method in SYNTHESIS_METHODS.items():
             # print(f"Synth: {synth_method}")
             column = {
-                "n_rep": i,
-                "num_qubits": num_qubits,
-                "n_gadgets": num_gadgets,
-                "method": synth,
-            } | synth_method(pp, topo, prefix=naive_circuit)
+                         "n_rep": i,
+                         "num_qubits": num_qubits,
+                         "n_gadgets": num_gadgets,
+                         "method": synth,
+                     } | synth_method(pp, topo, prefix=naive_circuit)
 
             df.loc[len(df)] = column
             df.to_csv(output_csv)
@@ -619,7 +619,7 @@ def get_lock(new_lock):
 
 
 def threaded_random_pauli_experiment(
-    backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random", n_gadgets=None
+        backend_name="vigo", nr_input_gates=100, nr_steps=5, df_name="data/random", n_gadgets=None
 ):
     print("----------------------------------", "Experiment",
           backend_name, "----------------------------------")
@@ -653,7 +653,7 @@ def threaded_random_pauli_experiment(
     generation_q = manager.Queue()
     for num_gadgets, i in product(gadget_iter, exp_iter):
         generation_q.put((num_qubits, num_gadgets, i,
-                         topo_folder, backend_name, pp_dict))
+                          topo_folder, backend_name, pp_dict))
     print("Starting a task Queue of length",
           generation_q.qsize(), "on", n_workers, "workers")
     for _ in range(n_workers):
@@ -759,7 +759,7 @@ def pooled_function(q: Queue):
 
         try:
             signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(30*120)
+            signal.alarm(30 * 120)
             count_dict = synth_method(pp, topo)
             signal.alarm(0)  # Turn of the alarm.
         except TimeoutError:
@@ -768,12 +768,12 @@ def pooled_function(q: Queue):
         time_passed = (datetime.now() - start).total_seconds()
 
         column = {
-            "n_rep": i,
-            "num_qubits": num_qubits,
-            "n_gadgets": num_gadgets,
-            "time": time_passed,
-            "method": synth_name,
-        } | count_dict
+                     "n_rep": i,
+                     "num_qubits": num_qubits,
+                     "n_gadgets": num_gadgets,
+                     "time": time_passed,
+                     "method": synth_name,
+                 } | count_dict
 
         df = pd.DataFrame([{c: column[c] for c in create_csv_header()}])
         lock.acquire()
